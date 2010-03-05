@@ -2,22 +2,20 @@
 public class Board {
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=3, W_KNIGHT=5, W_BISHOP=7, W_QUEEN=9, W_KING=11; // CONSTANTE ALB
 	public static final byte           B_PAWN=2, B_ROOK=4, B_KNIGHT=6, B_BISHOP=8, B_QUEEN=10, B_KING=12; // CONSTANTE NEGRU
-	private long table;
 	//private long white;
+	private long table;
 	private long black;
 	private long pawns;
-	long kings;
-	long queens;
-	long rooks;
-	long bishops;
-	long knights;
+	private long kings;
+	private long queens;
+	private long rooks;
+	private long bishops;
+	private long knights;
 	public Board(){
 		// la Start:
 
 		/* 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 */ 
 		/* a8 ->> h8 | a7 ->> h7 | ...                                                       | a1 ->> h1 */
-
-
 		table = 0xFFFF00000000FFFFL;
 
 		pawns   = 0x00FF00000000FF00L;
@@ -80,13 +78,30 @@ public class Board {
 		}
 		return _EMPTY; // ERROR?
 	}
+	
+	boolean isValidMove(int i, int j, int i2, int j2){
+		//TODO
+		return false;
+	}
+	
+	int movePiece(int i, int j, int i2, int j2, byte type) {
+		long mask1 = 128L >> (j-1) << 8*(i-1); //??needs checked ??//
+		long mask2 = 128L >> (j2-1) << 8*(i2-1); //??needs checked ??//
+		
+		table = table & ~mask1 | mask2;
+		
+		//TODO
+		// si restul tablelor
+		
+		
+		return 0;
 
-	int movePiece(int i, int j, int i2, int j2) {
-		return 0;//TODO
 	}
 
 	long getMoves(int i, int j, byte type){
 		return 0L;//TODO
+		// Long.highestOneBit(i)
+		
 	}
 
 	
@@ -97,9 +112,7 @@ public class Board {
 				System.out.print(type[getPieceType(i,j)]+"\t");
 				//System.out.print("");
 			System.out.println();
-		}
-		
-		
+		}	
 	}
 	
 	void printNumbers(){
