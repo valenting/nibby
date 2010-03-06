@@ -111,9 +111,16 @@ public class Board {
 	long getMoves(int i, int j, byte type){
 		return 0L;//TODO
 		// Long.highestOneBit(i)
-		
+		// return getMoves((i-1)*8+j,type);
+		// return Moves.all[type][pos];
+	}
+	
+	long getMoves(int pos, byte type) {
+		return 0;
+		// return Moves.all[type][pos];
 	}
 
+	
 	
 	void printBoard() {
 		char type[]={'-','p','P','r','R','n','N','b','B','q','Q','k','K'};
