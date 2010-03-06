@@ -77,6 +77,7 @@ public class implMinimala {
                     System.out.println("feature done=0");
                     System.out.println("feature myname=\"nibbyEngine 0.1\"");
                     System.out.println("feature done=1");
+                    continue;
 
                 }
                 if (s.equals("black")) {
