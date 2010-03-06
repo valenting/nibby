@@ -2,7 +2,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 
-public class Moves {
+public class MoveGenerator {
 	//TODO
 	// toti vectorii de mutari posibile
 	
@@ -60,68 +60,89 @@ public class Moves {
 			sdiagL[i]=(sdiagL[i-1] >> 1) & ~sdiagL[i-1] & ~vert[1]; 
 
 		
-		FileWriter f=new FileWriter("defMoves.java");
+		FileWriter f=new FileWriter("Moves.java");
 		f.write("public class defMoves{\n");
-		f.write("long[] wpawnMoves={");
+		//f.write("long[] wpawnMoves={");
 		
 		long[] wpawn = new long[65];
 		for (int i=0;i<8;i++)
-			//f.write("0L,");
 			wpawn[i+1]=0L;
 		for (int i=0;i<=7;i++){
 			long mask = (128L << 8) >> (i%8); 
 			mask = mask << 8 | mask << 16;
-			//f.write("0x"+Long.toHexString(mask)+"L,");
 			wpawn[8+i+1]=mask;
-			//printBoard(mask);
 		}
 		for (int i=16;i<56;i++){
 			long mask = 128L >> (i%8) << 8*(i/8);
 			mask = mask << 8;
-			//f.write("0x"+Long.toHexString(mask)+"L,");
 			wpawn[i+1]=mask;
-			//printBoard(mask);
-		}
-		//f.write("0L};//ULTIMUL NU SE PUNE\n");
-		
-		
-		// wpawnMoves[8*(i-1)+j] = mutarile posibile din pozitia (i,j) 
-		f.write("0L,");
-		for (int i=1;i<=64;i++){
-			f.write("0x"+Long.toHexString(wpawn[i])+"L,");
-			System.out.println(i+":");
-			//printBoard(wpawn[i]);
-		}
-		f.write("0L}\n;");
-		
-		// bpawnMoves[8*(i-1)+j] = mutarile posibile din pozitia (i,j) 
-		
-		f.write("long[] bpawnMoves={");
-		f.write("0L,");
-		
-		long []bpawn=new long[66];
-		for (int i=1;i<=64;i++) {
-			
-			//f.write("0x"+Long.toHexString(invLines(wpawn[(8-i/8+1)+i%8]))+"L,");
-			//printBoard(invLines(wpawn[(8-i/8+1)+i%8])); // wrong FORMULA !!!
 		}
 		
-		for (int i=1;i<=8;i++) {
-			for (int j=1;j<=8;j++)
-				bpawn[(i-1)*8+j]=invLines(wpawn[(8-i)*8+j]);
+		
+		// wpawn[8*(i-1)+j] = mutarile posibile din pozitia (i,j) 
+		MoveGenerator.writeArrayH("wpawn", wpawn, f);
+		
+		
+		// bpawn[8*(i-1)+j] = mutarile posibile din pozitia (i,j) 
+		MoveGenerator.writeArrayH("bpawn", MoveGenerator.inv(wpawn), f);
+		
+		
+		long[] wpawnTake= new long[65];
+		for (int i=0;i<=64;i++){
+			wpawnTake[i]=wpawn[i] | (wpawn[i] << 1) | (wpawn[i] >> 1);
+			int lin=i/8;
+			if (i%8!=0)
+				lin++;
+			int col=i%8;
+			if (col==0)
+				col=8;
+			if (col==1)
+				wpawnTake[i]=wpawnTake[i] ^ (wpawn[i] << 1);
+			if (col==8)
+				wpawnTake[i]=wpawnTake[i] ^ (wpawn[i] >> 1);
+			wpawnTake[i]=wpawnTake[i] & ~vert[col];
+			if (lin!=8)
+				wpawnTake[i] &= lines[lin+1];
 		}
-		for (int i=1;i<=64;i++){
-			System.out.println(i+":\n");
-			printBoard(bpawn[i]);
-			f.write("0x"+Long.toHexString(bpawn[i])+"L,");
-		}
-		f.write("0L}\n;");
+		
+//		for (int i=1;i<=64;i++){
+//			int lin=i/8;
+//			if (i%8!=0)
+//				lin++;
+//			int col=i%8;
+//			if (col==0)
+//				col=8;
+//			System.out.println("lin:"+lin+"col:"+col);
+//			printBoard(wpawnTake[i]);
+//		}
+		
+		MoveGenerator.writeArrayH("wpawnTakes", wpawnTake, f);
+		
+		MoveGenerator.writeArrayH("bpawnTakes", inv(wpawnTake), f);
 		
 		f.write("\n}\n");
 		f.close();
 		//return null;
 	}
-
+	
+	public static void writeArrayH(String arrayName, long[] array, FileWriter f) throws Exception{
+		f.write("long[] "+arrayName+"={");
+		for (int i=0;i<array.length;i++)
+			f.write("0x"+Long.toHexString(array[i])+"L,");
+		f.write("0x0L};");
+		f.write("// Size: "+array.length+" +1 (final: 0x0L)");
+		f.write("\n");
+		}
+		
+	public static long[] inv(long[] arr){
+		long[] nou=new long[arr.length];
+		for (int i=1;i<=8;i++) {
+			for (int j=1;j<=8;j++)
+				nou[(i-1)*8+j]=invLines(arr[(8-i)*8+j]);
+		}
+		return nou;
+	}
+	
 	public static void main(String args[]) throws Exception {
 		genMoves();
 	}
