@@ -21,11 +21,9 @@ public class implMinimala {
         String s = "";
         String sir = " abcdefgh";
         // programul muta pionii la rand
-        int i = 1;
-        int j = 1;
+        int i = 1, j = 1;
 
-        int side = WHITE;
-        int engine = BLACK;
+        int side = WHITE, engine = BLACK;
 
         while (true) {
             System.out.flush();
@@ -33,18 +31,17 @@ public class implMinimala {
             if (side == engine) {
                 if (engine == WHITE) {
                     if (i < 9) {
-                        System.out.println("move " + sir.charAt(i) + "2" + sir.charAt(i) + "4");
-                        side = (side + 1) % 2;
+                        System.out.println("move " + sir.charAt(i) + "2" + sir.charAt(i) + "4");                    
                         i++;
                     }
                 }
                 if (engine == BLACK) {
                     if (j < 9) {
                         System.out.println("move " + sir.charAt(j) + "7" + sir.charAt(j) + "5");
-                        side = (side + 1) % 2;
                         j++;
                     }
                 }
+                 side = (side + 1) % 2;
             }
 
             // prelucreaza urmatoarea comanda
