@@ -30,7 +30,16 @@ public class Board {
 		black   = 0xFFFF000000000000L;
 
 	}
-
+	
+	public Board getCopy(){
+		try {
+			return (Board)this.clone();
+		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 	/* i (linia) - 1 .. 8 */
 	/* j (coloana) - 1.. 8 */
 	public byte getPieceType(int i,int j){
