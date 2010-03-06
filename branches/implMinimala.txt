@@ -1,0 +1,2 @@
+la engine1: "java -jar chess.jar" /fd="C:\cale\director" /xreuse ; /name="chess.jar"
+la engine2: "java -jar chess.jar" /sd="C:\cale\director" /xreuse ; /name="chess.jar"
