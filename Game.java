@@ -51,8 +51,8 @@ public class Game {
  					System.out.println(myMove);
                  }
  					
- 			else 
- 				System.out.println("resign");
+                 else 
+                	 System.out.println("resign");
                  
                  //System.out.println(myMove);
             }
@@ -78,18 +78,15 @@ public class Game {
     	// precum mutarile,time si otim iar restul comenzilor le verificam in rodinea aparitiei lor
     	
     	if (command.startsWith("usermove")){
-    		String mutare = command.substring(8);
+    		String mutare = command.substring(9);
     		//verificare mutare valida
     		//modificare tabla cu comanda data de el
     		//boolean ok = verificareMutare(board,mutare);
     		//board = newBoard(board,mutare);
     		Move m = new Move(mutare);
     		
-    		if (brd.isValidMove(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12())))
-				brd.movePiece(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()));
-		else 
-			System.out.println("NotValid");
-    		
+    			brd.movePiece(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()));
+			
     		side = (side + 1)%2;
     		return "";
     		
