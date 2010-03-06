@@ -12,7 +12,7 @@ public class implMinimala {
     public static int BLACK = 1;
     public static int FORCE = 2;
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws IOException {
         // stdin
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
         //salvare comenzi
@@ -74,7 +74,7 @@ public class implMinimala {
                     System.out.println("feature done=1");
                     continue;
                 }
-                 if (s.equals("white")) {
+                if (s.equals("white")) {
                     side = WHITE;
                     engine = BLACK;
                     continue;
@@ -93,6 +93,8 @@ public class implMinimala {
                     continue;
                 }
                 if (s.equals("quit")) {
+                    in.close();
+                    pr.close();
                     return;
                 }
 
@@ -101,5 +103,6 @@ public class implMinimala {
             }
 
         }
+
     }
 }
