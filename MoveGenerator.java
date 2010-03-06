@@ -120,10 +120,20 @@ public class MoveGenerator {
 		
 		MoveGenerator.writeArrayH("bpawnTakes", inv(wpawnTake), f);
 		
-		f.write("static long[][] all={ {0x0L}, wpawn, bpawn};");
+		long[] masks=new long[65];
+		for (int i=1;i<=8;i++)
+			for (int j=1;j<=8;j++)
+				masks[(i-1)*8+j]=128L >> (j-1) << 8*(i-1);
+			
+		MoveGenerator.writeArrayH("masks", masks, f);
 		
+		f.write("static long[][] all={ {0x0L}, wpawn, bpawn};\n");
+		f.write("static long[][] pawnTakes={{0x0L},wpawnTakes,bpawnTakes};\n");
 		f.write("\n}\n");
 		f.close();
+		for (int i=1;i<=64;i++){
+			printBoard(wpawn[i]);
+		}
 		//return null;
 	}
 	

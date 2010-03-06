@@ -13,6 +13,7 @@ public class Game {
     public static int FORCE = 2;
     public static int side = WHITE, engine = BLACK;
     public static int i = 0, j = 0;
+    public static Board2 brd=new Board2();
     
     public static void main(String []args) throws Exception{
 		
@@ -32,17 +33,28 @@ public class Game {
                         myMove = "move " + sir.charAt(i) + "2" + sir.charAt(i) + "4";                    
                         i++;
                     }
-                    else myMove = "resign";
+                   // else myMove = "resign";
                 }
                 if (engine == BLACK) {
                     if (j < 8) {
                         myMove = "move " + sir.charAt(j) + "7" + sir.charAt(j) + "5";
                         j++;
                     }
-                    else myMove = "resign";
+                   // else myMove = "resign";
                 }
                  side = (side + 1) % 2;
-                 System.out.println(myMove);
+                  
+                 Move m = new Move(myMove.substring(5));
+                 
+                 if (brd.isValidMove(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()))){
+ 					brd.movePiece(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()));
+ 					System.out.println(myMove);
+                 }
+ 					
+ 			else 
+ 				System.out.println("resign");
+                 
+                 //System.out.println(myMove);
             }
 			command = inReader.readLine();
 			if (command.length() > 0)
@@ -71,6 +83,13 @@ public class Game {
     		//modificare tabla cu comanda data de el
     		//boolean ok = verificareMutare(board,mutare);
     		//board = newBoard(board,mutare);
+    		Move m = new Move(mutare);
+    		
+    		if (brd.isValidMove(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12())))
+				brd.movePiece(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()));
+		else 
+			System.out.println("NotValid");
+    		
     		side = (side + 1)%2;
     		return "";
     		
