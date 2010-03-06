@@ -68,17 +68,16 @@ public class implMinimala {
                     engine = FORCE;
                     continue;
                 }
-                if (s.equals("white")) {
-                    side = WHITE;
-                    engine = BLACK;
-                    continue;
-                }
                 if (s.startsWith("protover")) {
                     System.out.println("feature done=0");
                     System.out.println("feature myname=\"nibbyEngine 0.1\"");
                     System.out.println("feature done=1");
                     continue;
-
+                }
+                 if (s.equals("white")) {
+                    side = WHITE;
+                    engine = BLACK;
+                    continue;
                 }
                 if (s.equals("black")) {
                     side = BLACK;
