@@ -61,7 +61,7 @@ public class MoveGenerator {
 
 		
 		FileWriter f=new FileWriter("Moves.java");
-		f.write("public class defMoves{\n");
+		f.write("public class Moves{\n");
 		//f.write("long[] wpawnMoves={");
 		
 		long[] wpawn = new long[65];
@@ -120,13 +120,15 @@ public class MoveGenerator {
 		
 		MoveGenerator.writeArrayH("bpawnTakes", inv(wpawnTake), f);
 		
+		f.write("static long[][] all={ {0x0L}, wpawn, bpawn};");
+		
 		f.write("\n}\n");
 		f.close();
 		//return null;
 	}
 	
 	public static void writeArrayH(String arrayName, long[] array, FileWriter f) throws Exception{
-		f.write("long[] "+arrayName+"={");
+		f.write("static long[] "+arrayName+"={");
 		for (int i=0;i<array.length;i++)
 			f.write("0x"+Long.toHexString(array[i])+"L,");
 		f.write("0x0L};");
