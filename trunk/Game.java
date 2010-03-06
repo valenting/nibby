@@ -32,12 +32,14 @@ public class Game {
                         myMove = "move " + sir.charAt(i) + "2" + sir.charAt(i) + "4";                    
                         i++;
                     }
+                    else myMove = "resign";
                 }
                 if (engine == BLACK) {
                     if (j < 8) {
                         myMove = "move " + sir.charAt(j) + "7" + sir.charAt(j) + "5";
                         j++;
                     }
+                    else myMove = "resign";
                 }
                  side = (side + 1) % 2;
                  System.out.println(myMove);
