@@ -5,21 +5,22 @@ public class Move {
 	private String strMove="";
 	private int p11, p12, p21, p22;
 	private int pos1,pos2;
+	
 	Move(int i, int j, int i2, int j2){
 		this.p11=i;
 		this.p12=j;
 		this.p21=i2;
 		this.p22=j2;
-		this.strMove=table.charAt(i)+j+table.charAt(i2)+j2+"";
+		this.strMove=table.charAt(j)+i+table.charAt(j2)+i2+"";
 		this.pos1=(i-1)*8+j;
 		this.pos2=(i2-1)*8+j;
 	}
 	Move(String move){
 		this.strMove=move;
-		this.p12=move.charAt(1)-'0';
-		this.p22=move.charAt(3)-'0';
-		this.p11=move.toLowerCase().charAt(0)-'a'+1;
-		this.p21=move.toLowerCase().charAt(2)-'a'+1;
+		this.p11=move.charAt(1)-'0';
+		this.p21=move.charAt(3)-'0';
+		this.p12=move.toLowerCase().charAt(0)-'a'+1;
+		this.p22=move.toLowerCase().charAt(2)-'a'+1;
 		this.pos1=(this.p11-1)*8+this.p12;
 		this.pos2=(this.p21-1)*8+this.p22;
 	}
@@ -42,7 +43,7 @@ public class Move {
 			i2++;
 		this.p21=i2;
 		this.p22=j2;
-		this.strMove=table.charAt(i)+j+table.charAt(i2)+j2+"";
+		this.strMove=table.charAt(j)+i+table.charAt(j2)+i2+"";
 	}
 	
 	public String strMove() {

@@ -26,7 +26,7 @@ public class Board {
 		kings   = 0x0800000000000008L;
 		queens  = 0x1000000000000010L;
 
-		//white   = 0x00000000000000FFL;
+		//white   = 0x000000000000FFFFL;
 		black   = 0xFFFF000000000000L;
 
 	}
@@ -83,6 +83,7 @@ public class Board {
 		//TODO
 		return false;
 	}
+	
 	
 	int movePiece(int i, int j, int i2, int j2, byte type) {
 		long mask1 = 128L >> (j-1) << 8*(i-1); //??needs checked ??//
