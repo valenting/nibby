@@ -6,7 +6,12 @@
  *	dinamic masca de mutari prin raportare la masca de pozitii ocupate(eu o sa-i
  *	spun metoda Vali, fiindca ele a propus-o).
  *	
- *	Versiunea 1.2
+ *	Versiunea 1.3
+ *	Am implementat si parcurgeri negative(daca ati citit documentatia stiti despre
+ *	ce este vorba) doar ca e un dezastru ca timp de executie, dupa cum veti vedea.
+ *
+ *	VA ROG NU INTERVENITI IN FISIERUL ASTA, desi ar fi normal sa faceti asta! Nu vreau
+ *	sa renunt inca la varianta 4, mai ales dupa timpii obtinuti pentru cazurile directe
  */
 
 import java.util.Random;
@@ -318,22 +323,46 @@ class speed_test{
 	 *	unde o - occupancy este dat de full_board si r - masca de mutari
 	 */
 	
-	static long mutNE(byte i,byte j,long full_board,long mv){
+	static long mutarePozitiva(byte i,byte j,long full_board,long mv){
 		long piece = 128L >> (j-1) << 8*(i-1);
-		
-	
-		
+
 		long pb = full_board & mv;
-		long dif = pb - piece;
-		long flip = dif ^ full_board;
-		printMask( flip & mv);
-		System.out.println();
+		pb -= piece;
+		long flip = pb ^ full_board;
+		
+											//printMask( flip & mv);
+											//System.out.println();
 		
 		return flip & mv;
-		//return full_board ^ (full_board -piece -piece);	// asta nu prea merge
-		//return (full_board - piece) ^ (full_board | piece);
 	}
 	
+	static long mutareNegativa(byte i,byte j,long full_board,long mv){
+		/*
+		 *	slider e pozitia nebunului
+		 *	linemask - longul de atac
+		 *
+		 *	forward  = occ & lineMask; // also performs the first subtraction by clearing the s in o
+   			reverse  = byteswap( forward ); // o'-s'
+   			forward -=         ( slider  ); // o -2s
+   			reverse -= byteswap( slider  ); // o'-2s'
+   			forward ^= byteswap( reverse );
+   			return forward & lineMask;      // mask the line again
+		*/
+				
+		long piece = 128L >> (j-1) << 8*(i-1);
+		long fw = full_board & mv;
+		long rev = Long.reverse(fw);
+		fw -= piece ;
+		rev -= Long.reverse(piece);
+		fw ^= Long.reverse(rev);
+										//Inca nu am incredere in metoda asta, asa ca ramane
+										//afisajul
+		
+										//	printMask( fw );
+										//	System.out.println();
+		
+		return fw & mv;
+	}
 	//	........................................................................................
 	
 													//	MAIN
@@ -348,7 +377,7 @@ class speed_test{
 		
 	//	printMask(full_board);
 		
-		int rep = 400000;		//	numarul de repetitii al calculului mastii de mutari
+		final int rep = 400000;		//	numarul de repetitii al calculului mastii de mutari
 		
 		
 			/*
@@ -434,14 +463,26 @@ class speed_test{
 								//	System.out.println();
 		
 		
-		System.out.println();
-		System.out.println("Tabla mutari lung");
-		tabla = mutNE((byte)4,(byte)4,full_board,diagNE[28]);
-	//	tabla |= mutNW((byte)4,(byte)4,full_board);
-	//	tabla |= mutSE((byte)4,(byte)4,full_board);
-	//	tabla |= mutSW((byte)4,(byte)4,full_board);
-									printMask(diagNE[28]);			System.out.println();
-									printMask(tabla);			System.out.println();
+	//	System.out.println();
+	//	System.out.println("Tabla mutari lung");
+		for(int i=0;i<rep;i++){
+			tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
+			tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
+			tabla |= mutareNegativa((byte)4,(byte)4,full_board,diagSE[28]);
+			tabla |= mutareNegativa((byte)4,(byte)4,full_board,diagSW[28]);
+	//								printMask(diagNE[28]);			System.out.println();
+	//								printMask(tabla);			System.out.println();
+	//
+		}
+		secund = System.nanoTime();
+		//	timpul de executie in nanosecunde
+		System.out.println(""+prim+" "+secund+" "+(secund-prim));
+	
+	
+											//	SFARSIT analiza METODA 3
+	
+	
+	
 	}
 	
 }
