@@ -1,12 +1,12 @@
 /*	Sugerez ca fisierul sa fie folosit ca fisier de test al performantelor pentru
- *	generarea mutarilor posibile. Deocamdata sunt implementate 2 metode de
- *	generare a mastii de pozitii, ambele constand in constructia progresiva a
- *  mastii prin calcul dinamic pe biti si repectiv prin folosirea a 64 de masti
- *	create static.
+ *	generarea mutarilor posibile. Suntt implementate 3 metode de generare a mastii 
+ *	de pozitii, primele 2 ambele constand in constructia progresiva a mastii prin 
+ *	calcul dinamic pe biti si repectiv prin folosirea a 64 de masti create static,
+ *	iar cea de-a treia foloseste masti de mutari pe table libere si construieste
+ *	dinamic masca de mutari prin raportare la masca de pozitii ocupate(eu o sa-i
+ *	spun metoda Vali, fiindca ele a propus-o).
  *	
- *	Versiunea 1.1
- *	Pentru calculul tabelei prin metoda dinamica procesul de creare a mastii de
- *	mutari se opreste daca se gaseste o alta piesa pe directia curenta de creare
+ *	Versiunea 1.2
  */
 
 import java.util.Random;
@@ -16,9 +16,38 @@ class speed_test{
 
 	static byte diag[][][] = new byte[64][4][8];
 	
+	static long diagNE[] = new long[64];
+	static long diagNW[] = new long[64];
+	static long diagSE[] = new long[64];
+	static long diagSW[] = new long[64];
 	
 	
 	
+	
+	
+	
+	public static void printMask(long tabla){
+		//	Metoda de afisare a unei masti de biti
+		
+		long maska;
+		for(int i=8;i>=1;i--){
+			maska = 128L << 8*(i-1);
+			
+			for(int j=1;j<=8;j++){
+				if((maska & tabla)!=0)
+					System.out.print("1 ");
+				else
+					System.out.print("0 ");
+			maska = maska >>1;
+			}
+			
+			System.out.println();
+		}
+	}
+	
+		//	........................................................................................
+	
+								//	Functii ce tin de implementarea 1
 	
 	static long calc_board(byte i, byte j,long full_board){	// e declarata static pentru ca am apelat-o din main
 		long start = 128L;
@@ -84,6 +113,12 @@ class speed_test{
 		return sup;
 	}
 	
+
+	//	........................................................................................
+	
+								//	Functii ce tin de implementarea 2
+	
+	
 	static long weird_call(byte lin, byte col){
 		/*	
 		 *	Metoda ineficienta asupra careia nu voi mai reveni dupa versiunea 1.2
@@ -108,28 +143,7 @@ class speed_test{
 		 
 	}
 	
-	
-	
-	public static void printMask(long tabla){
-		//	Metoda de afisare a unei masti de biti
-		
-		long maska;
-		for(int i=8;i>=1;i--){
-			maska = 128L << 8*(i-1);
-			
-			for(int j=1;j<=8;j++){
-				if((maska & tabla)!=0)
-					System.out.print("1 ");
-				else
-					System.out.print("0 ");
-			maska = maska >>1;
-			}
-			
-			System.out.println();
-		}
-	}
-	
-	public void createStatic(){
+	public static void createStatic(){
 		/*
 		 *	Face parte dintr-o abordarea ineficienta asupra careia nu voi mai reveni
 		 *	incepand cu versiunea 1.2
@@ -233,6 +247,97 @@ class speed_test{
 		diag[28][3][3] = (byte)1;
 	}
 	
+	//	........................................................................................
+	
+								//	Functii ce tin de implementarea 3
+	
+	/*	Functii de tin de cea de-a treia implementare.
+	 *
+	 *	Primele 4 genereaza mastile de deplasare pentru o tabla libera,
+	 *	pentru un nebun. In implementare nu vom folosi asemenea functii
+	 *	decat o data, sau nici macar o data; probabil vom folosi o
+	 *	insiruire de masti gen depNW[0] = cod0; depNW[1] = cod1;...
+	 *	
+	 *	Urmatoarele 4 sunt cele care calculeaza mutarile pe o tabla ce
+	 *	contine si alte piese.
+	 */
+	 
+	 
+	static long genNW(byte i, byte j){
+		long shift = 128L >> (j-1) << 8*(i-1);
+		long sup = 0L;
+		
+		while(i<8 && j>1){
+			shift = shift << 9;
+			sup = sup + shift;
+			i++;j--;
+		}
+		return sup;		
+	}
+	
+	
+	
+	static long genNE(byte i, byte j){
+		long shift = 128L >> (j-1) << 8*(i-1);
+		long sup = 0L;
+		
+		while(i<8 && j<8){
+			shift = shift << 7;
+			sup = sup + shift;
+			i++;j++;
+		}
+		return sup;	
+	}
+	
+	static long genSW(byte i, byte j){
+		long shift = 128L >> (j-1) << 8*(i-1);
+		long sup = 0L;
+		
+		while(i>1 && j>1){
+			shift = shift >>7;
+			sup = sup + shift;
+			i--;j--;
+		}
+		return sup;		
+	}
+	
+	static long genSE(byte i, byte j){
+		long shift = 128L >> (j-1) << 8*(i-1);
+		long sup = 0L;
+		
+		while(i>1 && j<8){
+			shift = shift >> 9;
+			sup = sup + shift;
+			i--;j++;
+		}
+		return sup;		
+	}
+	
+	/*	
+	 *	mutNE si mutNW sunt mutari pozitive cu rezultat dupa formula o^(o-2r)
+	 *	unde o - occupancy este dat de full_board si r - masca de mutari
+	 */
+	
+	static long mutNE(byte i,byte j,long full_board,long mv){
+		long piece = 128L >> (j-1) << 8*(i-1);
+		
+	
+		
+		long pb = full_board & mv;
+		long dif = pb - piece;
+		long flip = dif ^ full_board;
+		printMask( flip & mv);
+		System.out.println();
+		
+		return flip & mv;
+		//return full_board ^ (full_board -piece -piece);	// asta nu prea merge
+		//return (full_board - piece) ^ (full_board | piece);
+	}
+	
+	//	........................................................................................
+	
+													//	MAIN
+	
 	public static void main(String arg[]){
 		Random ran = new Random();		
 		long prim,secund,maska;
@@ -241,7 +346,7 @@ class speed_test{
 		long full_board = ran.nextLong();	
 		long tabla = 0L;
 		
-		printMask(full_board);
+	//	printMask(full_board);
 		
 		int rep = 400000;		//	numarul de repetitii al calculului mastii de mutari
 		
@@ -252,10 +357,14 @@ class speed_test{
 			 */
 			 
 			 
-					int linie = ran.nextInt(8)+1;
-					int col = ran.nextInt(8)+1;
-					long pozitie = 128L >> (linie-1) << 8*(col-1);
-					full_board = full_board & ~pozitie;
+					int linie = 4;//ran.nextInt(8)+1;
+					int col = 4;//ran.nextInt(8)+1;
+					long pozitie = 128L >> (col-1) << 8*(linie-1);
+					full_board = full_board | pozitie;
+		
+		
+		System.out.println("Tabla inintial");
+		printMask(full_board);
 		
 		// ..................................................................................
 			
@@ -265,9 +374,9 @@ class speed_test{
 			
 		for(int i=0;i<rep;i++)
 			//	pentru pozitia D4
-			//	tabla = calc_board((byte)4,(byte)4,0L);
+				tabla = calc_board((byte)4,(byte)4,0L);
 			//	pentru o pozitie oarecare
-				tabla = calc_board((byte)linie,(byte)col,full_board);
+			//	tabla = calc_board((byte)linie,(byte)col,full_board);
 
 		
 		//		printMask(tabla);
@@ -303,6 +412,36 @@ class speed_test{
 		System.out.println(""+prim+" "+secund+" "+(secund-prim));
 
 										//	SFARSIT analiza METODA 2
+										
+		// .....................................................................................
+		
+										//	START analiza METODA 3
+		
+		prim = System.nanoTime();
+		
+		diagNE[28] = genNE((byte)4,(byte)4);
+		diagNW[28] = genNW((byte)4,(byte)4);
+		diagSE[28] = genSE((byte)4,(byte)4);
+		diagSW[28] = genSW((byte)4,(byte)4);
+		
+	//	printMask(diagNW[28]);
+								//	System.out.println();
+	//	printMask(diagNE[28]);
+								//	System.out.println();
+	//	printMask(diagSW[28]);
+								//	System.out.println();
+	//	printMask(diagSE[28]);
+								//	System.out.println();
+		
+		
+		System.out.println();
+		System.out.println("Tabla mutari lung");
+		tabla = mutNE((byte)4,(byte)4,full_board,diagNE[28]);
+	//	tabla |= mutNW((byte)4,(byte)4,full_board);
+	//	tabla |= mutSE((byte)4,(byte)4,full_board);
+	//	tabla |= mutSW((byte)4,(byte)4,full_board);
+									printMask(diagNE[28]);			System.out.println();
+									printMask(tabla);			System.out.println();
 	}
 	
 }
