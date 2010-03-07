@@ -84,9 +84,7 @@ public class Game {
     		//boolean ok = verificareMutare(board,mutare);
     		//board = newBoard(board,mutare);
     		Move m = new Move(mutare);
-    		
-    			brd.movePiece(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()));
-			
+    		brd.movePiece(m.getP11(), m.getP12(), m.getP21(), m.getP22(), brd.getPieceType(m.getP11(), m.getP12()));
     		side = (side + 1)%2;
     		return "";
     		
