@@ -1,53 +1,30 @@
 
 // Generic data type
+
 public class Move {
-	private static String table=" abcdefgh";
-	private String strMove="";
-	private int p11, p12, p21, p22;
+	private static char table[]={'a','b','c','d','e','f','g','h'};
 	private int pos1,pos2;
 	
 	Move(int i, int j, int i2, int j2){
-		this.p11=i;
-		this.p12=j;
-		this.p21=i2;
-		this.p22=j2;
-		this.strMove=table.charAt(j)+i+table.charAt(j2)+i2+"";
-		this.pos1=(i-1)*8+j;
-		this.pos2=(i2-1)*8+j;
+		pos1=i*8+j;
+		pos2=i2*8+j;
 	}
+	
 	Move(String move){
-		this.strMove=move;
-		this.p11=move.charAt(1)-'0';
-		this.p21=move.charAt(3)-'0';
-		this.p12=move.toLowerCase().charAt(0)-'a'+1;
-		this.p22=move.toLowerCase().charAt(2)-'a'+1;
-		this.pos1=(this.p11-1)*8+this.p12;
-		this.pos2=(this.p21-1)*8+this.p22;
+		/* a2a4 */
+		move=move.toLowerCase();
+		//pos1=((move.charAt(1)-'1') << 3) + move.charAt(0)-'a'; //?
+		pos1=(move.charAt(1)-'1')*8+move.charAt(0)-'a';
+		pos2=(move.charAt(3)-'1')*8+move.charAt(2)-'a';
 	}
+	
 	Move(int ps1, int ps2){
 		this.pos1=ps1;
-		this.pos2=ps2;
-		int i=ps1/8;
-		int j=ps1%8;
-		if (j==0)
-			j=8;
-		else 
-			i++;
-		this.p11=i;
-		this.p12=j;
-		int i2=ps2/8;
-		int j2=ps2%8;
-		if (j2==0)
-			j2=8;
-		else 
-			i2++;
-		this.p21=i2;
-		this.p22=j2;
-		this.strMove=table.charAt(j)+i+table.charAt(j2)+i2+"";
+		this.pos2=ps2;	
 	}
 	
 	public String strMove() {
-		return this.strMove;
+		return ""+table[pos1%8]+pos1/8+table[pos2%8]+pos2/8;
 	}
 	
 	public int getPos1(){
@@ -58,23 +35,7 @@ public class Move {
 		return this.pos2;
 	}
 	
-	public int getP11(){
-		return this.p11;
-	}
-	
-	public int getP12(){
-		return this.p12;
-	}
-	
-	public int getP21(){
-		return this.p21;
-	}
-	
-	public int getP22(){
-		return this.p22;
-	}
-	
-	
+		
 	// Static methods :)
 	public static String strMove(int i, int j, int i2, int j2){
 		return (new Move(i,j,i2,j2)).strMove();
@@ -92,4 +53,7 @@ public class Move {
 		return (new Move(move)).getPos2();
 	}
 	
+	public static void main(String args[]){
+		System.out.print(strMove(0,8));
+	}
 }
