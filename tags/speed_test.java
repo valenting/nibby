@@ -35,10 +35,27 @@ class speed_test{
 		//	Metoda de afisare a unei masti de biti
 		
 		long maska;
-		for(int i=8;i>=1;i--){
+		int i,j;
+		maska = 128L << 8*7;
+		if((maska & tabla)!=0)
+					System.out.print("1 ");
+				else
+					System.out.print("0 ");
+		maska = 128L >> 1 << 8*7;
+		for( j=1;j<=7;j++){
+				if((maska & tabla)!=0)
+					System.out.print("1 ");
+				else
+					System.out.print("0 ");
+			maska = maska >>1;
+			}
+			
+			System.out.println();
+		
+		for( i=7;i>=1;i--){
 			maska = 128L << 8*(i-1);
 			
-			for(int j=1;j<=8;j++){
+			for( j=1;j<=8;j++){
 				if((maska & tabla)!=0)
 					System.out.print("1 ");
 				else
@@ -273,10 +290,16 @@ class speed_test{
 		long sup = 0L;
 		
 		while(i<8 && j>1){
-			shift = shift << 9;
+			shift = shift << 7<<2;
 			sup = sup + shift;
 			i++;j--;
+		
+	//	printMask(sup);
+	//								System.out.println("la i="+ i+" j="+j);
+		
 		}
+		
+		
 		return sup;		
 	}
 	
@@ -335,7 +358,35 @@ class speed_test{
 		
 		return flip & mv;
 	}
-	
+
+	static long mutareNegativa_fast(byte i,byte j,long full_board,long mv){
+		/*
+		 *	slider e pozitia nebunului
+		 *	linemask - longul de atac
+		 *
+		 *	forward  = occ & lineMask; // also performs the first subtraction by clearing the s in o
+   			reverse  = byteswap( forward ); // o'-s'
+   			forward -=         ( slider  ); // o -2s
+   			reverse -= byteswap( slider  ); // o'-2s'
+   			forward ^= byteswap( reverse );
+   			return forward & lineMask;      // mask the line again
+		*/
+				
+		long piece = 128L >> (j-1) << 8*(i-1) ;
+		long fb = Long.reverse(full_board);
+		
+		long pb = fb & mv;
+		pb -= piece;
+		long flip = pb ^ fb;
+		
+										//Inca nu am incredere in metoda asta, asa ca ramane
+										//afisajul
+		
+										//	printMask( fw );
+										//	System.out.println();
+		
+		return Long.reverse(flip & mv);
+	}
 	static long mutareNegativa(byte i,byte j,long full_board,long mv){
 		/*
 		 *	slider e pozitia nebunului
@@ -448,15 +499,31 @@ class speed_test{
 		
 		prim = System.nanoTime();
 		
+		/*
+		 *	0 1 1 1 1 1 1 1 
+			0 0 1 0 0 0 0 0 
+			0 0 0 1 0 0 0 0 
+			0 0 0 0 0 0 0 0 
+			0 0 0 0 0 0 0 0 
+			0 0 0 0 0 0 0 0 
+			0 0 0 0 0 0 0 0 
+			0 0 0 0 0 0 0 0 
+		 */
+		
+		
 		diagNE[28] = genNE((byte)4,(byte)4);
+		diagNE[35] = genNE((byte)5,(byte)5);
 		diagNW[28] = genNW((byte)4,(byte)4);
+		diagNW[35] = 0x4020100000000000L;
 		diagSE[28] = genSE((byte)4,(byte)4);
 		diagSW[28] = genSW((byte)4,(byte)4);
 		
-	//	printMask(diagNW[28]);
-								//	System.out.println();
-	//	printMask(diagNE[28]);
-								//	System.out.println();
+	//	System.out.println("Acum afisez");
+		
+	//	printMask(diagNW[35]);
+	//								System.out.println();
+	//	printMask(diagNE[35]);
+	//								System.out.println();
 	//	printMask(diagSW[28]);
 								//	System.out.println();
 	//	printMask(diagSE[28]);
@@ -468,21 +535,35 @@ class speed_test{
 		for(int i=0;i<rep;i++){
 			tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
 			tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
-			tabla |= mutareNegativa((byte)4,(byte)4,full_board,diagSE[28]);
-			tabla |= mutareNegativa((byte)4,(byte)4,full_board,diagSW[28]);
-	//								printMask(diagNE[28]);			System.out.println();
+			tabla |= mutareNegativa_fast((byte)4,(byte)4,full_board,diagNE[35]);
+			tabla |= mutareNegativa_fast((byte)4,(byte)4,full_board,diagNW[35]);
+		}
+									
 	//								printMask(tabla);			System.out.println();
 	//
-		}
+		
 		secund = System.nanoTime();
 		//	timpul de executie in nanosecunde
 		System.out.println(""+prim+" "+secund+" "+(secund-prim));
 	
-	
+	printMask(tabla);			System.out.println();
 											//	SFARSIT analiza METODA 3
 	
 	
 	
+	
+	prim = System.nanoTime();
+	
+	tabla = 0L;
+	for(int i=0;i<rep;i++){
+			tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
+			tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
+			tabla |= mutareNegativa((byte)4,(byte)4,full_board,diagNE[28]);
+			tabla |= mutareNegativa((byte)4,(byte)4,full_board,diagNW[28]);
+		}
+	
+	secund = System.nanoTime();
+	System.out.println(""+prim+" "+secund+" "+(secund-prim));
 	}
 	
 }
