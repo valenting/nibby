@@ -1,4 +1,11 @@
-/*	Sugerez ca fisierul sa fie folosit ca fisier de test al performantelor pentru
+/*	
+ *	Versiunea 1.5 9.3.2010 ora
+ *	Probabil versiunea de test finala pentru ca nu mai am idei; din punctul meu de
+ *	vedere favorita ramane varianta 2.2 ce foloseste metoda less_weird_call), urmata 
+ *	de varianta 3.3 care foloseste mutarePozitiva, ca totate variantele 3.x, si in 
+ *	mod deosebit metoda mutareNegativa_proprie.
+ *
+ *	Sugerez ca fisierul sa fie folosit ca fisier de test al performantelor pentru
  *	generarea mutarilor posibile. Suntt implementate 3 metode de generare a mastii 
  *	de pozitii, primele 2 ambele constand in constructia progresiva a mastii prin 
  *	calcul dinamic pe biti si repectiv prin folosirea a 64 de masti create static,
@@ -6,22 +13,22 @@
  *	dinamic masca de mutari prin raportare la masca de pozitii ocupate(eu o sa-i
  *	spun metoda Vali, fiindca ele a propus-o).
  *	
- *	Versiunea 1.4
- *	De la vechea versiune am mai incercat 2 tipuri de parcurgeri negative, una dupa
- *	o alta formula, iar cealalta dupa o formula pe care am dedus-o(si care sper ca e
- *	buna).
- *	
- *	De asemenea, in adevarat sirit politic, mi-am incalcat promisiunea de a nu reveni
- *	asupra metodei 2 si am mai implementat o forma care este ceva mai rapida decat
- *	prima varianta a metodei 2.
+ *	Am modificat un break care functiona ciudat in ciclurile for si am scris in loc
+ *	un ciclu while la "less_weird_call", varianta care este momentan cea mai rapida.
  *
- *	VA ROG NU INTERVENITI IN FISIERUL ASTA, desi ar fi normal sa faceti asta! Nu vreau
- *	sa renunt inca la varianta 4, mai ales dupa timpii obtinuti pentru cazurile directe
+ *	SUCCES la facut TESTE!
+ *	
+ *	WARNING!
+ *	Apropo, chestiile astea de aici folosesc codificarea MightyVali(adica ai initiala
+ *	in care numaram incepand cu a8 deci nu puteti muta direct in alte clase)!!!!!!!
  */
 
 import java.util.Random;
 
 class speed_test{
+	static long prim,secund,maska;
+	final static int rep = 400000;		//	numarul de repetitii al calculului mastii de mutari
+	
 	static long[] mask = new long[64];
 
 	static byte diag[][][] = new byte[64][4][8];
@@ -47,6 +54,9 @@ class speed_test{
 		
 		long maska;
 		int i,j;
+		
+		System.out.println();
+		
 		maska = 128L << 8*7;
 		if((maska & tabla)!=0)
 					System.out.print("1 ");
@@ -75,12 +85,36 @@ class speed_test{
 			}
 			
 			System.out.println();
+			
 		}
+		System.out.println();
 	}
 	
 		//	........................................................................................
 	
 								//	Functii ce tin de implementarea 1
+	
+	public static void varianta1_1(){
+		
+		prim = System.nanoTime();
+		long tabla;
+		
+			
+		for(int i=0;i<rep;i++)
+			//	pentru pozitia D4
+				tabla = calc_board((byte)4,(byte)4,0L);
+			//	pentru o pozitie oarecare
+			//	tabla = calc_board((byte)linie,(byte)col,full_board);
+
+		
+		//		printMask(tabla);
+		
+		secund = System.nanoTime();
+		
+		//	timpul de executie in nanosecunde
+		System.out.println("Prima metoda:\n"+prim+" "+secund+" "+(secund-prim));
+	}
+	
 	
 	static long calc_board(byte i, byte j,long full_board){	// e declarata static pentru ca am apelat-o din main
 		long start = 128L;
@@ -151,6 +185,28 @@ class speed_test{
 	
 								//	Functii ce tin de implementarea 2
 	
+	public static void varianta2_1(){
+		
+		long tabla;
+		//	Se incepe cronometrarea executie metodei statice
+		//	Apropo, chestia asta pica din start, pentru ca dupa cum veti vedea
+		//	este mai lenta
+		
+		prim = System.nanoTime();
+					
+		createStatic();
+			
+		for(int i=0;i<rep;i++)
+			tabla = weird_call((byte)4,(byte)4);
+	
+	
+		//		printMask(tabla);
+	
+		
+		secund = System.nanoTime();
+		//	timpul de executie in nanosecunde
+		System.out.println("Metoda 2(ce foloseste weird_call):\n"+prim+" "+secund+" "+(secund-prim));
+	}
 	
 	static long weird_call(byte lin, byte col){
 		/*	
@@ -163,6 +219,7 @@ class speed_test{
 		 *	nu e foarta eficienta metoda).
 		 */
 		
+	
 		byte poz = (byte)(8*lin - col);
 		long maska = 0L;
 		
@@ -174,6 +231,85 @@ class speed_test{
 		
 		return maska;
 		 
+	}
+	
+	public static void varianta2_2(long full_board){
+		
+		/*	Varianta foloseste o metoda de memorare a mastilor progresive mai eficienta
+		 *	limitandu-se la a folosi un tablou bidimensional, nu unul unidimensional ca
+		 *	anterior; acesta poate fi interpretat astfel: pentru fiecare din cele 4 
+		 *	orientari(NW, NE, SW, SE) asociem cate un tablou care pe fiecare din cele 64
+		 *	de linii are o structura de forma: numarul de pozitii ce pot fi ocupate pe
+		 *	directia respectiva, urmat de indicii casutelor in ordinea.
+		 */ 
+		
+		long tabla = 0L;
+		prim = System.nanoTime();
+		
+		for(int i=0;i<rep;i++)
+			tabla = less_weird_call((byte)4,(byte)4,full_board);
+		secund = System.nanoTime();
+		System.out.println("Ceva mai eficient bazat pe metoda2(less_weird_call):\n"+prim+" "+secund+" "+(secund-prim));
+		
+		
+			printMask(tabla);
+	}
+	
+	static long less_weird_call(byte lin, byte col,long tabla){
+		/*	
+		 *	Metoda care construieste masca de pozitii pentru cele 4 directii inacelasi
+		 *	timp, folosindu-se de 4 vectori ce retin progresiv mastile casutelor in care
+		 *	poate muta piesa de la linia i coloana j
+		 *
+		 */
+		
+		byte poz = (byte)(8*lin - col);
+		long maska = 0L,temp;
+		byte j;
+		
+		j=1;
+		while(j<=NW[poz][0]){	//ciclul se executa doar pentru atatea pozitii cate sunt disponibile
+				maska = maska + mask[NW[poz][j]];	//	prima pozitie se aduaga neaparat
+				//printMask(mask[NW[poz][j]] & tabla);
+				if((mask[NW[poz][j]] & tabla)==0L)	//se verifica o eventuala coliziune cu alta piesa
+					j++;	// daca nu exista alta piesa se continua cu urmatoarea pozitie memorata
+				else
+					break;	//	daca s-a detectat intersectie cu alta piesa stop ciclu
+		}
+		
+					// si analog...
+		
+		j=1;
+		while(j<=NE[poz][0]){
+				maska = maska + mask[NE[poz][j]];
+				//printMask(mask[NE[poz][j]] & tabla);
+				if((mask[NE[poz][j]] & tabla)==0L)
+					j++;
+				else
+					break;
+		}
+		
+		j=1;
+		while(j<=SW[poz][0]){
+				maska = maska + mask[SW[poz][j]];
+				//printMask(mask[SW[poz][j]] & tabla);
+				if((mask[SW[poz][j]] & tabla)==0L)
+					j++;
+				else
+					break;
+		}
+		
+		j=1;
+		while(j<=SE[poz][0]){
+				maska = maska + mask[SE[poz][j]];
+			//	printMask(mask[SE[poz][j]] & tabla);
+				if((mask[SE[poz][j]] & tabla)==0L)
+					j++;
+				else
+					break;
+		}
+		 
+		 return maska;
 	}
 	
 	public static void createStatic(){
@@ -303,35 +439,41 @@ class speed_test{
 		SE[28][1] = (byte)19;
 		SE[28][2] = (byte)10;
 		SE[28][3] = (byte)1;
+		
+		
+		
+		//	NW
+		NW[56][0] = 0;
+		
+		//	SW
+		SW[56][0] = 7;
+		SW[56][1] = (byte)49;
+		SW[56][2] = (byte)42;
+		SW[56][3] = (byte)35;
+		SW[56][4] = (byte)28;
+		SW[56][5] = (byte)21;
+		SW[56][6] = (byte)14;
+		SW[56][7] = (byte)7;
+		
+		//	NE
+		NE[56][0] = 0;
+
+		//	SE
+		SE[56][0] = 0;
+		
+		//Le-am adunat pe toate aici ca sa pot sa le creez dintr-un singur apel
+		diagNE[28] = genNE((byte)4,(byte)4);
+		diagNE[56] = genNE((byte)8,(byte)8);
+		diagNW[28] = genNW((byte)4,(byte)4);
+		diagNW[56] = genNW((byte)8,(byte)8);
+		diagSE[28] = genSE((byte)4,(byte)4);
+		diagSW[28] = genSW((byte)4,(byte)4);
+		diagSE[56] = genSE((byte)8,(byte)8);
+		diagSW[56] = genSW((byte)8,(byte)8);
 	}
 	
 	
-	static long less_weird_call(byte lin, byte col,long tabla){//o varianta mai usoara a precedentei
-		/*	
-		 */
-		
-		byte poz = (byte)(8*lin - col);
-		long maska = 0L,temp;
-		
-		for(byte j=1;j<=NW[poz][0];j++)
-				if((mask[NW[poz][j]] & tabla)==0)
-					maska = maska + mask[NW[poz][j]];
-				else break;	
-		for(byte j=1;j<=NE[poz][0];j++)
-				if((mask[NE[poz][j]] & tabla)==0)
-					maska = maska + mask[NE[poz][j]];
-				else break;	
-		for(byte j=1;j<=SW[poz][0];j++)
-				if((mask[SW[poz][j]] & tabla)==0)
-					maska = maska + mask[SW[poz][j]];
-				else break;		
-		for(byte j=1;j<=SE[poz][0];j++)
-				if((mask[SE[poz][j]] & tabla)==0)
-					maska = maska + mask[SE[poz][j]];
-				else break;		
-		return maska;
-		 
-	}
+	
 	
 	//	........................................................................................
 	
@@ -422,7 +564,37 @@ class speed_test{
 	
 	
 	static long mutareNegativa_proprie(byte i,byte j,long full_board,long mv){
-		
+		/*
+		 * Voi explica cel mai bine pe un exemplu:
+		 *		pozitie					mv				full_board & mv 
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0	
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 * 	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *	0 0 0 1 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			0 0 1 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			0 1 0 0 0 0 0 0		0 1 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			1 0 0 0 0 0 0 0		1 0 0 0 0 0 0 0
+		 *
+		 *	pozitia piesei			mutari negative		intersectia mutarilor cu tabla
+		 *
+		 *	Cu Long.highestOneBit aplicat pe ultima tabla, obtin:
+		 * Long.highestOneBit		pozitie-Long.hob	tabla de mutari
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0	
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 * 	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 1 1 1 1		0 0 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			1 1 1 1 1 1 1 1		0 0 1 0 0 0 0 0
+		 *	0 1 0 0 0 0 0 0			1 1 0 0 0 0 0 0		0 1 0 0 0 0 0 0
+		 *	0 0 0 0 0 0 0 0			0 0 0 0 0 0 0 0		0 0 0 0 0 0 0 0
+		 *
+		 *	tabla de mutari se obtin facans si intre rezultatul scaderii pozitie - Long.hob
+		 *	si facnd si logic cu masca de mutari maximale
+		 *
+		 *	Observatie: daca intersectia dintre: mv si full_board este 0 se intoarce
+		 *	pur si simplu masca de mutari maximale.
+		 */		
 													//	System.out.println("Incep analiza");
 			
 		long piece = 128L >> (j-1) << 8*(i-1);		//	printMask(piece);System.out.println();
@@ -439,17 +611,14 @@ class speed_test{
 	
 	static long mutareNegativa_fast(byte i,byte j,long full_board,long mv){
 		/*
-		 *	slider e pozitia nebunului
-		 *	linemask - longul de atac
+		 *	Metoda pe care am incercat sa o imbunatatesc pe baza mutarilor pozitive
+		 *	reducand operatiile de inversare si folosind masti de mutari pozitive
+		 *	in loc sa inversez niste masti de mutari negative, ceea ce ar aduce si
+		 *	o scadere a numarului de masti ce trebuie sa fie memorate.
 		 *
-		 *	forward  = occ & lineMask; // also performs the first subtraction by clearing the s in o
-   			reverse  = byteswap( forward ); // o'-s'
-   			forward -=         ( slider  ); // o -2s
-   			reverse -= byteswap( slider  ); // o'-2s'
-   			forward ^= byteswap( reverse );
-   			return forward & lineMask;      // mask the line again
-		*/
-				
+		 */
+		
+		
 		long piece = 128L >> (j-1) << 8*(i-1) ;
 		long fb = Long.reverse(full_board);
 		
@@ -465,8 +634,11 @@ class speed_test{
 		
 		return Long.reverse(flip & mv);
 	}
+	
 	static long mutareNegativa(byte i,byte j,long full_board,long mv){
 		/*
+		 *	Metoda preluata cu nesimtire de pe site
+		 *	
 		 *	slider e pozitia nebunului
 		 *	linemask - longul de atac
 		 *
@@ -484,169 +656,33 @@ class speed_test{
 		fw -= piece ;
 		rev -= Long.reverse(piece);
 		fw ^= Long.reverse(rev);
-										//Inca nu am incredere in metoda asta, asa ca ramane
-										//afisajul
-		
-										//	printMask( fw );
-										//	System.out.println();
 		
 		return fw & mv;
 	}
-	//	........................................................................................
 	
-													//	MAIN
-	
-	public static void main(String arg[]){
-		Random ran = new Random();		
-		long prim,secund,maska;
+	public static void varianta3_1(long full_board){
 		
-		//	o tabla generata random, eventual cu prea multe/putine piese
-		long full_board = ran.nextLong();	
-		long tabla = 0L;
-		
-	//	printMask(full_board);
-		
-		final int rep = 4000000;		//	numarul de repetitii al calculului mastii de mutari
-		
-		
-			/*
-			 *	Calculez separat pozitia random ca sa nu afecteze timpul de executie a
-			 *	secventei de calcul
-			 */
-			 
-			 
-					int linie = 4;//ran.nextInt(8)+1;
-					int col = 4;//ran.nextInt(8)+1;
-					long pozitie = 128L >> (col-1) << 8*(linie-1);
-					full_board = full_board | pozitie;
-		
-		
-		System.out.println("Tabla inintial");
-		printMask(full_board);
-		
-		// ..................................................................................
-			
-										//	START analiza METODA 1
+		long tabla;
 		
 		prim = System.nanoTime();
-			
-		for(int i=0;i<rep;i++)
-			//	pentru pozitia D4
-				tabla = calc_board((byte)4,(byte)4,0L);
-			//	pentru o pozitie oarecare
-			//	tabla = calc_board((byte)linie,(byte)col,full_board);
-
-		
-		//		printMask(tabla);
-		
-		secund = System.nanoTime();
-		
-		//	timpul de executie in nanosecunde
-		System.out.println("Prima metoda:\n"+prim+" "+secund+" "+(secund-prim));
-		
-										//	SFARSIT analiza METODA 1
-		
-		// .....................................................................................
-		
-										//	START analiza METODA 2.1 - clasica
-		
-		//	Se incepe cronometrarea executie metodei statice
-		//	Apropo, chestia asta pica din start, pentru ca dupa cum veti vedea
-		//	este mai lenta
-		
-		prim = System.nanoTime();
-					
-		createStatic();
-			
-		for(int i=0;i<rep;i++)
-			tabla = weird_call((byte)4,(byte)4);
-	
-	
-		//		printMask(tabla);
-	
-		
-		secund = System.nanoTime();
-		//	timpul de executie in nanosecunde
-		System.out.println("Metoda 2(ce foloseste weird_call):\n"+prim+" "+secund+" "+(secund-prim));
-	
-										//	SFARSIT analiza METODA 2.1	
-	
-	// .....................................................................................
-		
-										//	START analiza METODA 2.2	
-		
-		/*	Metoda foloseste o metoda de memorare a mastilor progresive mai eficienta
-		 *	limitandu-se la a folosi un tablou bidimensional, nu unul unidimensional ca
-		 *	anterior; acesta poate fi interpretat astfel: pentru fiecare din cele 4 
-		 *	orientari(NW, NE, SW, SE) asociem cate un tablou care pe fiecare din cele 64
-		 *	de linii are o structura de forma: numarul de pozitii ce pot fi ocupate pe
-		 *	directia respectiva, urmat de indicii casutelor in ordinea.
-		 */ 
-		
-		
-		prim = System.nanoTime();
-		
-		for(int i=0;i<rep;i++)
-			tabla = less_weird_call((byte)4,(byte)4,full_board);
-		secund = System.nanoTime();
-		System.out.println("Ceva mai eficient bazat pe metoda2(less_weird_call):\n"+prim+" "+secund+" "+(secund-prim));
-
-										//	SFARSIT analiza METODA 2.2
-										
-	// .....................................................................................
-		
-										//	START analiza METODA 3
-									
-							/*
-							 *	Cele trei submetode ale metodei difera doa prin metoda
-							 *	ce calculeaza long-ul pentru deplasari negative.
-							 *	
-							 */
-		
-		prim = System.nanoTime();
-		
-		/*
-		 *	0 1 1 1 1 1 1 1 
-			0 0 1 0 0 0 0 0 
-			0 0 0 1 0 0 0 0 
-			0 0 0 0 0 0 0 0 
-			0 0 0 0 0 0 0 0 
-			0 0 0 0 0 0 0 0 
-			0 0 0 0 0 0 0 0 
-			0 0 0 0 0 0 0 0 
-		 */
-		
-		
+				
 		diagNE[28] = genNE((byte)4,(byte)4);
-		diagNE[35] = genNE((byte)5,(byte)5);
+		diagNE[56] = genNE((byte)8,(byte)8);
 		diagNW[28] = genNW((byte)4,(byte)4);
-		diagNW[35] = 0x4020100000000000L;
+		diagNW[56] = genNW((byte)8,(byte)8);
 		diagSE[28] = genSE((byte)4,(byte)4);
 		diagSW[28] = genSW((byte)4,(byte)4);
-		
-	//	System.out.println("Acum afisez");
+		diagSE[56] = genSE((byte)8,(byte)8);
+		diagSW[56] = genSW((byte)8,(byte)8);
 		
 	//	printMask(diagNW[35]);
-	//								System.out.println();
+								//	System.out.println();
 	//	printMask(diagNE[35]);
-	//								System.out.println();
+								//	System.out.println();
 	//	printMask(diagSW[28]);
 								//	System.out.println();
 	//	printMask(diagSE[28]);
-								//	System.out.println();
-		
-		
-		
-							/*	_____________________
-							 *	|					|
-							 *	|	Submeoda	1	|
-							 *	_____________________
-							 */
-		
-		
-		
-	//	System.out.println();
-	//	System.out.println("Tabla mutari lung");
+	
 		for(int i=0;i<rep;i++){
 			tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
 			tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
@@ -655,61 +691,86 @@ class speed_test{
 		}
 									
 	//								printMask(tabla);			System.out.println();
-	//
 		
 		secund = System.nanoTime();
 		//	timpul de executie in nanosecunde
 	System.out.println("Metoda 3 clasica(mutareNegativa):\n"+prim+" "+secund+" "+(secund-prim));
-	
-	//printMask(tabla);			System.out.println();
-											
+	}
 	
 	
-							/*	_____________________
-							 *	|					|
-							 *	|	Submeoda	2	|
-							 *	_____________________
-							 */
 	
-	prim = System.nanoTime();
+	public static void varianta3_2(long full_board){
+		
+		long tabla;
+		
+		prim = System.nanoTime();
 	
-	tabla = 0L;
-	for(int i=0;i<rep;i++){
-			tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
-			tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
-			tabla |= mutareNegativa_fast((byte)4,(byte)4,full_board,diagNE[35]);
-			tabla |= mutareNegativa_fast((byte)4,(byte)4,full_board,diagNW[35]);
+		tabla = 0L;
+		for(int i=0;i<rep;i++){
+				tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
+				tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
+				tabla |= mutareNegativa_fast((byte)4,(byte)4,full_board,diagNE[35]);
+				tabla |= mutareNegativa_fast((byte)4,(byte)4,full_board,diagNW[35]);
+	
+			}
+		
+		secund = System.nanoTime();
+		System.out.println("Metoda 3 imbunatatita(mutareNegativa_fast):\n"+prim+" "+secund+" "+(secund-prim));
+	}
+	
+	public static void varianta3_3(long full_board){
+		
+		long tabla;
+		
+		prim = System.nanoTime();
+	
+		tabla = 0L;
+		for(int i=0;i<rep;i++){
+				tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
+				tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
+				tabla |= mutareNegativa_proprie((byte)4,(byte)4,full_board,diagSE[28]);
+				tabla |= mutareNegativa_proprie((byte)4,(byte)4,full_board,diagSW[28]);
+			}
+		
+		secund = System.nanoTime();
+		System.out.println("Metoda 3 dezvoltata de mine(mutareNegativa_proprie):\n"+prim+" "+secund+" "+(secund-prim));	
+		
+		printMask(tabla);			System.out.println();
+	}
 
-		}
+	//	........................................................................................
 	
-	secund = System.nanoTime();
-	System.out.println("Metoda 3 imbunatatita(mutareNegativa_fast):\n"+prim+" "+secund+" "+(secund-prim));
+													//	MAIN
 	
-							/*	_____________________
-							 *	|					|
-							 *	|	Submeoda	3	|
-							 *	_____________________
-							 */
-
-	prim = System.nanoTime();
-	
-	tabla = 0L;
-	for(int i=0;i<rep;i++){
-			tabla = mutarePozitiva((byte)4,(byte)4,full_board,diagNE[28]);
-			tabla |= mutarePozitiva((byte)4,(byte)4,full_board,diagNW[28]);
-			tabla |= mutareNegativa_proprie((byte)4,(byte)4,full_board,diagSE[28]);
-			tabla |= mutareNegativa_proprie((byte)4,(byte)4,full_board,diagSW[28]);
-		}
-	
-	secund = System.nanoTime();
-	System.out.println("Metoda 3 dezvoltata de mine(mutareNegativa_proprie):\n"+prim+" "+secund+" "+(secund-prim));	
-	
-	printMask(tabla);			System.out.println();
-	
-	
-	
-	
-									//	SFARSIT analiza METODA 3
+	public static void main(String arg[]){
+		Random ran = new Random();		
+		
+		
+		//	o tabla generata random, eventual cu prea multe/putine piese
+		long full_board = ran.nextLong();	
+		long tabla = 0L;
+		
+	//	printMask(full_board);
+		
+					int linie = 4;//ran.nextInt(8)+1;
+					int col = 4;//ran.nextInt(8)+1;
+					long pozitie = 128L >> (col-1) << 8*(linie-1);
+					full_board = full_board | pozitie;
+		
+		createStatic();
+		
+		System.out.println("Tabla inintial");
+		printMask(full_board);
+		
+		
+		
+		varianta1_1();
+		varianta2_1();
+		varianta2_2(full_board);
+		varianta3_1(full_board);
+		varianta3_2(full_board);
+		varianta3_3(full_board);
+		
 	}
 	
 }
