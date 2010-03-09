@@ -3,7 +3,9 @@
 
 public class Move {
 	private static char table[]={'a','b','c','d','e','f','g','h'};
+	
 	private int pos1,pos2;
+	
 	
 	Move(int i, int j, int i2, int j2){
 		pos1=i*8+j;
@@ -34,7 +36,6 @@ public class Move {
 	public int getPos2(){
 		return this.pos2;
 	}
-	
 		
 	// Static methods :)
 	public static String strMove(int i, int j, int i2, int j2){
@@ -53,7 +54,7 @@ public class Move {
 		return (new Move(move)).getPos2();
 	}
 	
-	public static void main(String args[]){
-		System.out.print(strMove(0,8));
+	public String toSAN() {
+		
 	}
 }
