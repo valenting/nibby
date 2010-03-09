@@ -60,6 +60,13 @@ public class MoveGenerator {
 		f.write("static long[][] Pawns={wPawns,bPawns};\n");
 		f.write("static long[][] PawnTakes={wPawnTakes,bPawnTakes};\n");
 		
+//		byte[] types={2,3,4,5,6,4,3,2,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,9,9,9,9,9,9,9,10,11,12,13,14,12,11,10};
+//		
+//		f.write("static byte[] types={"+types[0]);
+//		for (int i=1;i<64;i++)
+//			f.write(","+types[i]);
+//		f.write("};\n");
+		
 		//W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
 		//public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGR
 		

@@ -6,14 +6,17 @@ public class Usual {
 	}
 	
 	public static int position(String pos) {
+		pos=pos.toLowerCase();
 		return ( pos.charAt(1) - '1' ) << 3 | ( pos.charAt(0) - 'a' );
 	}
 	
 	public static int pos1(String move){
+		move=move.toLowerCase();
 		return ( move.charAt(1) - '1' ) << 3 | ( move.charAt(0) - 'a' );
 	}
 	
 	public static int pos2(String move){
+		move=move.toLowerCase();
 		return ( move.charAt(3) - '1' ) << 3 | ( move.charAt(2) - 'a' );
 	}
 	

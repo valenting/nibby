@@ -1,16 +1,8 @@
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-class bitGen{
-	static long genMask(String pos){
-		pos=pos.toLowerCase();
-		return 1L << ( ( pos.charAt(1) - '1' ) << 3 | ( pos.charAt(0) - 'a' ) );
-	}
-	static long genMask(int pos){
-		return 1L << pos;
-	}
-}
 
 public class Board2 {
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
@@ -21,6 +13,8 @@ public class Board2 {
 	
 	private long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
 	private long[] color = new long[2]; // white.. black
+	
+	byte types[];
 	
 	public Board2(){
 		// la Start:
@@ -37,8 +31,15 @@ public class Board2 {
 		pieces[2] = 0x8100000000000081L; // rook
 		pieces[3] = 0x4200000000000042L;   // knight
 		pieces[4] = 0x2400000000000024L;   // bishop
-		pieces[5] = Usual.boardMask("d1") | Usual.boardMask("d8");  // queen
-		pieces[6] = Usual.boardMask("e1") | Usual.boardMask("e8");  // king		
+		pieces[5] = 0x0800000000000008L;//Usual.boardMask("d1") | Usual.boardMask("d8");  // queen
+		pieces[6] = 0x1000000000000010L;//Usual.boardMask("e1") | Usual.boardMask("e8");  // king	
+		
+		types=initTypes();
+	}
+	
+	byte [] initTypes() {
+		byte[] tips={2,3,4,5,6,4,3,2,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,9,9,9,9,9,9,9,10,11,12,13,14,12,11,10};
+		return tips;
 	}
 
 	public Board getCopy(){
@@ -52,20 +53,9 @@ public class Board2 {
 
 	
 	public byte getPieceType(int pos){
-		byte type=_EMPTY;
-		long mask=bitGen.genMask(pos);
-		if ( (mask&table) == 0L )
-			return type;
-		for (byte i=1;i<=6;i++)
-			if ( (mask&pieces[i]) != 0L ) {
-				type=i;
-				if ((mask&color[1])!=0L)
-					type |= 8L;
-				return type;
-			}
-		return _EMPTY;
+		return types[pos];
 	}
-
+	
 	public void move(int pos1, int pos2, byte type){
 		long mask1 = 1L << pos1;
 		long mask2 = 1L << pos2;
@@ -80,7 +70,9 @@ public class Board2 {
 		table  = table ^ mask1 | mask2;
 		pieces[type&7] ^= mask1 | mask2;//(pieces[type&7] ^ mask1) | mask2;
 		color[type>>3] ^= mask1 | mask2;
-		
+	
+		types[pos2]=types[pos1];
+		types[pos1]=_EMPTY;
 	}
 	
 	public boolean isValidMove(int pos1,int pos2, byte type){
@@ -91,8 +83,8 @@ public class Board2 {
 	
 	public long getValidMoves(int pos1, byte type){
 		long move=Moves.all[type][pos1];
-		//System.out.println("type:"+type);
 		if (type==W_PAWN || type==B_PAWN){
+			//move = 1L << pos1;
 			move = Moves.Pawns[type>>3][pos1];
 
 			// Modify!
@@ -141,6 +133,7 @@ public class Board2 {
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		String move="";
 		
+				
 		while (true){
 			brd.printBoard();
 			try {
