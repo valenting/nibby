@@ -1,5 +1,5 @@
 /*	
- *	Versiunea 1.5 9.3.2010 ora
+ *	Versiunea 1.6 10.3.2010 ora 4:19
  *	Probabil versiunea de test finala pentru ca nu mai am idei; din punctul meu de
  *	vedere favorita ramane varianta 2.2 ce foloseste metoda less_weird_call), urmata 
  *	de varianta 3.3 care foloseste mutarePozitiva, ca totate variantele 3.x, si in 
@@ -13,8 +13,8 @@
  *	dinamic masca de mutari prin raportare la masca de pozitii ocupate(eu o sa-i
  *	spun metoda Vali, fiindca ele a propus-o).
  *	
- *	Am modificat un break care functiona ciudat in ciclurile for si am scris in loc
- *	un ciclu while la "less_weird_call", varianta care este momentan cea mai rapida.
+ *	Acum se pare ca varianta 1.2 e cea mai rapida, cea care creeaza masca prin
+ *	shifturi. Multumim lui musca pentru faptul ca a fost nemultumit de rezultate.
  *
  *	SUCCES la facut TESTE!
  *	
@@ -27,7 +27,7 @@ import java.util.Random;
 
 class speed_test{
 	static long prim,secund,maska;
-	final static int rep = 400000;		//	numarul de repetitii al calculului mastii de mutari
+	final static int rep = 4000000;		//	numarul de repetitii al calculului mastii de mutari
 	
 	static long[] mask = new long[64];
 
@@ -94,20 +94,20 @@ class speed_test{
 	
 								//	Functii ce tin de implementarea 1
 	
-	public static void varianta1_1(){
+	public static void varianta1_1(long full_board){
 		
 		prim = System.nanoTime();
-		long tabla;
+		long tabla = 0L;
 		
 			
 		for(int i=0;i<rep;i++)
 			//	pentru pozitia D4
-				tabla = calc_board((byte)4,(byte)4,0L);
+				tabla = calc_board((byte)7,(byte)8,full_board);
 			//	pentru o pozitie oarecare
 			//	tabla = calc_board((byte)linie,(byte)col,full_board);
 
 		
-		//		printMask(tabla);
+				printMask(tabla);
 		
 		secund = System.nanoTime();
 		
@@ -115,8 +115,28 @@ class speed_test{
 		System.out.println("Prima metoda:\n"+prim+" "+secund+" "+(secund-prim));
 	}
 	
+	public static void varianta1_2(long full_board){
+		
+		prim = System.nanoTime();
+		long tabla = 0L;
+		
+			
+		for(int i=0;i<rep;i++)
+			//	pentru pozitia D4
+				tabla = calc_board_prim((byte)7,(byte)8,full_board);
+			//	pentru o pozitie oarecare
+			//	tabla = calc_board((byte)linie,(byte)col,full_board);
+
+		
+				printMask(tabla);
+		
+		secund = System.nanoTime();
+		
+		//	timpul de executie in nanosecunde
+		System.out.println("Prima metoda imbunatatiata:\n"+prim+" "+secund+" "+(secund-prim));
+	}
 	
-	static long calc_board(byte i, byte j,long full_board){	// e declarata static pentru ca am apelat-o din main
+	static long calc_board(byte i, byte j,long full_board){
 		long start = 128L;
 		start = start >> (j-1) << 8*(i-1);
 		long shift;
@@ -131,16 +151,21 @@ class speed_test{
 		 *	pe care le avem pastrate in memorie, pentru ca ar fi mai util sa avem
 		 *	o masca a pieselor albe si una a pieselor negre, fiindca folosim mai des
 		 *	mascaAlba/mascaNeagra decat mascaTotala.
+		 *
+		 *	Apropo >>> este logic shift si nu trebuie sa ne mai facem griji pentru
+		 *	patratul cu masca de long de valoare maxima.
+		 *
 		 */
 		
 		//	Se completeaza masca pentru mutari diagonale inspre h8(coltul dreapta sus)						
-		pozi = i;pozj = j;
+		pozi = i;pozj = j;		
 		shift = start;
 		while(pozi<8 && pozj<8){
 			shift = shift << 7;
+			sup = sup + shift;
 			if((shift & full_board)!=0) //pozitie ocupata
 				break;
-			sup = sup + shift;
+			
 			pozi++;pozj++;
 		}
 		
@@ -149,9 +174,9 @@ class speed_test{
 		shift = start;
 		while(pozi<8 && pozj>1){
 			shift = shift << 9;
+			sup = sup + shift;
 			if((shift & full_board)!=0) //pozitie ocupata
 				break;
-			sup = sup + shift;
 			pozi++; pozj--;
 		}
 		
@@ -159,10 +184,10 @@ class speed_test{
 		pozi = i;pozj = j;
 		shift = start;
 		while(pozi>1 && pozj>1){
-			shift = shift >>9;
+			shift = shift >>>7;
+			sup = sup + shift;
 			if((shift & full_board)!=0) //pozitie ocupata
 				break;
-			sup = sup + shift;
 			pozi--; pozj--;
 		}
 		
@@ -170,11 +195,89 @@ class speed_test{
 		pozi = i;pozj = j;
 		shift = start;
 		while(pozi>1 && pozj<8){
-			shift = shift >> 7;
+			shift = shift >>> 9;
+			sup = sup + shift;
 			if((shift & full_board)!=0) //pozitie ocupata
 				break;
-			sup = sup + shift;
 			pozi--; pozj++;
+		}
+		
+		return sup;
+	}
+	
+	static long calc_board_prim(byte i, byte j,long full_board){
+		long start = 128L;
+		start = start << 8*(i-1) >>> (j-1) ;
+		long shift;
+		long sup = 0L;
+		byte plusi,plusj,minusi,minusj,parc;
+		/*	
+		 *	E apropare identica cu metoda anterioara doar ca este mai eficienta in cicluri,
+		 *	folosiind in schimb mai multe variabile locale.
+		 */
+		
+		//	Se completeaza masca pentru mutari diagonale inspre h8(coltul dreapta sus)						
+		plusi = (byte)(8-i); plusj = (byte)(8-j);
+		minusi = (byte)(i-1); minusj = (byte)(j-1);
+		if(plusi<plusj)
+			parc = plusi;
+		else
+			parc = plusj;
+		
+		shift = start;
+		while(parc>0){
+			shift = shift << 7;
+			sup = sup + shift;
+			if((shift & full_board)!=0) //pozitie ocupata
+				break;
+			
+			parc--;
+		}
+		
+		//	Se completeaza masca pentru mutari diagonale inspre a8(coltul stanga sus)	
+		if(plusi<minusj)
+			parc = plusi;
+		else
+			parc = minusj;
+		
+		shift = start;
+		while(parc>0){
+			shift = shift << 9;
+			sup = sup + shift;
+			if((shift & full_board)!=0) //pozitie ocupata
+				break;
+			parc--;
+		}
+		
+		//	Se completeaza masca pentru mutari diagonale inspre a1(coltul stanga jos)	
+		if(minusi<minusj)
+			parc = minusi;
+		else
+			parc = minusj;
+		
+		shift = start;
+		while(parc>0){
+			shift = shift >>>7;
+			sup = sup + shift;
+			if((shift & full_board)!=0) //pozitie ocupata
+				break;
+			parc--;
+		}
+		
+		//	Se completeaza masca pentru mutari diagonale inspre a8(coltul dreapta jos)
+		if(minusi<plusj)
+			parc = minusi;
+		else
+			parc = plusj;
+		
+		
+		shift = start;
+		while(parc>0){
+			shift = shift >>> 9;
+			sup = sup + shift;
+			if((shift & full_board)!=0) //pozitie ocupata
+				break;
+			parc--;
 		}
 		
 		return sup;
@@ -764,7 +867,8 @@ class speed_test{
 		
 		
 		
-		varianta1_1();
+		varianta1_1(full_board);
+		varianta1_2(full_board);
 		varianta2_1();
 		varianta2_2(full_board);
 		varianta3_1(full_board);
