@@ -5,6 +5,7 @@ public class Move {
 	private static char table[]={'a','b','c','d','e','f','g','h'};
 	
 	private int pos1,pos2;
+	private int type;
 	
 	
 	Move(int i, int j, int i2, int j2){
@@ -54,7 +55,8 @@ public class Move {
 		return (new Move(move)).getPos2();
 	}
 	
-	public String toSAN() {
+	public String toSAN(Board b) {
 		
+		return null;
 	}
 }

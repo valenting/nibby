@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 
 public class Usual {
 	public static long boardMask(String pos) {
@@ -28,6 +30,19 @@ public class Usual {
 		for (int i=0;i<8;i++)
 			System.out.println(new StringBuffer(rep0.subSequence(i*8, (i+1)*8)).reverse());
 		System.out.println();
-
+	}
+	
+	private static HashMap<Long, Integer> h = null;
+	
+	public static void initHash() {
+		h=new HashMap<Long, Integer>();
+		for (int i=0;i<64;i++)
+			h.put(1L << i, i);
+	}
+	
+	public static int getPosition(long bitboard){
+		if (h==null)
+			initHash();
+		return h.get(Long.highestOneBit(bitboard));
 	}
 }

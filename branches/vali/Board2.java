@@ -16,6 +16,9 @@ public class Board2 {
 	
 	byte types[];
 	
+	long[] attacksTo;
+	long[] attacksFrom;
+	
 	public Board2(){
 		// la Start:
 
@@ -127,6 +130,13 @@ public class Board2 {
 		}	
 	}
 
+	void attacks() {
+		long[] attack1= new long[64];
+		for (int i=0;i<64;i++)
+			attack1[i]=getValidMoves(i, getPieceType(i)) & table & ~color[getPieceType(i)>>3];
+		attacksTo=attack1;
+		
+	}
 	
 	public static void main(String args[]){
 		Board2 brd=new Board2();
