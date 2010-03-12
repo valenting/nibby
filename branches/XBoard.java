@@ -66,6 +66,11 @@ public class XBoard {
                 engine = BLACK;
 
             }
+            if (lastMove.startsWith("time"))
+                time = Integer.parseInt(lastMove.substring(5));
+
+            if (lastMove.startsWith("otim"))
+                otim = Integer.parseInt(lastMove.substring(5));
             if (lastMove.equals("force")) {
                 engine = FORCE;
 
