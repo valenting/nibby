@@ -627,6 +627,14 @@ public class Board {
 	}
 	
 	long attackAreaBlack(){
+		//TO DO
+		//determina pozitiile atacate de piesele negre
+		//functie care se foloseste tot mutarile standard
+		return 0L;
+	}
+	
+	long attackAreaWhite(){
+		//TO DO
 		return 0L;
 	}
 	
@@ -650,6 +658,35 @@ public class Board {
 	long movesOfBlackKing(long piece,int position){
 		return 0L;
 		//	TO DO
+	}
+	
+	boolean leavesOwnKingInCheck(long start,long end){
+		//Functia verifica daca mutarea analizata lasa regele in sah
+		long att;
+		boolean result;
+		if((color[0]&start)!=0L){//muta WHITES
+			color[0] ^= start;
+			color[0] |= end;
+			att = attackAreaBlack();
+			if((color[0] & pieces[6] & att)!=0)
+				result = true;
+			else
+				result = false;
+			color[0] |= start;
+			color[0] ^= end;
+		}
+		else{//muta WHITES
+			color[1] ^= start;
+			color[1] |= end;
+			att = attackAreaWhite();
+			if((color[1] & pieces[6] & att)!=0)
+				result = true;
+			else
+				result = false;
+			color[1] |= start;
+			color[1] ^= end;
+		}
+		return result;
 	}
 	
 	public long potentialMovesBoard(long piece){
