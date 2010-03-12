@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 import java.util.Random;
 
 
-public class Board2 {
+public class Board {
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
 	public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGRU
 	private long table;
@@ -21,17 +21,26 @@ public class Board2 {
 	//	de asemenea enPassantWhite - pe ce coloana se poate face captura en passant la 
 	//	piesa White si analog enPassantBlack
 	public static long knightMasks[] = new long[64];
+	public static long kingMasks[] = new long[64];
 	public static final byte columnPosition[] = new byte[64];
 	public static final byte rowPosition[] = new byte[64]; 
 	private byte enPassantWhite = 9;
 	private byte enPassantBlack = 9;
+	private boolean canCastleWhite = true;
+	private boolean canCastleBlack = true;
+	
+	
+	public static final long longCastlingWhite = 0x00000000000000CL;
+	public static final long shortCastlingWhite = 0x0000000000000060L;
+	public static final long longCastlingBlack = 0xC00000000000000L;
+	public static final long shortCastlingBlack = 0x6000000000000000L;
 	
 	byte types[];
 	
 	long[] attacksTo;
 	long[] attacksFrom;
 	
-	public Board2(){
+	public Board(){
 		// la Start:
 
 		/* 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 | 0000 0000 */ 
@@ -329,8 +338,75 @@ public class Board2 {
 		columnPosition[62]=6;
 		rowPosition[63]=7;
 		columnPosition[63]=7;
+		
+		kingMasks[0]=0x302L;
+		kingMasks[1]=0x705L;
+		kingMasks[2]=0xe0aL;
+		kingMasks[3]=0x1c14L;
+		kingMasks[4]=0x3828L;
+		kingMasks[5]=0x7050L;
+		kingMasks[6]=0xe0a0L;
+		kingMasks[7]=0xc040L;
+		kingMasks[8]=0x30203L;
+		kingMasks[9]=0x70507L;
+		kingMasks[10]=0xe0a0eL;
+		kingMasks[11]=0x1c141cL;
+		kingMasks[12]=0x382838L;
+		kingMasks[13]=0x705070L;
+		kingMasks[14]=0xe0a0e0L;
+		kingMasks[15]=0xc040c0L;
+		kingMasks[16]=0x3020300L;
+		kingMasks[17]=0x7050700L;
+		kingMasks[18]=0xe0a0e00L;
+		kingMasks[19]=0x1c141c00L;
+		kingMasks[20]=0x38283800L;
+		kingMasks[21]=0x70507000L;
+		kingMasks[22]=0xe0a0e000L;
+		kingMasks[23]=0xc040c000L;
+		kingMasks[24]=0x302030000L;
+		kingMasks[25]=0x705070000L;
+		kingMasks[26]=0xe0a0e0000L;
+		kingMasks[27]=0x1c141c0000L;
+		kingMasks[28]=0x3828380000L;
+		kingMasks[29]=0x7050700000L;
+		kingMasks[30]=0xe0a0e00000L;
+		kingMasks[31]=0xc040c00000L;
+		kingMasks[32]=0x30203000000L;
+		kingMasks[33]=0x70507000000L;
+		kingMasks[34]=0xe0a0e000000L;
+		kingMasks[35]=0x1c141c000000L;
+		kingMasks[36]=0x382838000000L;
+		kingMasks[37]=0x705070000000L;
+		kingMasks[38]=0xe0a0e0000000L;
+		kingMasks[39]=0xc040c0000000L;
+		kingMasks[40]=0x3020300000000L;
+		kingMasks[41]=0x7050700000000L;
+		kingMasks[42]=0xe0a0e00000000L;
+		kingMasks[43]=0x1c141c00000000L;
+		kingMasks[44]=0x38283800000000L;
+		kingMasks[45]=0x70507000000000L;
+		kingMasks[46]=0xe0a0e000000000L;
+		kingMasks[47]=0xc040c000000000L;
+		kingMasks[48]=0x302030000000000L;
+		kingMasks[49]=0x705070000000000L;
+		kingMasks[50]=0xe0a0e0000000000L;
+		kingMasks[51]=0x1c141c0000000000L;
+		kingMasks[52]=0x3828380000000000L;
+		kingMasks[53]=0x7050700000000000L;
+		kingMasks[54]=0xe0a0e00000000000L;
+		kingMasks[55]=0xc040c00000000000L;
+		kingMasks[56]=0x203000000000000L;
+		kingMasks[57]=0x507000000000000L;
+		kingMasks[58]=0xa0e000000000000L;
+		kingMasks[59]=0x141c000000000000L;
+		kingMasks[60]=0x2838000000000000L;
+		kingMasks[61]=0x5070000000000000L;
+		kingMasks[62]=0xa0e0000000000000L;
+		kingMasks[63]=0x40c0000000000000L;
+
 	}
 	
+	//	Functie care afiseaza un long ca un bitboard
 	public void printBoard(long n){
 		long mask = 1L;
 		System.out.println();
@@ -341,7 +417,6 @@ public class Board2 {
 					System.out.print("1 ");
 				else
 					System.out.print("0 ");
-				
 			}
 			System.out.println();
 		}
@@ -355,7 +430,7 @@ public class Board2 {
 			forward |= oneMove;
 			if(row==1){
 				oneMove = oneMove << 8;
-				if((oneMove & table)==0)	//
+				if((oneMove & table)==0)
 					forward |= oneMove;
 			}
 		}
@@ -428,7 +503,7 @@ public class Board2 {
 		oneMove = piece;
 		while(i>0){
 			oneMove = oneMove >>> 1;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				i--;
 			else
@@ -439,7 +514,7 @@ public class Board2 {
 		oneMove = piece;
 		while(i<7){
 			oneMove = oneMove << 1;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				i++;
 			else
@@ -450,7 +525,7 @@ public class Board2 {
 		oneMove = piece;
 		while(i<7){
 			oneMove = oneMove << 8;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				i++;
 			else
@@ -461,7 +536,7 @@ public class Board2 {
 		oneMove = piece;
 		while(i>0){
 			oneMove = oneMove >>> 8;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				i--;
 			else
@@ -472,7 +547,7 @@ public class Board2 {
 			i = 1;	//	piesa este BLACK
 		else
 			i = 0;	//	piesa este WHITE
-		return mask - (mask & color[i]);	//se elimina mutarile peste piese proprii
+		return mask ^ (mask & color[i]);	//se elimina mutarile peste piese proprii
 	}
 	
 	long movesOfBishop(long piece,byte row,byte column){
@@ -490,7 +565,7 @@ public class Board2 {
 		oneMove = piece;
 		while(shifts>0){
 			oneMove = oneMove >>> 9;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				shifts--;
 			else
@@ -504,7 +579,7 @@ public class Board2 {
 		oneMove = piece;
 		while(shifts>0){
 			oneMove = oneMove >>> 7;//printBoard(oneMove);
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				shifts--;
 			else
@@ -518,7 +593,7 @@ public class Board2 {
 		oneMove = piece;
 		while(shifts>0){
 			oneMove = oneMove << 7;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				shifts--;
 			else
@@ -532,7 +607,7 @@ public class Board2 {
 		oneMove = piece;
 		while(shifts>0){
 			oneMove = oneMove << 9;
-			mask += oneMove;
+			mask |= oneMove;
 			if((oneMove & table)==0)
 				shifts--;
 			else
@@ -543,20 +618,36 @@ public class Board2 {
 			shifts = 1;	//	piesa este BLACK
 		else
 			shifts = 0;	//	piesa este WHITE
-		return mask - (mask & color[shifts]);	//se elimina mutarile peste piese proprii
+		return mask ^ (mask & color[shifts]);	//se elimina mutarile peste piese proprii
 	}
 	
 	long movesOfKnight(int position){
 		byte side = (byte)((types[position] & 8) >> 3);
-		return knightMasks[position] - (knightMasks[position] & color[side]);
+		return knightMasks[position] ^ (knightMasks[position] & color[side]);
 	}
 	
-	long movesOfWhiteKing(long piece,byte row,byte column){
+	long attackAreaBlack(){
 		return 0L;
+	}
+	
+	long movesOfWhiteKing(long piece,int pozitie){
+		long mask = kingMasks[pozitie];
+		mask = mask ^ (mask & color[0]);	//zone acoperite de rege prin mutari simple
+		
+		if(canCastleWhite){
+			long att=attackAreaBlack();
+			mask = mask ^ (mask & att);	//eliminarea patratelor ce il duc pe rege in sah
+			if((att & shortCastlingWhite)==0L)	//Se poate face rocada mica
+				mask |= 0x0000000000000040L;
+			if((att & longCastlingWhite)==0L)	//Se poate face rocada mare
+				mask |= 0x0000000000000004L;
+			
+		}
+		return mask;
 		//	TO DO
 	}
 	
-	long movesOfBlackKing(long piece,byte row,byte column){
+	long movesOfBlackKing(long piece,int position){
 		return 0L;
 		//	TO DO
 	}
@@ -571,8 +662,8 @@ public class Board2 {
 		if(elem==W_PAWN) return movesOfWhitePawn(piece,rowPosition[pozitie],columnPosition[pozitie]);
 		if(elem==B_PAWN) return movesOfBlackPawn(piece,rowPosition[pozitie],columnPosition[pozitie]);
 		
-		if(elem==W_KING) return movesOfWhiteKing(piece,rowPosition[pozitie],columnPosition[pozitie]);
-		if(elem==B_KING) return movesOfBlackKing(piece,rowPosition[pozitie],columnPosition[pozitie]);
+		if(elem==W_KING) return movesOfWhiteKing(piece,pozitie);
+		if(elem==B_KING) return movesOfBlackKing(piece,pozitie);
 		
 		elem &= 7;
 		
@@ -588,16 +679,17 @@ public class Board2 {
 	void testare(){
 		
 		
-		int i=3,j=6;	//linie si coloana
+		int i=2,j=4;	//linie si coloana
 		long piece = 1L <<8*i<<j;
 		printBoard(piece);
 		color[0] |= piece;
 		
 		enPassantWhite = 7;
-		//table = 0xFFFF000080205FFFL;
-		//color[0] = 0x0000000080205FFFL;
+		table = 0xFFFF000080205FFFL;
+		color[0] = 0x000000000000FF91L;
 		printBoard(color[0]);
-		printBoard(movesOfKnight(Long.numberOfTrailingZeros(piece)));
+		printBoard(movesOfWhiteKing(piece,Long.numberOfTrailingZeros(piece)));
+		
 		
 		
 		
@@ -631,7 +723,7 @@ public class Board2 {
 	}
 	
 	public static void main(String args[]){
-		Board2 brd=new Board2();
+		Board brd=new Board();
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 		String move="";
 		
