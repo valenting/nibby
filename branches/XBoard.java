@@ -51,6 +51,8 @@ public class XBoard {
         System.out.flush();
         try {
             lastMove = inPipe.readLine();
+            log.println(lastMove);
+            log.flush();
       
         } catch (IOException er) {
             log.println("Eroare citire din pipe");
@@ -59,20 +61,25 @@ public class XBoard {
         if (lastMove.length() > 0) {
             if (lastMove.startsWith("usermove")) {
                 side = (side + 1) % 2;
+                return true;
 
             }
             if (lastMove.equals("new")) {
                 side = WHITE;
                 engine = BLACK;
-
+                return true;
             }
-            if (lastMove.startsWith("time"))
+            if (lastMove.startsWith("time")) {
                 time = Integer.parseInt(lastMove.substring(5));
-
-            if (lastMove.startsWith("otim"))
+                return true;
+            }
+            if (lastMove.startsWith("otim")) {
                 otim = Integer.parseInt(lastMove.substring(5));
+                return true;
+            }
             if (lastMove.equals("force")) {
                 engine = FORCE;
+                return true;
 
             }
             if (lastMove.startsWith("protover")) {
@@ -80,31 +87,32 @@ public class XBoard {
                 System.out.println("feature myname=\"nibbyEngine 0.1\"");
                 System.out.println("feature usermove=1");
                 System.out.println("feature done=1");
-
+                return true;
             }
             if (lastMove.equals("white")) {
                 side = WHITE;
                 engine = BLACK;
-
+                return true;
             }
             if (lastMove.equals("black")) {
                 side = BLACK;
                 engine = WHITE;
-
+                return true;
             }
             if (lastMove.equals("go")) {
                 engine = side;
-
+                return true;
             }
             if (lastMove.equals("ping")) {
                 System.out.println("pong");
-
+                return true;
             }
             if (lastMove.equals("quit")) {
                 try {
                     inPipe.close();
                      log.close();
                      on=false;
+                     return true;
 
                 } catch (IOException ex) {
                     log.println("Eroare inchidere fisier");    
@@ -114,8 +122,7 @@ public class XBoard {
             }
 
             
-            log.println(lastMove);
-            log.flush();
+            
             return true;
         }
         return false;
