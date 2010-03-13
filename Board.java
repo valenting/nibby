@@ -423,8 +423,9 @@ public class Board {
 		System.out.println();
 	}
 	
-	long movesOfWhitePawn(long piece,byte row,byte column){
+	long movesOfWhitePawn(long piece,byte row,byte column,boolean checkPass){
 		long forward = 0L,hostile=0L,oneMove;
+		boolean diag1=false,diag2=false;
 		oneMove = piece << 8;
 		if((oneMove & table)==0){	// nu este coliziune
 			forward |= oneMove;
@@ -434,113 +435,164 @@ public class Board {
 					forward |= oneMove;
 			}
 		}
+		if(checkPass && leavesOwnKingInCheck(piece,forward))
+			forward = 0L;	//	se anuleaza mutarea in fata pentru ca lasa regele in sah
 		if(column<7){	//	nu este pe coloana ultima
 			oneMove = piece << 9;
-			hostile |= oneMove;
+			oneMove &= color[1];
 		}
+		if(oneMove != 0L)	//	exista piesa pe care o poate captura
+			if(checkPass){	//	daca se verifica lasarea in sah
+				if(!leavesOwnKingInCheck(piece,oneMove))//	daca mutarea nu lasa regele propriu in sah
+					hostile |= oneMove;
+			} 
+			 
 		if(column>0){	//	nu este pe prima coloana
 			oneMove = piece << 7;
-			hostile |= oneMove;
+			oneMove &= color[1];
 		}
+		if(oneMove != 0L)	//	exista piesa pe care o poate captura
+			if(checkPass){	//	daca se verifica lasarea in sah
+				if(!leavesOwnKingInCheck(piece,oneMove))//	daca mutarea nu lasa regele propriu in sah
+					hostile |= oneMove;
+			} 
 
-		hostile = hostile & color[1];	//captura piesa neagra
-		
 		if(row==4){	//are potential sa faca en Passant
-			if(column==enPassantBlack-1){System.out.println("passant in dreapta");
+			if(column+1==enPassantBlack){System.out.println("passant in dreapta");
 				oneMove = piece << 9;
 				hostile |= oneMove;
+				if(checkPass && leavesOwnKingInCheck(piece,oneMove))// lasa regele in sah
+					hostile ^= oneMove;	//	se elimina mutarea propusa
 			}
-			else if(column==enPassantBlack+1){System.out.println("passant in stanga");
+			else if(column-1==enPassantBlack){System.out.println("passant in stanga");
 				oneMove = piece << 7;
 				hostile |= oneMove;
+				if(checkPass && leavesOwnKingInCheck(piece,oneMove))// lasa regele in sah
+					hostile ^= oneMove;	//	se elimina mutarea propusa
 			}
 		}
 		
 		return hostile | forward;
 	}
 	
-	long movesOfBlackPawn(long piece,byte row,byte column){
+	long movesOfBlackPawn(long piece,byte row,byte column,boolean checkPass){
 		long forward = 0L,hostile=0L,oneMove;
+		boolean diag1=false,diag2=false;
 		oneMove = piece >>> 8;
 		if((oneMove & table)==0){	// nu este coliziune
 			forward |= oneMove;
 			if(row==6){
 				oneMove = oneMove >>> 8;
-				if((oneMove & table)==0)	//
+				if((oneMove & table)==0)
 					forward |= oneMove;
 			}
 		}
+		if(checkPass && leavesOwnKingInCheck(piece,forward))
+			forward = 0L;	//	se anuleaza mutarea in fata pentru ca lasa regele in sah
 		if(column<7){	//	nu este pe coloana ultima
-			oneMove = piece >>> 7;
-			hostile |= oneMove;printBoard(hostile);
+			oneMove = piece >>> 7;;
+			oneMove &= color[0];
 		}
-		if(column>0){	//	nu este pe pima coloana
+		if(oneMove != 0L)	//	exista piesa pe care o poate captura
+			if(checkPass){	//	daca se verifica lasarea in sah
+				if(!leavesOwnKingInCheck(piece,oneMove))//	daca mutarea nu lasa regele propriu in sah
+					hostile |= oneMove;
+			} 
+			 
+		if(column>0){	//	nu este pe prima coloana
 			oneMove = piece >>> 9;
-			hostile |= oneMove;printBoard(hostile);
+			oneMove &= color[0];
 		}
-		
-		hostile = hostile & color[0];	//	captura piessa alba
-		
+		if(oneMove != 0L)	//	exista piesa pe care o poate captura
+			if(checkPass){	//	daca se verifica lasarea in sah
+				if(!leavesOwnKingInCheck(piece,oneMove))//	daca mutarea nu lasa regele propriu in sah
+					hostile |= oneMove;
+			} 
+
 		if(row==3){	//are potential sa faca en Passant
-			if(column+1==enPassantWhite){System.out.println("passant in dreapta");
+			if(column+1==enPassantBlack){System.out.println("passant in dreapta");
 				oneMove = piece >>> 7;
 				hostile |= oneMove;
+				if(checkPass && leavesOwnKingInCheck(piece,oneMove))// lasa regele in sah
+					hostile ^= oneMove;	//	se elimina mutarea propusa
 			}
-			else if(column-1==enPassantWhite){System.out.println("passant in stanga");
+			else if(column-1==enPassantBlack){System.out.println("passant in stanga");
 				oneMove = piece >>> 9;
 				hostile |= oneMove;
+				if(checkPass && leavesOwnKingInCheck(piece,oneMove))// lasa regele in sah
+					hostile ^= oneMove;	//	se elimina mutarea propusa
 			}
 		}
 		
 		return hostile | forward;
 	}
 	
-	long movesOfRook(long piece,byte row,byte column){
+	long movesOfRook(long piece,byte row,byte column,boolean checkPass){
 		long mask = 0L,oneMove;
 		byte i ;
 		i = column;
 		//	Mutari orizontale spre coloana A
 		oneMove = piece;
-		while(i>0){
+		if(i>0){
 			oneMove = oneMove >>> 1;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				i--;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+				while(i>0){
+					mask |= oneMove;
+					if((oneMove & table)==0){
+						i--;
+						oneMove = oneMove >>> 1;
+					}
+					else
+						break;
+				}
 		}
 		//	Mutari orizontale spre coloana H
 		i = column;
 		oneMove = piece;
-		while(i<7){
+		if(i<7){
 			oneMove = oneMove << 1;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				i++;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+				while(i<7){
+					mask |= oneMove;
+					if((oneMove & table)==0){
+						i++;
+						oneMove = oneMove << 1;
+					}
+					else
+						break;
+				}
 		}
 		//	Mutari verticale spre linia 8
 		i = row;
 		oneMove = piece;
-		while(i<7){
+		if(i<7){
 			oneMove = oneMove << 8;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				i++;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+				while(i<7){
+						mask |= oneMove;
+						if((oneMove & table)==0){
+							i++;
+							oneMove = oneMove << 8;
+						}
+						else
+							break;
+				}
 		}
 		//	Mutari verticale spre linia 1
 		i = row;
 		oneMove = piece;
-		while(i>0){
+		if(i>0){
 			oneMove = oneMove >>> 8;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				i--;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+				while(i>0){
+					mask |= oneMove;
+					if((oneMove & table)==0){
+						i--;
+						oneMove = oneMove >>> 8;
+					}
+					else
+						break;
+				}
 		}
 		
 		if((piece & pieces[1])!=0)
@@ -550,7 +602,7 @@ public class Board {
 		return mask ^ (mask & color[i]);	//se elimina mutarile peste piese proprii
 	}
 	
-	long movesOfBishop(long piece,byte row,byte column){
+	long movesOfBishop(long piece,byte row,byte column,boolean checkPass){
 		long mask = 0L,oneMove;
 		byte minusRow = row,plusRow = (byte)(7 - row);
 		byte minusColumn = column,plusColumn = (byte)(7 - column); 
@@ -563,13 +615,18 @@ public class Board {
 		else
 			shifts = minusColumn;
 		oneMove = piece;
-		while(shifts>0){
+		if(shifts>0){
 			oneMove = oneMove >>> 9;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				shifts--;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+				while(shifts>0){
+					mask |= oneMove;
+					if((oneMove & table)==0){
+						shifts--;
+						oneMove = oneMove >>> 9;
+					}
+					else
+						break;
+				}
 		}
 		//	Deplasari spre H1
 		if(minusRow<plusColumn)
@@ -577,13 +634,18 @@ public class Board {
 		else
 			shifts = plusColumn;
 		oneMove = piece;
-		while(shifts>0){
-			oneMove = oneMove >>> 7;//printBoard(oneMove);
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				shifts--;
-			else
-				break;
+		if(shifts>0){
+			oneMove = oneMove >>> 7;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+			while(shifts>0){
+				mask |= oneMove;
+				if((oneMove & table)==0){
+					shifts--;
+					oneMove = oneMove >>> 7;//printBoard(oneMove);
+				}
+				else
+					break;
+			}
 		}
 		//	Deplasari spre A8
 		if(plusRow<minusColumn)
@@ -591,13 +653,18 @@ public class Board {
 		else
 			shifts = minusColumn;
 		oneMove = piece;
-		while(shifts>0){
+		if(shifts>0){
 			oneMove = oneMove << 7;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				shifts--;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))	
+				while(shifts>0){
+					mask |= oneMove;
+					if((oneMove & table)==0){
+						shifts--;
+						oneMove = oneMove << 7;
+					}
+					else
+						break;
+				}
 		}
 		//	Deplasari spre H8
 		if(plusRow<plusColumn)
@@ -605,13 +672,18 @@ public class Board {
 		else
 			shifts = plusColumn;
 		oneMove = piece;
-		while(shifts>0){
+		if(shifts>0){
 			oneMove = oneMove << 9;
-			mask |= oneMove;
-			if((oneMove & table)==0)
-				shifts--;
-			else
-				break;
+			if(!checkPass || !leavesOwnKingInCheck(piece,oneMove))
+				while(shifts>0){
+					mask |= oneMove;
+					if((oneMove & table)==0){
+						shifts--;
+						oneMove = oneMove << 9;
+					}
+					else
+						break;
+				}
 		}
 		
 		if((piece & pieces[1])!=0)
@@ -621,8 +693,10 @@ public class Board {
 		return mask ^ (mask & color[shifts]);	//se elimina mutarile peste piese proprii
 	}
 	
-	long movesOfKnight(int position){
+	long movesOfKnight(long piece,int position,boolean checkPass){
 		byte side = (byte)((types[position] & 8) >> 3);
+		if(checkPass && leavesOwnKingInCheck(piece,0L))
+			return 0L;
 		return knightMasks[position] ^ (knightMasks[position] & color[side]);
 	}
 	
@@ -696,8 +770,8 @@ public class Board {
 		byte elem = types[pozitie];
 		
 		
-		if(elem==W_PAWN) return movesOfWhitePawn(piece,rowPosition[pozitie],columnPosition[pozitie]);
-		if(elem==B_PAWN) return movesOfBlackPawn(piece,rowPosition[pozitie],columnPosition[pozitie]);
+		if(elem==W_PAWN) return movesOfWhitePawn(piece,rowPosition[pozitie],columnPosition[pozitie],true);
+		if(elem==B_PAWN) return movesOfBlackPawn(piece,rowPosition[pozitie],columnPosition[pozitie],true);
 		
 		if(elem==W_KING) return movesOfWhiteKing(piece,pozitie);
 		if(elem==B_KING) return movesOfBlackKing(piece,pozitie);
@@ -705,27 +779,27 @@ public class Board {
 		elem &= 7;
 		
 		switch(elem){
-			case W_KNIGHT : return movesOfKnight(pozitie);
-			case W_ROOK : return movesOfRook(piece,rowPosition[pozitie],columnPosition[pozitie]);
-			case W_BISHOP : return movesOfBishop(piece,rowPosition[pozitie],columnPosition[pozitie]);
-			default : return movesOfBishop(piece,rowPosition[pozitie],columnPosition[pozitie]) 
-								| movesOfRook(piece,rowPosition[pozitie],columnPosition[pozitie]);	
+			case W_KNIGHT : return movesOfKnight(piece,pozitie,true);
+			case W_ROOK : return movesOfRook(piece,rowPosition[pozitie],columnPosition[pozitie],true);
+			case W_BISHOP : return movesOfBishop(piece,rowPosition[pozitie],columnPosition[pozitie],true);
+			default : return movesOfBishop(piece,rowPosition[pozitie],columnPosition[pozitie],true) 
+								| movesOfRook(piece,rowPosition[pozitie],columnPosition[pozitie],true);	
 		}
 	}
 	
 	void testare(){
 		
 		
-		int i=2,j=4;	//linie si coloana
+		int i=4,j=6;	//linie si coloana
 		long piece = 1L <<8*i<<j;
 		printBoard(piece);
 		color[0] |= piece;
 		
-		enPassantWhite = 7;
+		enPassantBlack = 7;
 		table = 0xFFFF000080205FFFL;
-		color[0] = 0x000000000000FF91L;
+		color[0] = 0x000000000000FFFFL;
 		printBoard(color[0]);
-		printBoard(movesOfWhiteKing(piece,Long.numberOfTrailingZeros(piece)));
+		printBoard(movesOfWhitePawn(piece,(byte)i,(byte)j,false));
 		
 		
 		
