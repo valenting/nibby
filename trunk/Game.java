@@ -13,7 +13,7 @@ public class Game {
     public static int FORCE = 2;
     public static int side = WHITE, engine = BLACK;
     public static int i = 0, j = 0;
-    public static Board2 brd=new Board2();
+    public static Board brd=new Board();
     
     public static void main(String []args) throws Exception{
 		
