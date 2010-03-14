@@ -1029,5 +1029,125 @@ public class Board {
 		}
 		*/
 	}
+	
+	public boolean check;
+	public boolean checkmate;
+	public byte promotion;
+	public boolean captured;
+	public byte piece_type;
+	public byte castling;
+	public int pos1,pos2;
+	public void SAN(String mutare, int color){
+		int lin = -1, col = -1;
+		check = false;
+		checkmate = false;
+		promotion = 0;
+		captured = false;
+		piece_type = _EMPTY;
+		castling = _EMPTY;
+		pos1 = -1; pos2 = -1;
+		if (mutare.equals("O-O")){
+			castling = W_KING; //rocada pe partea regelui
+			if (color == 1)
+				castling = B_KING;
+			return;
+		}
+		if (mutare.equals("O-O-O")){
+			castling = W_QUEEN; //rocada pe partea reginei
+			if (color == 1)
+				castling = B_QUEEN;
+			return;
+		}
+		int i = mutare.length()-1;
+		if (mutare.charAt(i)=='#'){
+			checkmate = true;
+			i--;
+		}
+		if (mutare.charAt(i)=='+'){
+			check = true;
+			i--;
+		}
+		if(mutare.indexOf("=")>0){
+			promotion = (byte)"  RNBQ".indexOf(mutare.charAt(mutare.indexOf("=")+1));
+			mutare = mutare.substring(0,i-2);
+			i = i - 2;
+		}
+		pos2 = Usual.position(mutare.substring(i-1,i));
+		i = i - 2;
+		mutare = mutare.substring(0,i);
+		if (mutare.indexOf("x")>0){
+			captured = true;
+			i--;
+		}
+		if (i>=0  && Character.isDigit(mutare.charAt(i))){
+			lin = mutare.charAt(i)-'1';
+			i-- ;
+		}
+		if (i>=0 && "abcdefgh".indexOf(mutare.charAt(i))>=0){
+			col = mutare.charAt(i)-'a';
+			i--;
+		}
+		if (i>=0 && "  RNBQK".indexOf(mutare.charAt(i))>=0)
+			piece_type = (byte)"  RNBQK".indexOf(mutare.charAt(i));
+		else 
+			piece_type = 1;
+		if (col != -1 && lin != -1)
+			pos1 = lin*8 + col;
+		if (col != -1 && lin == -1){
+			long bit = pieces[piece_type]; 
+			long col1 = 0x8080808080808080L >>> col;
+			bit &= col1;
+			long firstb;
+			int poz;
+			if (color == 1)
+				piece_type |= 8;
+			while (bit != 0L){
+				firstb = Long.highestOneBit(bit);
+				bit ^= firstb;
+				poz = Long.numberOfTrailingZeros(firstb);
+				if ((getValidMoves(poz, piece_type)&(1L<<pos2))!= 0) {
+					pos1 = poz;
+					break;
+				}
+			}
+		}
+		if (col == -1 && lin != -1) {
+			long bit = pieces[piece_type];
+			long lin1 = 0xFFL << lin;
+			bit &= lin1;
+			long firstb;
+			int poz;
+			if (color == 1)
+				piece_type |= 8;
+			while (bit != 0L){
+				firstb = Long.highestOneBit(bit);
+				bit ^= firstb;
+				poz = Long.numberOfTrailingZeros(firstb);
+				if ((getValidMoves(poz, piece_type)&(1L<<pos2))!= 0) {
+					pos1 = poz;
+					break;
+				}
+			}
+		}
+		if (col == -1 && lin == -1){
+			long bit = pieces[piece_type];
+			long firstb;
+			int poz;
+			if (color == 1)
+				piece_type |=8;
+			while (bit != 0L) {
+				firstb = Long.highestOneBit(bit);
+				bit ^= firstb;
+				poz = Long.numberOfTrailingZeros(firstb);
+				if ((getValidMoves(poz, piece_type)&(1L<<pos2))!= 0) {
+					pos1 = poz;
+					break;
+				}
+			}
+		}
+		
+	}
+	
+	
 }
 
