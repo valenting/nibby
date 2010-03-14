@@ -13,7 +13,7 @@ public class Game {
     public static int FORCE = 2;
     public static int side = WHITE, engine = BLACK;
     public static int i = 0, j = 0;
-    public static Board2 brd=new Board2();
+    public static Board brd=new Board();
     
     public static void main(String []args) throws Exception{
 		
@@ -79,12 +79,8 @@ public class Game {
     	
     	if (command.startsWith("usermove")){
     		String mutare = command.substring(9);
-    		//verificare mutare valida
-    		//modificare tabla cu comanda data de el
-    		//boolean ok = verificareMutare(board,mutare);
-    		//board = newBoard(board,mutare);
-    		Move m = new Move(mutare);
-    		brd.move(m.getPos1(),m.getPos2());
+    		brd.SAN(mutare,side);
+    		brd.move(brd.pos1,brd.pos2);
     		side = (side + 1)%2;
     		return "";
     		
@@ -97,7 +93,7 @@ public class Game {
     		return "";
     	}
     	if (command.startsWith("protover")){
-    		return "feature usermove=1";
+    		return "feature usermove=1 san=1 myname=Nibblonians";
     	}
     	if (command.equals("new")){
     		side = WHITE;
