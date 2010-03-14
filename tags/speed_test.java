@@ -102,7 +102,7 @@ class speed_test{
 			
 		for(int i=0;i<rep;i++)
 			//	pentru pozitia D4
-				tabla = calc_board((byte)7,(byte)8,full_board);
+				tabla = calc_board((byte)4,(byte)4,full_board);
 			//	pentru o pozitie oarecare
 			//	tabla = calc_board((byte)linie,(byte)col,full_board);
 
@@ -123,7 +123,7 @@ class speed_test{
 			
 		for(int i=0;i<rep;i++)
 			//	pentru pozitia D4
-				tabla = calc_board_prim((byte)7,(byte)8,full_board);
+				tabla = calc_board_prim((byte)4,(byte)4,full_board);
 			//	pentru o pozitie oarecare
 			//	tabla = calc_board((byte)linie,(byte)col,full_board);
 
