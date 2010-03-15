@@ -670,11 +670,6 @@ public class BoardX {
 		return mask;
 	}
 	
-	/*
-	 *										Sfarsit metode de generare mutari
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
-	
 	public long potentialMovesBoard(long piece){
 		//	Face selectia intre diferitele piese, pe baza mastii date ca parametru
 		
@@ -699,6 +694,104 @@ public class BoardX {
 		}
 	}
 	
+	/*
+	 *										Sfarsit metode de generare mutari
+	 ********************************************************************************************************
+	 ********************************************************************************************************/
+	
+	/********************************************************************************************************
+	 *																										*
+	 *											Metode de analiza mutarilor									*
+	 *																										*
+	 ********************************************************************************************************/
+	
+	
+	long filterMoveMasks(long start,long possibleMoves){
+		/*
+		 *	Functia filtreaza matricea de mutari psoibile eliminandu-le pe
+		 *	acele ce ar lasa regele propriu in sah.
+		 */
+		long oneMove = Long.highestOneBit(possibleMoves);
+		long newMask = 0L;
+		while(oneMove!=0L && isValidMove(start,oneMove)){
+			possibleMoves ^= oneMove;
+			newMask |= oneMove;
+			oneMove = Long.highestOneBit(possibleMoves);
+		}
+		return newMask;
+	}
+	
+	boolean isValidMove(long start,long end){
+		/*
+		 *	Metoda modifica tabla pentru a corespunde noii situatii indicate de mutarea data
+		 *	ca pozitie initiala - pozitie finala si determina daca noua asezare a pieselor
+		 *	este valida din punctul de vedere al pozitiei de sah a regelui propriu.
+		 *
+		 *	Pentru rege se fac verificari suplimentare in cazul in caremutarea propusa spre
+		 *	analiza este rocada.
+		 */
+		byte elementType = types[Long.numberOfTrailingZeros(end)];
+		boolean result = false;
+		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
+			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
+				updateMoveOnBoard(start,start>>>1);
+				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+				if(result){
+					updateMoveOnBoard(start>>>1,end);
+					result = avoidCheckPosition((byte)(elementType>>>3));
+					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+				}
+				else
+					updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
+			}
+			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
+				updateMoveOnBoard(start,start<<1);
+				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+				if(result){
+					updateMoveOnBoard(start<<1,end);
+					result = avoidCheckPosition((byte)(elementType>>>3));
+					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+				}
+				else
+					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
+			}
+		}
+		else{	//	se analizeaza mutarea unei piese diferite de rege
+		
+			updateMoveOnBoard(start,end);
+			if((color[0] & start)!=0)	//se studiaza validitatea mutarii WHITE
+				result = avoidCheckPosition((byte)0);
+			else
+				result = avoidCheckPosition((byte)1);
+			
+			updateMoveOnBoard(end,start);
+			if(elementType != _EMPTY)
+				restorePieceOnBoard(end,elementType);
+		}	
+		return result;
+	}
+	
+	boolean avoidCheckPosition(byte defendingSide){
+		/*	
+		 *	Metoda intoarce true daca regele jucatorului(culoarea) dat ca parametru nu se
+		 *	afla in sah si flase in caz contrar.
+		 */
+		long allAttackingPieces = color[((defendingSide+1)&1)];
+		long piece,king = color[defendingSide] & pieces[6];
+		
+		piece = Long.highestOneBit(allAttackingPieces);
+		while(piece!=0L){
+			if((potentialMovesBoard(piece)&king)!=0L)	//sah
+				return false;
+			allAttackingPieces ^= piece;
+		}
+		return true;
+	}
+	
+	/*
+	 *										Sfarsit metode de analiza a mutarilor
+	 ********************************************************************************************************
+	 ********************************************************************************************************/
 	/********************************************************************************************************
 	 *																										*
 	 *											Board update methods										*
@@ -707,10 +800,11 @@ public class BoardX {
 	
 	public void boardIndicatorsUpdate(long start,long end){
 		/*
-		 *	Metoda modifica indicatorii tablei de sah in conformitate cu mutarea curenta:
+		 *	Metoda modifica indicatorii tablei de sah in conformitate cu mutarea curenta(mutare deja efectuata):
 		 *		-	enPassantWhite,enPassantBlack daca se muta pioni
 		 *		-	canLongCastleWhite,canLongCastleBlack,canShortCastleWhite,canShortCastleBlack daca se
 		 *				muta regi,ture sau regele advers este in sah
+		 *		
 		 */
 		
 		byte elementType = getPieceType(Long.numberOfTrailingZeros(start));
@@ -775,7 +869,7 @@ public class BoardX {
 	
 	public void restorePieceOnBoard(long piece,byte elementType){
 		/*
-		 *	Repune o piesa pe tabla ( metoda folosita laolalta cu updateBoard de catre
+		 *	Repune o piesa pe tabla ( metoda folosita laolalta cu updateMoveOnBoard de catre
 		 *	isValidMove pentru a reface pozitiile tablei de sah inainte de mutarea
 		 *	analizata)
 		 */
@@ -784,18 +878,25 @@ public class BoardX {
 		types[Long.numberOfTrailingZeros(piece)] = elementType;
 	}
 	
-	public void promotionUpdate(long piece,byte padding){
+	public void promotionUpdate(long piece,byte type){
 		/*
-		 *	Face promovarea unui pion in regina(pentru ca banuiesc ca nu vreti cai
-		 *	sau nebuni). 
+		 *	Update-ul se face doar dupa ce pionul este mutat pe pozitia finala.
+		 *
+		 *	Face promovarea unui pion in type; daca nu vreti sa va pese de culoare
+		 *	(sa nu faceti distinctie W_QUEEN/B_QUEEN) pot sa ma ocup aici de asta.
 		 */
-		pieces[5] |= piece;
-		types[Long.numberOfTrailingZeros(piece)] = (byte)(W_QUEEN | padding);
+		type &= 7;
+		pieces[type] |= piece;	//	aduagarea noii piese la tabla de piese de tip propriu
+		if((color[0]&piece)==0) //	piesa BLACK
+			type |= 8;
+		
+		pieces[1] |= piece;	//	eliminarea pionului
+		types[Long.numberOfTrailingZeros(piece)] = type;//	adaugarea pe tabla de tipuri
 	}
 	
-	public void updateBoard(long start,long end){
+	public void updateMoveOnBoard(long start,long end){
 		/*
-		 *	Modifica board-ul in conformitate cu ultima mutare executata:
+		 *	Modifica board-ul in conformitate cu mutarea data:
 		 *		table,color[0],color[1],type[] si pieces[]
 		 */
 		
@@ -828,71 +929,87 @@ public class BoardX {
 		pieces[elementType] |= end;
 	}
 	
-	boolean isValidMove(long start,long end){
+	public void updateBoard(long start,long end,byte promotion){
 		/*
-		 *	Metoda modifica tabla pentru a corespunde noii situatii indicate de mutarea data
-		 *	ca pozitie initiala - pozitie finala si determina daca noua asezare a pieselor
-		 *	este valida din punctul de vedere al pozitiei de sah a regelui propriu.
+		 *	Actualizeaza tabla de sah efectuand mutarea data ca parametru dar si alte
+		 *	mutari implicite ce sunt asociate cu aceasta: rocada, enPassant, posibilitate
+		 *	de a face rocade, etc.
 		 *
-		 *	Pentru rege se fac verificari suplimentare in cazul in caremutarea propusa spre
-		 *	analiza este rocada.
+		 *	Intentionez sa primesc promotion ca una din piese albe/negre si sa o aplic doar
+		 *	daca mutarea o necesita. Implicit ar trebui sa primesc zero la promotion
 		 */
-		byte elementType = types[Long.numberOfTrailingZeros(end)];
-		boolean result = false;
-		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
-			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
-				updateBoard(start,start>>>1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateBoard(start>>>1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateBoard(end,start);	//	aduce tabla la starea initiala
-				}
-				else
-					updateBoard(start>>>1,start);//	aduce tabla la starea initiala
-			}
-			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
-				updateBoard(start,start<<1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateBoard(start<<1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateBoard(end,start);	//	aduce tabla la starea initiala
-				}
-				else
-					updateBoard(start<<1,start);//	aduce tabla la starea initiala
-			}
-		}
-		else{	//	se analizeaza mutarea unei piese diferite de rege
-		
-			updateBoard(start,end);
-			if((color[0] & start)!=0)	//se studiaza validitatea mutarii WHITE
-				result = avoidCheckPosition((byte)0);
-			else
-				result = avoidCheckPosition((byte)1);
-			
-			updateBoard(end,start);
-			if(elementType != _EMPTY)
-				restorePieceOnBoard(end,elementType);
-		}	
-		return result;
-	}
-	
-	boolean avoidCheckPosition(byte defendingSide){
-		/*	
-		 *	Metoda intoarce true daca regele jucatorului(culoarea) dat ca parametru nu se
-		 *	afla in sah si flase in caz contrar.
-		 */
-		long allAttackingPieces = color[((defendingSide+1)&1)];
-		long piece,king = color[defendingSide] & pieces[6];
-		
-		piece = Long.highestOneBit(allAttackingPieces);
-		while(piece!=0L){
-			if((potentialMovesBoard(piece)&king)!=0L)	//sah
-				return false;
-			allAttackingPieces ^= piece;
-		}
-		return true;
+		 
+		 int number = Long.numberOfTrailingZeros(start);
+		 byte elementType = getPieceType(number);
+		 long extra = 0L;
+		 //byte ownColor = getColor(start);
+		 //byte oppositeColor = (byte)(((ownColor)+1) & 1);
+		 /*
+		  *updateMoveOnBoard(start,end);
+		 		boardIndicatorsUpdate(start,end);
+		  
+		  */
+		 
+		 
+		 switch(elementType){
+		 	case W_PAWN : {
+		 		if((end == start << 7) || (end == start << 9))	// este mutarea de captura
+		 			if((end & table)==0){ // nu este piesa la destinatie(deci este enPassant)
+		 				extra = end>>8;	//	pozitia pionului capturat
+		 				pieces[1] ^= extra;
+		 				color[1] ^= extra;
+		 				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
+		 				
+		 				updateMoveOnBoard(start,end);
+		 				boardIndicatorsUpdate(start,end);
+		 			}
+		 		else if(rowPosition[number]==7){	//	este in situatie de a face promovare
+		 			updateMoveOnBoard(start,end);
+		 			//pentru a aplica promotionUpdate este nevoie ca la destinatie sa fie pion propriu
+		 			promotionUpdate(end,(byte)(promotion&7));
+		 			boardIndicatorsUpdate(start,end);
+		 		}
+		 	}
+		 	case B_PAWN : {
+		 		if((end == start >>> 7) || (end == start >>> 9))
+		 			if((end & table)==0){ // nu este piesa la destinatie(deci este enPassant)
+		 				extra = end<<8;	//	pozitia pionului capturat
+		 				pieces[0] ^= extra;
+		 				color[0] ^= extra;
+		 				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
+		 				
+		 				updateMoveOnBoard(start,end);
+		 				boardIndicatorsUpdate(start,end);
+		 			}
+		 		else if(rowPosition[number]==0){	//	este in situatie de a face promovare
+		 			updateMoveOnBoard(start,end);
+		 			promotionUpdate(end,(byte)(promotion|8));
+		 			boardIndicatorsUpdate(start,end);
+		 		}
+		 	}
+		 	case W_KING : {
+		 		if(start<<2 == end)	//rocada mica
+		 			updateMoveOnBoard(start<<3,start<<1);//	se muta tura corespunzator
+		 		else if(start>>2 == end)	//rocada nare
+		 			updateMoveOnBoard(start>>>4,start>>>1);//	se muta tura corespunzator
+		 		updateMoveOnBoard(start,end);
+		 		boardIndicatorsUpdate(start,end);
+		 	}
+		 	case B_KING : {
+		 		if(start<<2 == end)	//rocada mica
+		 			updateMoveOnBoard(start<<3,start<<1);//	se muta tura corespunzator
+		 		else if(start>>2 == end)	//rocada nare
+		 			updateMoveOnBoard(start>>>4,start>>>1);//	se muta tura corespunzator
+		 		updateMoveOnBoard(start,end);
+		 		boardIndicatorsUpdate(start,end);
+		 	}
+		 	default:{
+		 		updateMoveOnBoard(start,end);
+		 		boardIndicatorsUpdate(start,end);
+		 	}
+		 }
+		 
+		 
 	}
 	
 	/*
@@ -965,7 +1082,7 @@ public class BoardX {
 			if(endPosition==0L)
 				return "quit";
 			moveCode = getSANMove(piece,endPosition);
-			updateBoard(piece,endPosition);
+			updateMoveOnBoard(piece,endPosition);
 			if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==7)
 				promotionUpdate(endPosition,(byte)0);
 			return moveCode;
@@ -980,7 +1097,7 @@ public class BoardX {
 			if(endPosition==0L)
 				return "quit";
 			moveCode = getSANMove(piece,endPosition);
-			updateBoard(piece,endPosition);
+			updateMoveOnBoard(piece,endPosition);
 			if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==0)
 				promotionUpdate(endPosition,(byte)8);
 			return moveCode;
