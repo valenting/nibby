@@ -7,119 +7,40 @@ import java.io.*;
  */
 
 public class Game {
-	public static BufferedWriter outWriter;       
-    public static int WHITE = 0;
-    public static int BLACK = 1;
-    public static int FORCE = 2;
-    public static int side = WHITE, engine = BLACK;
-    public static int i = 0, j = 0;
     public static Board brd=new Board();
     
     public static void main(String []args) throws Exception{
-		
-		BufferedReader inReader = new BufferedReader(new InputStreamReader(System.in));
-		// variabile ce reprezinta comanda primita si cea data
-		String command = "";
-		String retCommand = "";
-		String sir = "abcdefgh";
-		//fisier folosit la debugging
-		outWriter = new BufferedWriter(new FileWriter("out.txt"));
-		while (true){
-			System.out.flush();
-			if (side == engine) {
-				String myMove = "";
-                if (engine == WHITE) {
+    	int i = 0, j = 0;
+        XBoard xboard = new XBoard();
+        while(xboard.isAlive()) {
+            boolean citit = xboard.read();
+            if(xboard.isTurn()) {
+            	if (xboard.engine == xboard.WHITE) {
                     if (i < 8) {
-                        myMove = "move " + sir.charAt(i) + "4"; 
+                        xboard.sendToXBoard("move " + xboard.sir.charAt(i) + "4");
                         brd.move(8+i,24+i);
                         i++;
                     }
-                    else myMove = "resign";
+                    else xboard.sendToXBoard("resign");
                 }
-                if (engine == BLACK) {
+                if (xboard.engine == xboard.BLACK) {
                     if (j < 8) {
-                    	brd.move(48+i, 32+i);
-                        myMove = "move " + sir.charAt(j) + "5";
+                        xboard.sendToXBoard("move " + xboard.sir.charAt(j) + "5");
+                        brd.move(48+j, 32+j);
                         j++;
                     }
-                   else myMove = "resign";
+                    else xboard.sendToXBoard("resign");
                 }
-                 side = (side + 1) % 2;
-                 System.out.println(myMove);
             }
-			command = inReader.readLine();
-			if (command.length() > 0)
-				outWriter.write(command+"\n");
-			//outWriter.write("*"+brd.pos1+"\n");
-			retCommand = evaluateCommand(command);
-			outWriter.flush();
-			if (retCommand.equals("exit")){
-				outWriter.close();
-				inReader.close();
-				return;
-			}
-			if (retCommand.length() > 0)
-				System.out.println(retCommand);
-		}
-		
-    }
-    
-    private static String evaluateCommand(String command){
-		
-    	//verificam mai intai comenzile cu probabilitate mai mare de aparitie
-    	// precum mutarile,time si otim iar restul comenzilor le verificam in ordinea aparitiei lor
-    	
-    	if (command.startsWith("usermove")){
-    		String mutare = command.substring(9);
-    		brd.SAN(mutare,side);
-    		brd.move(brd.pos1,brd.pos2);
-    		//System.out.println("***" + brd.pos1);
-    		side = (side + 1)%2;
-    		return "";
-    		
-    	}
-    	if (command.startsWith("time") || command.startsWith("otim")){
-    		return "";
-    	}
-    	if (command.equals("xboard")){
-    		System.out.println();
-    		return "";
-    	}
-    	if (command.startsWith("protover")){
-    		return "feature usermove=1 san=1 myname=\"Nibby\"";
-    	}
-    	if (command.equals("new")){
-    		side = WHITE;
-    		engine = BLACK;
-    		return "";
-    	}
-    	if (command.equals("computer") || command.equals("hard") || command.equals("easy") || 
-    			command.startsWith("level") || command.startsWith("accepted") || command.equals("post")
-    			|| command.equals("random"))
-    		return "";
-    	if (command.equals("force")){
-    		engine = FORCE;
-    		return "";
-    	}
-    	if (command.equals("white")){
-    		side = WHITE;
-            engine = BLACK;
-            return "";
-    	}
-    	if (command.equals("black")) {
-            side = BLACK;
-            engine = WHITE;
-            return "";
+            else 
+            	if (xboard.lastMove.startsWith("usermove")){
+                	String mutare = xboard.lastMove.substring(9);
+            		brd.SAN(mutare,xboard.side);
+            		brd.move(brd.pos1,brd.pos2);
+                }
+
         }
-    	if (command.equals("go")){
-    		engine = side;
-    		return "";
-    	}
-    	if (command.equals("quit")){
-    		return "exit";
-    	}
-    	//pentru orice alte comenzi care au probabilitate 
-    	//mai mica de aparitie nu ne intereseaza sa le evaluam si intoarcem sirul vid 
-    	return "";
     }
 }
+    
+ 
