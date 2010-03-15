@@ -100,12 +100,12 @@ public class Board {
 		
 		if (type2 !=_EMPTY) {
 			pieces[type2&7]^= mask2;
-			color[type2>>3]^=mask2;
+			color[type2>>>3]^=mask2;
 		}
 		
 		table  = table ^ mask1 | mask2;
 		pieces[type&7] ^= mask1 | mask2;//(pieces[type&7] ^ mask1) | mask2;
-		color[type>>3] ^= mask1 | mask2;
+		color[type>>>3] ^= mask1 | mask2;
 	
 		types[pos2]=types[pos1];
 		types[pos1]=_EMPTY;
@@ -121,7 +121,7 @@ public class Board {
 		long move=Moves.all[type][pos1];
 		if (type==W_PAWN || type==B_PAWN){
 			//move = 1L << pos1;
-			move = Moves.Pawns[type>>3][pos1];
+			move = Moves.Pawns[type>>>3][pos1];
 
 			// Modify!
 			if (type==W_PAWN){
@@ -133,7 +133,7 @@ public class Board {
 					move=0L;
 
 			move &= ~table;
-			move |= (Moves.PawnTakes[type>>3][pos1] & (color[(type>>3) ^ 1]));
+			move |= (Moves.PawnTakes[type>>>3][pos1] & (color[(type>>>3) ^ 1]));
 		}
 		Usual.printBoard(move);
 		return move;
@@ -1005,30 +1005,7 @@ public class Board {
 		
 	}
 	
-	public static void main(String args[]){
-		Board brd=new Board();
-		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-		String move="";
-		
-		brd.testare();
-		
-		/*
-		while (true){
-			brd.printBoard();
-			try {
-				move=in.readLine();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			if (brd.isValidMove(Usual.pos1(move),Usual.pos2(move)))
-					brd.move(Usual.pos1(move),Usual.pos2(move));
-			else 
-				System.out.println("NotValid");
-		
-		}
-		*/
-	}
+
 	
 	public boolean check;
 	public boolean checkmate;
@@ -1037,24 +1014,24 @@ public class Board {
 	public byte piece_type;
 	public byte castling;
 	public int pos1,pos2;
-	public void SAN(String mutare, int color){
+	public void SAN(String mutare, int clr){
 		int lin = -1, col = -1;
 		check = false;
 		checkmate = false;
-		promotion = 0;
+		promotion = _EMPTY;
 		captured = false;
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
 		if (mutare.equals("O-O")){
 			castling = W_KING; //rocada pe partea regelui
-			if (color == 1)
+			if (clr == 1)
 				castling = B_KING;
 			return;
 		}
 		if (mutare.equals("O-O-O")){
 			castling = W_QUEEN; //rocada pe partea reginei
-			if (color == 1)
+			if (clr == 1)
 				castling = B_QUEEN;
 			return;
 		}
@@ -1072,13 +1049,14 @@ public class Board {
 			mutare = mutare.substring(0,i-2);
 			i = i - 2;
 		}
-		pos2 = Usual.position(mutare.substring(i-1,i));
+		pos2 = Usual.position(mutare.substring(i-1));
 		i = i - 2;
-		mutare = mutare.substring(0,i);
-		if (mutare.indexOf("x")>0){
+		//if (i>=0) System.out.println("***"+mutare.charAt(i));
+		if (mutare.indexOf("x")>=0){
 			captured = true;
-			i--;
+			i = mutare.indexOf("x") - 1;
 		}
+		//if (i>=0) System.out.println("**"+mutare.charAt(i));
 		if (i>=0  && Character.isDigit(mutare.charAt(i))){
 			lin = mutare.charAt(i)-'1';
 			i-- ;
@@ -1086,20 +1064,23 @@ public class Board {
 		if (i>=0 && "abcdefgh".indexOf(mutare.charAt(i))>=0){
 			col = mutare.charAt(i)-'a';
 			i--;
+			//System.out.println("!");
 		}
 		if (i>=0 && "  RNBQK".indexOf(mutare.charAt(i))>=0)
 			piece_type = (byte)"  RNBQK".indexOf(mutare.charAt(i));
 		else 
 			piece_type = 1;
-		if (col != -1 && lin != -1)
+		if (col != -1 && lin != -1){
 			pos1 = lin*8 + col;
+			return;
+		}
 		if (col != -1 && lin == -1){
-			long bit = pieces[piece_type]; 
-			long col1 = 0x8080808080808080L >>> col;
+			long bit = pieces[piece_type]&color[clr]; 
+			long col1 = 0x0101010101010101L << col;
 			bit &= col1;
 			long firstb;
 			int poz;
-			if (color == 1)
+			if (clr == 1)
 				piece_type |= 8;
 			while (bit != 0L){
 				firstb = Long.highestOneBit(bit);
@@ -1110,14 +1091,17 @@ public class Board {
 					break;
 				}
 			}
+			if (pos1==-1)
+				pos1=3*8+col;
+			return;
 		}
 		if (col == -1 && lin != -1) {
-			long bit = pieces[piece_type];
-			long lin1 = 0xFFL << lin;
+			long bit = pieces[piece_type]&color[clr];
+			long lin1 = 0xFFL << lin*8;
 			bit &= lin1;
 			long firstb;
 			int poz;
-			if (color == 1)
+			if (clr == 1)
 				piece_type |= 8;
 			while (bit != 0L){
 				firstb = Long.highestOneBit(bit);
@@ -1128,12 +1112,13 @@ public class Board {
 					break;
 				}
 			}
+			return;
 		}
 		if (col == -1 && lin == -1){
-			long bit = pieces[piece_type];
+			long bit = pieces[piece_type]&color[clr];
 			long firstb;
 			int poz;
-			if (color == 1)
+			if (clr == 1)
 				piece_type |=8;
 			while (bit != 0L) {
 				firstb = Long.highestOneBit(bit);
