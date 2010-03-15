@@ -21,13 +21,13 @@ public class Game {
 	        while(xboard.isAlive()) {
 	            boolean citit = xboard.read();
 	            if(xboard.isTurn()) {
-	            if (xboard.engine == xboard.WHITE) {
+	            if (xboard.myColor == xboard.WHITE) {
 	                    if (i < 8) {
 	                        xboard.sendToXBoard("move " + sir.charAt(i) + "2" + sir.charAt(i) + "4");
 	                        i++;
 	                    }
 	                }
-	                if (xboard.engine == xboard.BLACK) {
+	                if (xboard.myColor == xboard.BLACK) {
 	                    if (j < 8) {
 	                        xboard.sendToXBoard("move " + sir.charAt(j) + "7" + sir.charAt(j) + "5");
 	                        j++;

@@ -30,14 +30,8 @@ public class XBoard2{
 		log = new BufferedWriter(new FileWriter("out.txt"));
 	}
 	
-	// initializeaza conexiunea
-	// se asteapta mutarea
 	public void init() throws Exception {
-		// while ( System.in.available() )
-		// init culori
-		// init time
-		// totul pana la GO
-		String read="";
+		String read=""; 
 		while (inReader.ready() && !read.contains("go")){
 			read=inReader.readLine();
 			log.write(read+"\n");
@@ -105,3 +99,4 @@ public class XBoard2{
 		}
 	}
 }
+	

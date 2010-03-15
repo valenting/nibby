@@ -13,11 +13,11 @@ public class XBoard {
     public static String sir = "abcdefgh";
     public static int WHITE = 0;
     public static int BLACK = 1;
-    public static int FORCE = 2;
-
-    public boolean on=false;
-    public int side = WHITE;
-    public int engine = BLACK;
+    public static int FORCE = -1;
+ 
+    public boolean on = false;
+    public int toMove = WHITE;
+    public int myColor = BLACK;
 
     public String lastMove = "";
     public int time;
@@ -25,13 +25,20 @@ public class XBoard {
     
 
     public XBoard() throws IOException {
+    	
         inPipe = new BufferedReader(new InputStreamReader(System.in));
         on=true;
-        log = new PrintWriter("D:/out" + (int) (Math.random() * 20) + ".txt");
+    }
+    
+    public XBoard(boolean log_messages) throws IOException{
+    	inPipe = new BufferedReader(new InputStreamReader(System.in));
+        on=true;
+        if (log_messages)
+        	log = new PrintWriter("D:/out" + (int) (Math.random() * 200) + ".txt");
     }
 
     public boolean isTurn() {
-        return side == engine;
+        return toMove == myColor;
     }
     public boolean isAlive() {
         return on;
@@ -39,7 +46,7 @@ public class XBoard {
    
     public void sendToXBoard(String command) {
         if (command.startsWith("move")) {
-            side = (side + 1) % 2;
+            toMove = (toMove + 1) % 2;
         }
         System.out.println(command);
         System.out.flush();
@@ -64,13 +71,13 @@ public class XBoard {
         
         if (lastMove.length() > 0) {
             if (lastMove.startsWith("usermove")) {
-                side = (side + 1) % 2;
+                toMove = (toMove + 1) % 2;
                 return true;
 
             }
             if (lastMove.equals("new")) {
-                side = WHITE;
-                engine = BLACK;
+                toMove = WHITE;
+                myColor = BLACK;
                 return true;
             }
             if (lastMove.startsWith("time")) {
@@ -82,7 +89,7 @@ public class XBoard {
                 return true;
             }
             if (lastMove.equals("force")) {
-                engine = FORCE;
+                myColor = FORCE;
                 return true;
 
             }
@@ -94,17 +101,17 @@ public class XBoard {
                 return true;
             }
             if (lastMove.equals("white")) {
-                side = WHITE;
-                engine = BLACK;
+                toMove = WHITE;
+                myColor = BLACK;
                 return true;
             }
             if (lastMove.equals("black")) {
-                side = BLACK;
-                engine = WHITE;
+                toMove = BLACK;
+                myColor = WHITE;
                 return true;
             }
             if (lastMove.equals("go")) {
-                engine = side;
+                myColor = toMove;
                 return true;
             }
             if (lastMove.equals("ping")) {
@@ -139,13 +146,13 @@ public class XBoard {
         while(xboard.isAlive()) {
             boolean citit = xboard.read();
             if(xboard.isTurn()) {
-            if (xboard.engine == WHITE) {
+            if (xboard.myColor == WHITE) {
                     if (i < 8) {
                         xboard.sendToXBoard("move " + sir.charAt(i) + "2" + sir.charAt(i) + "4");
                         i++;
                     }
                 }
-                if (xboard.engine == BLACK) {
+                if (xboard.myColor == BLACK) {
                     if (j < 8) {
                         xboard.sendToXBoard("move " + sir.charAt(j) + "7" + sir.charAt(j) + "5");
                         j++;
