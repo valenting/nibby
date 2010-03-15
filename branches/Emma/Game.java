@@ -30,35 +30,27 @@ public class Game {
 				String myMove = "";
                 if (engine == WHITE) {
                     if (i < 8) {
-                        myMove = "move " + sir.charAt(i) + "2" + sir.charAt(i) + "4";                    
+                        myMove = "move " + sir.charAt(i) + "4"; 
+                        brd.move(8+i,24+i);
                         i++;
                     }
-                   // else myMove = "resign";
+                    else myMove = "resign";
                 }
                 if (engine == BLACK) {
                     if (j < 8) {
-                        myMove = "move " + sir.charAt(j) + "7" + sir.charAt(j) + "5";
+                    	brd.move(48+i, 32+i);
+                        myMove = "move " + sir.charAt(j) + "5";
                         j++;
                     }
-                   // else myMove = "resign";
+                   else myMove = "resign";
                 }
                  side = (side + 1) % 2;
-                  
-                 Move m = new Move(myMove.substring(5));
-                 
-                 if (brd.isValidMove(m.getPos1(),m.getPos2())){
- 					brd.move(m.getPos1(),m.getPos2());
- 					System.out.println(myMove);
-                 }
- 					
-                 else 
-                	 System.out.println("resign");
-                 
-                 //System.out.println(myMove);
+                 System.out.println(myMove);
             }
 			command = inReader.readLine();
 			if (command.length() > 0)
 				outWriter.write(command+"\n");
+			//outWriter.write("*"+brd.pos1+"\n");
 			retCommand = evaluateCommand(command);
 			outWriter.flush();
 			if (retCommand.equals("exit")){
@@ -75,12 +67,13 @@ public class Game {
     private static String evaluateCommand(String command){
 		
     	//verificam mai intai comenzile cu probabilitate mai mare de aparitie
-    	// precum mutarile,time si otim iar restul comenzilor le verificam in rodinea aparitiei lor
+    	// precum mutarile,time si otim iar restul comenzilor le verificam in ordinea aparitiei lor
     	
     	if (command.startsWith("usermove")){
     		String mutare = command.substring(9);
     		brd.SAN(mutare,side);
     		brd.move(brd.pos1,brd.pos2);
+    		//System.out.println("***" + brd.pos1);
     		side = (side + 1)%2;
     		return "";
     		
@@ -93,7 +86,7 @@ public class Game {
     		return "";
     	}
     	if (command.startsWith("protover")){
-    		return "feature usermove=1 san=1 myname=Nibblonians";
+    		return "feature usermove=1 san=1 myname=\"Nibby\"";
     	}
     	if (command.equals("new")){
     		side = WHITE;
