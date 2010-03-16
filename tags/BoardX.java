@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 
 /*
  *	Forma simplificata la insistentele lui Vali
+ *	Am mai modificat ceva si acum muta toti pionii
+ *	Facui mai multe verificari si modificari si merge corect pe culoarea alb, pion
  */
 
 //Asta random este doar de test
@@ -435,8 +437,6 @@ public class BoardX {
 		System.out.println();
 	}
 	
-	//	Functie care afiseaza un long ca un bitboard
-	
 	long movesOfWhitePawn(long piece,byte row,byte column){
 		long forward = 0L,hostile=0L,oneMove;
 		oneMove = piece << 8;
@@ -486,11 +486,11 @@ public class BoardX {
 		}
 		if(column<7){	//	nu este pe coloana ultima
 			oneMove = piece >>> 7;
-			hostile |= oneMove;printBoard(hostile);
+			hostile |= oneMove;//printBoard(hostile);
 		}
 		if(column>0){	//	nu este pe pima coloana
 			oneMove = piece >>> 9;
-			hostile |= oneMove;printBoard(hostile);
+			hostile |= oneMove;//printBoard(hostile);
 		}
 		
 		hostile = hostile & color[0];	//	captura piessa alba
@@ -705,17 +705,26 @@ public class BoardX {
 	 *																										*
 	 ********************************************************************************************************/
 	
+	long getValidMoves(int position){
+		/*
+		 *	Intoarce masca de mutari valide pentru piesa aflata in patratul cu numarul de ordine
+		 *	dat ca parametru
+		 */
+		long mask = potentialMovesBoard(1L << position);
+		return filterMoveMask(1L << position,mask);
+	}
 	
-	long filterMoveMasks(long start,long possibleMoves){
+	long filterMoveMask(long start,long possibleMoves){
 		/*
 		 *	Functia filtreaza matricea de mutari psoibile eliminandu-le pe
 		 *	acele ce ar lasa regele propriu in sah.
 		 */
 		long oneMove = Long.highestOneBit(possibleMoves);
 		long newMask = 0L;
-		while(oneMove!=0L && isValidMove(start,oneMove)){
+		while(oneMove!=0L){
+			if(isValidMove(start,oneMove))
+				newMask |= oneMove;
 			possibleMoves ^= oneMove;
-			newMask |= oneMove;
 			oneMove = Long.highestOneBit(possibleMoves);
 		}
 		return newMask;
@@ -730,7 +739,7 @@ public class BoardX {
 		 *	Pentru rege se fac verificari suplimentare in cazul in caremutarea propusa spre
 		 *	analiza este rocada.
 		 */
-		byte elementType = types[Long.numberOfTrailingZeros(end)];
+		byte elementType = types[Long.numberOfTrailingZeros(start)];
 		boolean result = false;
 		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
 			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
@@ -757,9 +766,10 @@ public class BoardX {
 			}
 		}
 		else{	//	se analizeaza mutarea unei piese diferite de rege
-		
+																				System.out.println("nu e rege");
+			elementType = types[Long.numberOfTrailingZeros(end)];
 			updateMoveOnBoard(start,end);
-			if((color[0] & start)!=0)	//se studiaza validitatea mutarii WHITE
+			if((color[0] & end)!=0)	//se studiaza validitatea mutarii WHITE
 				result = avoidCheckPosition((byte)0);
 			else
 				result = avoidCheckPosition((byte)1);
@@ -778,12 +788,15 @@ public class BoardX {
 		 */
 		long allAttackingPieces = color[((defendingSide+1)&1)];
 		long piece,king = color[defendingSide] & pieces[6];
+																		
 		
 		piece = Long.highestOneBit(allAttackingPieces);
 		while(piece!=0L){
+																		
 			if((potentialMovesBoard(piece)&king)!=0L)	//sah
 				return false;
 			allAttackingPieces ^= piece;
+			piece = Long.highestOneBit(allAttackingPieces);
 		}
 		return true;
 	}
@@ -875,6 +888,7 @@ public class BoardX {
 		 */
 		pieces[elementType & 7] |= piece;	//modificare tabla piese
 		color[elementType >>> 3] |= piece;	//modificare tabla culori
+		table |= piece;
 		types[Long.numberOfTrailingZeros(piece)] = elementType;
 	}
 	
@@ -890,7 +904,7 @@ public class BoardX {
 		if((color[0]&piece)==0) //	piesa BLACK
 			type |= 8;
 		
-		pieces[1] |= piece;	//	eliminarea pionului
+		pieces[1] ^= piece;	//	eliminarea pionului
 		types[Long.numberOfTrailingZeros(piece)] = type;//	adaugarea pe tabla de tipuri
 	}
 	
@@ -949,12 +963,18 @@ public class BoardX {
 		 		boardIndicatorsUpdate(start,end);
 		  
 		  */
-		 
-		 
+		 								//	System.out.println("sunt pe linia " + rowPosition[number] );
+		 								//	System.out.println(((end == start << 7) || (end == start << 9)));
+		 								//	System.out.println(((end == start << 7) || (end == start << 9))&&((end & table)==0L));
+		 								//				printBoard(table);
 		 switch(elementType){
 		 	case W_PAWN : {
-		 		if((end == start << 7) || (end == start << 9))	// este mutarea de captura
-		 			if((end & table)==0){ // nu este piesa la destinatie(deci este enPassant)
+		 		System.out.println("Ce afisez?");
+		 		if(((end == start << 7) || (end == start << 9))&&((end & table)==0L)){	
+		 			 // este mutare de captura dar nu este piesa la destinatie(deci este enPassant)
+		 								
+		 								System.out.println("En Passant");
+		 				
 		 				extra = end>>8;	//	pozitia pionului capturat
 		 				pieces[1] ^= extra;
 		 				color[1] ^= extra;
@@ -962,17 +982,30 @@ public class BoardX {
 		 				
 		 				updateMoveOnBoard(start,end);
 		 				boardIndicatorsUpdate(start,end);
-		 			}
-		 		else if(rowPosition[number]==7){	//	este in situatie de a face promovare
-		 			updateMoveOnBoard(start,end);
-		 			//pentru a aplica promotionUpdate este nevoie ca la destinatie sa fie pion propriu
-		 			promotionUpdate(end,(byte)(promotion&7));
-		 			boardIndicatorsUpdate(start,end);
+		 				break;
 		 		}
+			 	if(rowPosition[Long.numberOfTrailingZeros(end)]==7){	//	este in situatie de a face promovare
+			 		updateMoveOnBoard(start,end);
+			 											System.out.println("este promotion");
+			 		
+			 		//pentru a aplica promotionUpdate este nevoie ca la destinatie sa fie pion propriu
+			 		promotionUpdate(end,(byte)(promotion&7));
+			 		boardIndicatorsUpdate(start,end);
+			 	}
+		 		else{
+		 							System.out.println("simplu");
+		 			updateMoveOnBoard(start,end);
+		 			boardIndicatorsUpdate(start,end);
+		 											//	System.out.println("Asta-i placa");
+		 											//	printBoard(pieces[1] & color[0]);
+		 											//	printBoard(table);
+		 			
+		 		}
+		 		break;
 		 	}
 		 	case B_PAWN : {
-		 		if((end == start >>> 7) || (end == start >>> 9))
-		 			if((end & table)==0){ // nu este piesa la destinatie(deci este enPassant)
+		 		if(((end == start >>> 7) || (end == start >>> 9))&&((end & table)==0L)){ 
+		 			
 		 				extra = end<<8;	//	pozitia pionului capturat
 		 				pieces[0] ^= extra;
 		 				color[0] ^= extra;
@@ -980,10 +1013,14 @@ public class BoardX {
 		 				
 		 				updateMoveOnBoard(start,end);
 		 				boardIndicatorsUpdate(start,end);
-		 			}
-		 		else if(rowPosition[number]==0){	//	este in situatie de a face promovare
+		 		}
+			 	else if(rowPosition[Long.numberOfTrailingZeros(end)]==0){	//	este in situatie de a face promovare
+			 		updateMoveOnBoard(start,end);
+			 		promotionUpdate(end,(byte)(promotion|8));
+			 		boardIndicatorsUpdate(start,end);
+			 	}
+		 		else{
 		 			updateMoveOnBoard(start,end);
-		 			promotionUpdate(end,(byte)(promotion|8));
 		 			boardIndicatorsUpdate(start,end);
 		 		}
 		 	}
@@ -994,6 +1031,7 @@ public class BoardX {
 		 			updateMoveOnBoard(start>>>4,start>>>1);//	se muta tura corespunzator
 		 		updateMoveOnBoard(start,end);
 		 		boardIndicatorsUpdate(start,end);
+		 		break;
 		 	}
 		 	case B_KING : {
 		 		if(start<<2 == end)	//rocada mica
@@ -1002,6 +1040,7 @@ public class BoardX {
 		 			updateMoveOnBoard(start>>>4,start>>>1);//	se muta tura corespunzator
 		 		updateMoveOnBoard(start,end);
 		 		boardIndicatorsUpdate(start,end);
+		 		break;
 		 	}
 		 	default:{
 		 		updateMoveOnBoard(start,end);
@@ -1016,6 +1055,51 @@ public class BoardX {
 	 *										Sfarsit metode de update al baordului
 	 ********************************************************************************************************
 	 ********************************************************************************************************/
+	
+	public String futureGetNextMove(byte side){
+		/*
+		 *	Functia primeste ca parametru culoarea si alege o mutare care ii este
+		 *	convenabila, urmand sa o transforme in SAN prin apelul unei functii
+		 *	corespunzatoare din clasa definita de Emma
+		 */
+		
+		long optimumStart = 0L;
+		long optimumEnd = 0L;
+		boolean isCheck,isCapture;
+		byte castling = 0;	//1 daca este rocada mica, 2 daca este rocada mare
+		byte elementType = 0;
+		 
+		/*{
+		 *	Un cod care apeleaza convenabil o functie astfel incat sa intoarca mutarea
+		 *	cea mai onvenabila... ne vom love de el la minimx si la tot felul de optimizari
+		 *	asa ca nu vreau sa scriu asta deocamdata, dar voi presupune ca in urma
+		 *	prelucrarilor functia va considera drept solutie optima mutarea 
+		 *		long optimumStart,long optimumEnd
+		 *
+		 *	Inainte sa scrie careva ceva aici(mai ales Vali) as sugera ca functia asta sa
+		 *	semene ca structura cu functia recursiva... Din nou, scopul sugestiei este de a va
+		 *	impiedica sa scrieti cod inainte de a discuta implementarea.
+		 *
+		 *}
+		 */
+		if((elementType | 7) == W_KING){
+			if(optimumEnd == optimumStart << 2)	//	rocada mica
+				castling = 1;
+			else if(optimumEnd == optimumStart >>> 2)	//	rocada mare
+				castling = 2;
+		}
+		else{
+			elementType = getPieceType(Long.numberOfTrailingZeros(optimumEnd));
+			updateMoveOnBoard(optimumStart,optimumEnd);
+			isCheck = !avoidCheckPosition((byte)((side+1)&1));	//	verifica daca adversarul este in sah
+			updateMoveOnBoard(optimumEnd,optimumStart);
+			restorePieceOnBoard(optimumEnd,elementType);
+			
+			if(elementType!=0)	//	captura
+				isCapture = true;
+		}
+		return "La Asta va fi ceva de lucru";
+	}
 	
 	public String getSANMove(long start,long end){
 		/*
@@ -1064,42 +1148,93 @@ public class BoardX {
 		/*
 		 *	Functie folosita pentru a selecta mutarea urmatoare(cel putin pentru etapa 1);
 		 *	Functia intoarce un string cu mutarea transpusa in SAN
+		 *
+		 *	mutarea se va lua din SAN dupa un apel de forma
+		 *			
+		 *		toSan(int sursa,int destinatie,boolean isCheck,boolean isCapture,byte castling); 
+		 *
 		 */
 		
 		long piece = color[side] & pieces[1];
 		String moveCode = "";
 		
+		boolean isCheck=false,isCapture=false;
+		byte rocada = 0;
 		
 						
 		long endPosition;
 		int number;
 		if(side==0)	{//WHITE
+															//		System.out.println("Initial");
+															//		printBoard(table);
+		
+		
 			piece = Long.highestOneBit(piece);
+			
+			if(piece==0L)
+				return "quit";
+			
 			number = Long.numberOfTrailingZeros(piece);
-			endPosition = movesOfWhitePawn(piece,rowPosition[number],columnPosition[number]);
+																		
+																		System.out.println("piesa selectata");
+																	printBoard(piece);
+																		
+			endPosition = getValidMoves(number);//movesOfWhitePawn(piece,rowPosition[number],columnPosition[number]);
+			
+																System.out.println("mutari valide");
+																	printBoard(endPosition);
+			
+			
+			
+			
 			endPosition = Long.highestOneBit(endPosition);
+			
+														//		System.out.println("iar tabla");
+														//			printBoard(table);
 			
 			if(endPosition==0L)
 				return "quit";
+			
+			
+									
+			if((endPosition & color[1])!=0L)	//captura;
+				isCapture = true;
+				
+						
+			isCheck = !avoidCheckPosition((byte)1);
+			
+			
+			
 			moveCode = getSANMove(piece,endPosition);
-			updateMoveOnBoard(piece,endPosition);
-			if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==7)
-				promotionUpdate(endPosition,(byte)0);
+														//	System.out.println("SAN, ceva?");
+														//			printBoard(table);
+			updateBoard(piece,endPosition,(byte)5);
+			//if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==7)
+			//	promotionUpdate(endPosition,(byte)5);
+														//			System.out.println("Si dupa toate cele");
+														//			printBoard(table);
+																					
+																					
 			return moveCode;
 		}
 		else{		//Black
 			piece = Long.lowestOneBit(piece);
 			number = Long.numberOfTrailingZeros(piece);
 			movesOfWhitePawn(piece,rowPosition[number],columnPosition[number]);
-			endPosition = movesOfBlackPawn(piece,rowPosition[number],columnPosition[number]);
+			endPosition = getValidMoves(number);//movesOfBlackPawn(piece,rowPosition[number],columnPosition[number]);
 			endPosition = Long.lowestOneBit(endPosition);
 			
 			if(endPosition==0L)
 				return "quit";
+			
+			if((endPosition & color[0])!=0)	//captura;
+				isCapture = true;
+			isCheck = !avoidCheckPosition((byte)0);
+			
 			moveCode = getSANMove(piece,endPosition);
-			updateMoveOnBoard(piece,endPosition);
-			if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==0)
-				promotionUpdate(endPosition,(byte)8);
+			updateBoard(piece,endPosition,(byte)13);
+			//if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==0)
+			//	promotionUpdate(endPosition,(byte)13);
 			return moveCode;
 		}
 		
@@ -1129,7 +1264,7 @@ public class BoardX {
 	*/	
 		String move="";
 		while(true){
-			move = nextMove((byte)1);
+			move = nextMove((byte)0);
 			if(move.equals("quit"))
 				break;
 			System.out.println(move);
