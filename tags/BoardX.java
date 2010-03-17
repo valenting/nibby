@@ -6,7 +6,9 @@ import java.io.InputStreamReader;
 /*
  *	Forma simplificata la insistentele lui Vali
  *	Am mai modificat ceva si acum muta toti pionii
- *	Facui mai multe verificari si modificari si merge corect pe culoarea alb, pion
+ *	Functioneaza corect pentru mutarea pionilor albi si negri (la nivelul etapei I)
+ *
+ *	Am implementat si o functie de determinare a situatiei de sah-mat
  */
 
 //Asta random este doar de test
@@ -110,37 +112,6 @@ public class BoardX {
 		types[pos1]=_EMPTY;
 	}
 	
-	/*	
-	public long getValidMoves(int pos1, byte type){
-		long move=Moves.all[type][pos1];
-		if (type==W_PAWN || type==B_PAWN){
-			//move = 1L << pos1;
-			move = Moves.Pawns[type>>3][pos1];
-
-			// Modify!
-			if (type==W_PAWN){
-				if ((1L<<(pos1+8)&table)!=0L)
-					move=0L;
-			}
-			else
-				if ((1L<<(pos1-8)&table)!=0L)
-					move=0L;
-
-			move &= ~table;
-			move |= (Moves.PawnTakes[type>>3][pos1] & (color[(type>>3) ^ 1]));
-		}
-		Usual.printBoard(move);
-		return move;
-	}
-	
-	public void move(int pos1, int pos2){
-		this.move(pos1, pos2, this.getPieceType(pos1));
-	}
-	
-	public boolean isValidMove(int pos1, int pos2){
-		return isValidMove(pos1, pos2, this.getPieceType(pos1));
-	}
-	*/
 	//.............................................................................................
 	/*
 	 *	Functii adaugate de Andrei 
@@ -415,12 +386,6 @@ public class BoardX {
 
 	}
 	
-	/********************************************************************************************************
-	 *																										*
-	 *										Inceput metode de generare mutari								*
-	 *																										*
-	 ********************************************************************************************************/
-	
 	//	Functie care afiseaza un long ca un bitboard
 	public void printBoard(long n){
 		long mask = 1L;
@@ -437,6 +402,14 @@ public class BoardX {
 		}
 		System.out.println();
 	}
+	
+	/********************************************************************************************************
+	 *																										*
+	 *										Inceput metode de generare mutari								*
+	 *																										*
+	 ********************************************************************************************************/
+	
+	
 	
 	long movesOfWhitePawn(long piece,byte row,byte column){
 		long forward = 0L,hostile=0L,oneMove;
@@ -802,6 +775,23 @@ public class BoardX {
 		return true;
 	}
 	
+	boolean isCheckMate(byte defendingSide){
+		/*
+		 *	Functia determina daca regele de culoare data ca parametru este in mat
+		 */
+		
+		long allPieces = color[defendingSide];
+		long onePiece = Long.highestOneBit(allPieces);
+		while(onePiece!=0L){
+			if(getValidMoves(Long.numberOfTrailingZeros(onePiece))!=0L)	//	exista mutari ce nu lasa regele propriu in sah
+				return false;
+			allPieces ^= onePiece;
+			onePiece = Long.highestOneBit(allPieces);
+		}
+		return true;
+		
+	}
+	
 	/*
 	 *										Sfarsit metode de analiza a mutarilor
 	 ********************************************************************************************************
@@ -1007,15 +997,16 @@ public class BoardX {
 		 	case B_PAWN : {
 		 		if(((end == start >>> 7) || (end == start >>> 9))&&((end & table)==0L)){ 
 		 			
-		 				extra = end<<8;	//	pozitia pionului capturat
+		 				extra = end<<8;
 		 				pieces[0] ^= extra;
 		 				color[0] ^= extra;
 		 				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
 		 				
 		 				updateMoveOnBoard(start,end);
 		 				boardIndicatorsUpdate(start,end);
+		 				break;
 		 		}
-			 	else if(rowPosition[Long.numberOfTrailingZeros(end)]==0){	//	este in situatie de a face promovare
+			 	if(rowPosition[Long.numberOfTrailingZeros(end)]==0){	//	este in situatie de a face promovare
 			 		updateMoveOnBoard(start,end);
 			 		promotionUpdate(end,(byte)(promotion|8));
 			 		boardIndicatorsUpdate(start,end);
@@ -1024,6 +1015,7 @@ public class BoardX {
 		 			updateMoveOnBoard(start,end);
 		 			boardIndicatorsUpdate(start,end);
 		 		}
+		 		break;
 		 	}
 		 	case W_KING : {
 		 		if(start<<2 == end)	//rocada mica
@@ -1105,7 +1097,17 @@ public class BoardX {
 	
 	
 	public String emmasToSAN(byte elementType,long endPosition,byte row,byte column,
-								boolean checkPosition,boolean capture,byte castlingType,byte promotion){
+								boolean checkPosition,boolean checkMate,boolean capture,byte castlingType,byte promotion){
+		
+		/*
+		 *	Initial vorbisem cu Emma sa faca asta, asa ca i-am zis emmasToSAN, dar apoi am scris-o eu.
+		 *	
+		 *
+		 *	Functia scrie traduce in SAN o mutare, conform parametrilor de apel; este posibil sa o introduc
+		 *	in functia apelanta (intermediaryToSANMove) pentru ca primeste prea multi parametrii
+		 *
+		 *	elementType este de fapt unul din tipurile de piese de la 1 la 6, corespunzator mastilor
+		 */
 		
 		StringBuffer sb = new StringBuffer();
 		if(castlingType == 1)
@@ -1128,7 +1130,9 @@ public class BoardX {
 				sb.append(pieceForSAN[promotion]);
 			}
 		}
-		if(checkPosition)
+		if(checkMate)
+			sb.append("#");
+		else if(checkPosition)
 			sb.append("+");
 		
 		return sb.toString();
@@ -1138,13 +1142,18 @@ public class BoardX {
 	
 	public String intermediaryToSANMove(long start,long end){
 		/*
-		 *	KWL
+		 *	Functoe intermediara care momentan calculeaza parametrii necesari crearii codificarii
+		 *	SAN.
+		 *	
+		 *	Este posibil sa unesc functia asta cu functia propriu-zisa de generare a codificarii SAN
+		 *	prezentata mai sus.
 		 */
 		
 		
 		byte castlingType = 0;
 		boolean isCapture = false;
 		boolean checkPosition = false;
+		boolean checkMate = false;
 		
 		byte row = 9,column = 9,extra = 9;
 		
@@ -1164,12 +1173,14 @@ public class BoardX {
 			long allPieces = color[side] & pieces[elementType];
 			long onePiece = Long.highestOneBit(allPieces);
 			
+			//	calculul destinatiei in termeni de coordonate carteziene
 			number = (byte)Long.numberOfTrailingZeros(end);
 			byte endRow = rowPosition[number];
 			byte endColumn = columnPosition[number];
 			
-			if(endRow == 0 || endRow==7)
-				promotion = W_QUEEN;
+			if(elementType == W_PAWN)	//	daca este pion
+				if(endRow == 0 || endRow==7)	//	pe ultimul rand
+					promotion = W_QUEEN;
 			
 			while(onePiece != 0L){	//	mai exista piese de acest tip
 				if(onePiece != start){
@@ -1187,18 +1198,26 @@ public class BoardX {
 				onePiece = Long.highestOneBit(allPieces);
 			}
 		}
+		//	Se face update-ul boardului in conformitate cu mutarea curenta
 		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));
+		//	Pentru noua configuratie a tablei de sah se determina daca adversarul e in sah
 		checkPosition = !avoidCheckPosition((byte)((side+1)&1));
+		
+		//	adversarul este in sah-mat
+		checkMate = isCheckMate((byte)((side+1)&1));
+		
 		if(extra<9)
 			column = extra;
 		
 		
-		return emmasToSAN(elementType,end,row,column,checkPosition,isCapture,castlingType,promotion);
+		return emmasToSAN(elementType,end,row,column,checkPosition,checkMate,isCapture,castlingType,promotion);
 		
 	}
 	
 	public String getSANMove(long start,long end){
-		
+		/*
+		 *	Veche functie de conversie a mutarii pionilor in SAN
+		 */
 		int numberStart = Long.numberOfTrailingZeros(start);
 		int numberEnd = Long.numberOfTrailingZeros(end);
 		
@@ -1257,76 +1276,35 @@ public class BoardX {
 		long endPosition;
 		int number;
 		if(side==0)	{//WHITE
-															//		System.out.println("Initial");
-															//		printBoard(table);
-		
-		
 			piece = Long.highestOneBit(piece);
 			
 			if(piece==0L)
 				return "quit";
 			
 			number = Long.numberOfTrailingZeros(piece);
-																		
-																//		System.out.println("piesa selectata");
-																//	printBoard(piece);
-																		
-			endPosition = getValidMoves(number);//movesOfWhitePawn(piece,rowPosition[number],columnPosition[number]);
-			
-															//	System.out.println("mutari valide");
-															//		printBoard(endPosition);
-			
-			
-			
-			
+			endPosition = getValidMoves(number);
 			endPosition = Long.highestOneBit(endPosition);
-			
-														//		System.out.println("iar tabla");
-														//			printBoard(table);
 			
 			if(endPosition==0L)
 				return "quit";
 			
-			
-			/*						
-			if((endPosition & color[1])!=0L)	//captura;
-				isCapture = true;
-				
-						
-			isCheck = !avoidCheckPosition((byte)1);
-			
-			
-			*/
 			moveCode = intermediaryToSANMove(piece,endPosition);
-														//	System.out.println("SAN, ceva?");
-														//			printBoard(table);
-			//updateBoard(piece,endPosition,(byte)5);
-			//if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==7)
-			//	promotionUpdate(endPosition,(byte)5);
-														//			System.out.println("Si dupa toate cele");
-														//			printBoard(table);
-																					
-																					
 			return moveCode;
 		}
 		else{		//Black
 			piece = Long.lowestOneBit(piece);
+			
+			if(piece==0L)
+				return "quit";
+			
 			number = Long.numberOfTrailingZeros(piece);
-			movesOfWhitePawn(piece,rowPosition[number],columnPosition[number]);
-			endPosition = getValidMoves(number);//movesOfBlackPawn(piece,rowPosition[number],columnPosition[number]);
+			endPosition = getValidMoves(number);
 			endPosition = Long.lowestOneBit(endPosition);
 			
 			if(endPosition==0L)
 				return "quit";
 			
-			if((endPosition & color[0])!=0)	//captura;
-				isCapture = true;
-			isCheck = !avoidCheckPosition((byte)0);
-			
 			moveCode = intermediaryToSANMove(piece,endPosition);
-			updateBoard(piece,endPosition,(byte)13);
-			//if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==0)
-			//	promotionUpdate(endPosition,(byte)13);
 			return moveCode;
 		}
 		
@@ -1356,7 +1334,7 @@ public class BoardX {
 	*/	
 		String move="";
 		while(true){
-			move = nextMove((byte)0);
+			move = nextMove((byte)1);
 			if(move.equals("quit"))
 				break;
 			System.out.println(move);
@@ -1393,15 +1371,7 @@ public class BoardX {
 			System.out.println();
 		}	
 	}
-/*
-	void attacks() {
-		long[] attack1= new long[64];
-		for (int i=0;i<64;i++)
-			attack1[i]=getValidMoves(i, getPieceType(i)) & table & ~color[getPieceType(i)>>3];
-		attacksTo=attack1;
-		
-	}
-*/	
+
 	public static void main(String args[]){
 		BoardX brd=new BoardX();
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
