@@ -120,10 +120,7 @@ public class XBoard {
                 }
                
 
-            }
-
-            
-            
+            }  
             return true;
         }
         return false;

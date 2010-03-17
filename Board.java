@@ -170,7 +170,7 @@ public class Board {
 	}
 	
 
-	//transpunere a unei mutari primite din SAN in forma (poz_initiala, poz_finala)
+	//transpunere a unei mutari primite din SAN in forma (poz_initiala, poz_finala) + informatii despre starea jocului
 	public boolean check;
 	public boolean checkmate;
 	public byte promotion; //retine tipul piesei la care a fost promovat pionul
