@@ -37,6 +37,7 @@ public class BoardX {
 	private boolean canLongCastleBlack = true;
 	public static char columnChar[] = {'A','B','C','D','E','F','G','H'};
 	public static char rowChar[] = {'1','2','3','4','5','6','7','8'};
+	public static char pieceForSAN[] = {' ',' ','R','N','B','Q','K'};
 	
 	public static final long longCastlingWhite = 0x00000000000000EL;
 	public static final long shortCastlingWhite = 0x0000000000000060L;
@@ -766,7 +767,7 @@ public class BoardX {
 			}
 		}
 		else{	//	se analizeaza mutarea unei piese diferite de rege
-																				System.out.println("nu e rege");
+																				//System.out.println("nu e rege");
 			elementType = types[Long.numberOfTrailingZeros(end)];
 			updateMoveOnBoard(start,end);
 			if((color[0] & end)!=0)	//se studiaza validitatea mutarii WHITE
@@ -969,7 +970,7 @@ public class BoardX {
 		 								//				printBoard(table);
 		 switch(elementType){
 		 	case W_PAWN : {
-		 		System.out.println("Ce afisez?");
+		 																//System.out.println("Ce afisez?");
 		 		if(((end == start << 7) || (end == start << 9))&&((end & table)==0L)){	
 		 			 // este mutare de captura dar nu este piesa la destinatie(deci este enPassant)
 		 								
@@ -986,14 +987,14 @@ public class BoardX {
 		 		}
 			 	if(rowPosition[Long.numberOfTrailingZeros(end)]==7){	//	este in situatie de a face promovare
 			 		updateMoveOnBoard(start,end);
-			 											System.out.println("este promotion");
+			 											//System.out.println("este promotion");
 			 		
 			 		//pentru a aplica promotionUpdate este nevoie ca la destinatie sa fie pion propriu
 			 		promotionUpdate(end,(byte)(promotion&7));
 			 		boardIndicatorsUpdate(start,end);
 			 	}
 		 		else{
-		 							System.out.println("simplu");
+		 														//System.out.println("simplu");
 		 			updateMoveOnBoard(start,end);
 		 			boardIndicatorsUpdate(start,end);
 		 											//	System.out.println("Asta-i placa");
@@ -1101,12 +1102,103 @@ public class BoardX {
 		return "La Asta va fi ceva de lucru";
 	}
 	
-	public String getSANMove(long start,long end){
+	
+	
+	public String emmasToSAN(byte elementType,long endPosition,byte row,byte column,
+								boolean checkPosition,boolean capture,byte castlingType,byte promotion){
+		
+		StringBuffer sb = new StringBuffer();
+		if(castlingType == 1)
+			sb.append("O-O");
+		else if(castlingType == 2)
+			sb.append("O-O-O");
+		else{
+			if(elementType != W_PAWN)
+				sb.append(pieceForSAN[elementType]);
+			if(column<8)
+				sb.append(columnChar[column]);
+			if(row<8)
+				sb.append(rowChar[row]);
+			if(capture)
+				sb.append("x");
+			sb.append(columnChar[columnPosition[Long.numberOfTrailingZeros(endPosition)]]);
+			sb.append(rowChar[rowPosition[Long.numberOfTrailingZeros(endPosition)]]);
+			if(promotion!=0){
+				sb.append("=");
+				sb.append(pieceForSAN[promotion]);
+			}
+		}
+		if(checkPosition)
+			sb.append("+");
+		
+		return sb.toString();
+		
+		
+	}
+	
+	public String intermediaryToSANMove(long start,long end){
 		/*
-		 *	Intoarcea SAN-ul unei mutari reprezentate prin masca sursei si masca destinatiei
-		 *	Momentan functia nu face traducerile decat pentru pioni; Negrul nu a fost verificat
-		 *	inca in teste
+		 *	KWL
 		 */
+		
+		
+		byte castlingType = 0;
+		boolean isCapture = false;
+		boolean checkPosition = false;
+		
+		byte row = 9,column = 9,extra = 9;
+		
+		byte promotion = 0;
+		byte elementType = getPieceType(Long.numberOfTrailingZeros(start));	//	piesa mutata
+		byte side = (byte)(elementType >>> 3);	//	culoarea piesei mutate
+		elementType = (byte)(elementType & 7);	//	tipul piesei
+		
+		if(elementType == W_KING){ //piesa este rege
+			if((start >> 2) == end)	//rocada mare
+				castlingType = (byte)2;
+			else if((start << 2) == end)	//	rocada mica
+				castlingType = (byte)1;
+		}
+		else{	//orice alta piesa
+			byte number,initialRow,initialColumn;
+			long allPieces = color[side] & pieces[elementType];
+			long onePiece = Long.highestOneBit(allPieces);
+			
+			number = (byte)Long.numberOfTrailingZeros(end);
+			byte endRow = rowPosition[number];
+			byte endColumn = columnPosition[number];
+			
+			if(endRow == 0 || endRow==7)
+				promotion = W_QUEEN;
+			
+			while(onePiece != 0L){	//	mai exista piese de acest tip
+				if(onePiece != start){
+					number = (byte)Long.numberOfTrailingZeros(onePiece);
+					if((getValidMoves(number) & end)!=0L){	//	mutari suprapuse
+						if(columnPosition[number] == endColumn)	//	aceeasi coloana
+							column = endColumn;
+						else if(rowPosition[number] == endRow)	//	aceeasi linie
+							row = endRow;
+						else 
+							extra = endColumn;
+					}
+				}
+				allPieces ^= onePiece;
+				onePiece = Long.highestOneBit(allPieces);
+			}
+		}
+		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));
+		checkPosition = !avoidCheckPosition((byte)((side+1)&1));
+		if(extra<9)
+			column = extra;
+		
+		
+		return emmasToSAN(elementType,end,row,column,checkPosition,isCapture,castlingType,promotion);
+		
+	}
+	
+	public String getSANMove(long start,long end){
+		
 		int numberStart = Long.numberOfTrailingZeros(start);
 		int numberEnd = Long.numberOfTrailingZeros(end);
 		
@@ -1176,13 +1268,13 @@ public class BoardX {
 			
 			number = Long.numberOfTrailingZeros(piece);
 																		
-																		System.out.println("piesa selectata");
-																	printBoard(piece);
+																//		System.out.println("piesa selectata");
+																//	printBoard(piece);
 																		
 			endPosition = getValidMoves(number);//movesOfWhitePawn(piece,rowPosition[number],columnPosition[number]);
 			
-																System.out.println("mutari valide");
-																	printBoard(endPosition);
+															//	System.out.println("mutari valide");
+															//		printBoard(endPosition);
 			
 			
 			
@@ -1196,7 +1288,7 @@ public class BoardX {
 				return "quit";
 			
 			
-									
+			/*						
 			if((endPosition & color[1])!=0L)	//captura;
 				isCapture = true;
 				
@@ -1204,11 +1296,11 @@ public class BoardX {
 			isCheck = !avoidCheckPosition((byte)1);
 			
 			
-			
-			moveCode = getSANMove(piece,endPosition);
+			*/
+			moveCode = intermediaryToSANMove(piece,endPosition);
 														//	System.out.println("SAN, ceva?");
 														//			printBoard(table);
-			updateBoard(piece,endPosition,(byte)5);
+			//updateBoard(piece,endPosition,(byte)5);
 			//if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==7)
 			//	promotionUpdate(endPosition,(byte)5);
 														//			System.out.println("Si dupa toate cele");
@@ -1231,7 +1323,7 @@ public class BoardX {
 				isCapture = true;
 			isCheck = !avoidCheckPosition((byte)0);
 			
-			moveCode = getSANMove(piece,endPosition);
+			moveCode = intermediaryToSANMove(piece,endPosition);
 			updateBoard(piece,endPosition,(byte)13);
 			//if(rowPosition[Long.numberOfTrailingZeros(endPosition)]==0)
 			//	promotionUpdate(endPosition,(byte)13);
