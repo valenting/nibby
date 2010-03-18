@@ -14,8 +14,11 @@ public class Game {
         XBoard xboard = new XBoard();
         while(xboard.isAlive()) {
             boolean citit = xboard.read();
+            if (xboard.lastMove.startsWith("printb")){
+        		brd.printBoard();
+        	}
             if(xboard.isTurn()) {
-            	xboard.sendToXBoard(brd.nextMove((byte)xboard.engine));
+            	xboard.sendToXBoard("move "+brd.nextMove((byte)xboard.side));
             }
             else 
             	if (xboard.lastMove.startsWith("usermove")){
