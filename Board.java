@@ -37,7 +37,7 @@ public class Board {
 	private boolean canShortCastleWhite = true;
 	private boolean canShortCastleBlack = true;
 	private boolean canLongCastleBlack = true;
-	public static char columnChar[] = {'A','B','C','D','E','F','G','H'};
+	public static char columnChar[] = {'a','b','c','d','e','f','g','h'};
 	public static char rowChar[] = {'1','2','3','4','5','6','7','8'};
 	public static char pieceForSAN[] = {' ',' ','R','N','B','Q','K'};
 	
@@ -381,12 +381,12 @@ public class Board {
 		
 		if (type2 !=_EMPTY) {
 			pieces[type2&7]^= mask2;
-			color[type2>>3]^=mask2;
+			color[type2>>>3]^=mask2;
 		}
 		
 		table  = table ^ mask1 | mask2;
 		pieces[type&7] ^= mask1 | mask2;//(pieces[type&7] ^ mask1) | mask2;
-		color[type>>3] ^= mask1 | mask2;
+		color[type>>>3] ^= mask1 | mask2;
 	
 		types[pos2]=types[pos1];
 		types[pos1]=_EMPTY;
@@ -906,11 +906,12 @@ public class Board {
 	}
 	
 	public void updateMoveOnBoard(long start,long end){
+		move(Long.numberOfTrailingZeros(start), Long.numberOfTrailingZeros(end));
 		/*
 		 *	Modifica board-ul in conformitate cu mutarea data:
 		 *		table,color[0],color[1],type[] si pieces[]
 		 */
-		
+		/*
 		byte side = getColor(start);
 		byte oppositeSide = (byte)((side+1) & 1);
 		byte elementType;// = getPieceType(position);
@@ -938,6 +939,7 @@ public class Board {
 		elementType &= 7;
 		pieces[elementType] ^= start;
 		pieces[elementType] |= end;
+		*/
 	}
 	
 	public void updateBoard(long start,long end,byte promotion){
@@ -1129,6 +1131,11 @@ public class Board {
 				sb.append(rowChar[row]);
 			if(capture)
 				sb.append("x");
+			
+				
+			
+			
+				
 			sb.append(columnChar[columnPosition[Long.numberOfTrailingZeros(endPosition)]]);
 			sb.append(rowChar[rowPosition[Long.numberOfTrailingZeros(endPosition)]]);
 			if(promotion!=0){
@@ -1204,6 +1211,14 @@ public class Board {
 				onePiece = Long.highestOneBit(allPieces);
 			}
 		}
+		
+		if((end & table)!=0L){
+			isCapture = true;
+			if(elementType == W_PAWN)
+				column = columnPosition[Long.numberOfTrailingZeros(start)];
+		}
+			
+		
 		//	Se face update-ul boardului in conformitate cu mutarea curenta
 		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));
 		//	Pentru noua configuratie a tablei de sah se determina daca adversarul e in sah
@@ -1285,14 +1300,14 @@ public class Board {
 			piece = Long.highestOneBit(piece);
 			
 			if(piece==0L)
-				return "quit";
+				return "resign";
 			
 			number = Long.numberOfTrailingZeros(piece);
 			endPosition = getValidMoves(number);
 			endPosition = Long.highestOneBit(endPosition);
 			
 			if(endPosition==0L)
-				return "quit";
+				return "resign";
 			
 			moveCode = intermediaryToSANMove(piece,endPosition);
 			return moveCode;
@@ -1301,14 +1316,14 @@ public class Board {
 			piece = Long.lowestOneBit(piece);
 			
 			if(piece==0L)
-				return "quit";
+				return "resign";
 			
 			number = Long.numberOfTrailingZeros(piece);
 			endPosition = getValidMoves(number);
 			endPosition = Long.lowestOneBit(endPosition);
 			
 			if(endPosition==0L)
-				return "quit";
+				return "resign";
 			
 			moveCode = intermediaryToSANMove(piece,endPosition);
 			return moveCode;
