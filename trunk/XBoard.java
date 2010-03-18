@@ -1,4 +1,3 @@
-//package chess;
 
 import java.io.*;
 

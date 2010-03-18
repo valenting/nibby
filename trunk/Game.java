@@ -4,6 +4,7 @@ import java.io.*;
 /* Author: Nibblonians
  * Etapa 1: 
  * 			implementare comenzi xboard
+ * 			mutare pion cat timp are mutari valide
  */
 
 public class Game {
@@ -13,7 +14,7 @@ public class Game {
         XBoard xboard = new XBoard();
         while(xboard.isAlive()) {       	
         	if(xboard.isTurn()) {
-            	xboard.sendToXBoard("move "+brd.nextMove((byte)xboard.side));
+            	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
             }
         	boolean citit = xboard.read();
             if (xboard.lastMove.startsWith("usermove") && xboard.side!=xboard.engine){
