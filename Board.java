@@ -691,7 +691,7 @@ public class Board {
 
 	long filterMoveMask(long start,long possibleMoves){
 		/*
-		 *	Functia filtreaza matricea de mutari psoibile eliminandu-le pe
+		 *	Functia filtreaza matricea de mutari posibile eliminandu-le pe
 		 *	acele ce ar lasa regele propriu in sah.
 		 */
 		long oneMove = Long.highestOneBit(possibleMoves);
@@ -905,12 +905,12 @@ public class Board {
 	}
 
 	public void updateMoveOnBoard(long start,long end){
-		move(Long.numberOfTrailingZeros(start), Long.numberOfTrailingZeros(end));
+		//move(Long.numberOfTrailingZeros(start), Long.numberOfTrailingZeros(end));
 		/*
 		 *	Modifica board-ul in conformitate cu mutarea data:
 		 *		table,color[0],color[1],type[] si pieces[]
 		 */
-		/*
+		
 		byte side = getColor(start);
 		byte oppositeSide = (byte)((side+1) & 1);
 		byte elementType;// = getPieceType(position);
@@ -938,7 +938,7 @@ public class Board {
 		elementType &= 7;
 		pieces[elementType] ^= start;
 		pieces[elementType] |= end;
-		 */
+		 
 	}
 
 	public void updateBoard(long start,long end,byte promotion){
@@ -1032,6 +1032,9 @@ public class Board {
 		}
 
 
+	}
+	public void updateBoard(int poz1, int poz2, byte promotion){
+		updateBoard(1L<<poz1,1L<<poz2,promotion);
 	}
 
 	/*
