@@ -389,7 +389,7 @@ public class Board {
 		types[pos1]=_EMPTY;
 	}
 
-	//	Functie care afiseaza un long ca un bitboard
+	//	Functie care afiseaza un long ca un bitboard, folosita la testare
 	public void printBoard(long n){
 		long mask = 1L;
 		System.out.println();
@@ -569,7 +569,7 @@ public class Board {
 			shifts = plusColumn;
 		oneMove = piece;
 		while(shifts>0){
-			oneMove = oneMove >>> 7;//printBoard(oneMove);
+			oneMove = oneMove >>> 7;
 			mask |= oneMove;
 			if((oneMove & table)==0)
 				shifts--;
@@ -616,8 +616,6 @@ public class Board {
 		byte side = (byte)((types[position] & 8) >> 3);
 		return knightMasks[position] ^ (knightMasks[position] & color[side]);
 	}
-
-
 
 	long movesOfWhiteKing(long piece,int pozitie){
 		long mask = kingMasks[pozitie];
@@ -713,7 +711,7 @@ public class Board {
 		 *	ca pozitie initiala - pozitie finala si determina daca noua asezare a pieselor
 		 *	este valida din punctul de vedere al pozitiei de sah a regelui propriu.
 		 *
-		 *	Pentru rege se fac verificari suplimentare in cazul in caremutarea propusa spre
+		 *	Pentru rege se fac verificari suplimentare in cazul in care mutarea propusa spre
 		 *	analiza este rocada.
 		 */
 		byte elementType = types[Long.numberOfTrailingZeros(start)];
@@ -743,14 +741,12 @@ public class Board {
 			}
 		}
 		else{	//	se analizeaza mutarea unei piese diferite de rege
-			//System.out.println("nu e rege");
 			elementType = types[Long.numberOfTrailingZeros(end)];
 			updateMoveOnBoard(start,end);
 			if((color[0] & end)!=0)	//se studiaza validitatea mutarii WHITE
 				result = avoidCheckPosition((byte)0);
 			else
 				result = avoidCheckPosition((byte)1);
-
 			updateMoveOnBoard(end,start);
 			if(elementType != _EMPTY)
 				restorePieceOnBoard(end,elementType);
@@ -761,7 +757,7 @@ public class Board {
 	boolean avoidCheckPosition(byte defendingSide){
 		/*	
 		 *	Metoda intoarce true daca regele jucatorului(culoarea) dat ca parametru nu se
-		 *	afla in sah si flase in caz contrar.
+		 *	afla in sah si false in caz contrar.
 		 */
 		long allAttackingPieces = color[((defendingSide+1)&1)];
 		long piece,king = color[defendingSide] & pieces[6];
@@ -771,7 +767,7 @@ public class Board {
 		while(piece!=0L){
 
 			if((potentialMovesBoard(piece)&king)!=0L)	//sah
-			return false;
+				return false;
 			allAttackingPieces ^= piece;
 			piece = Long.highestOneBit(allAttackingPieces);
 		}
@@ -927,7 +923,7 @@ public class Board {
 			elementType = (byte)(getPieceType(Long.numberOfTrailingZeros(end)) & 7);
 			pieces[elementType] ^= end; 
 		}
-													//	printBoard(end);
+													
 		//update tabla de coduri
 		elementType = getPieceType(Long.numberOfTrailingZeros(start));
 		types[Long.numberOfTrailingZeros(end)] = elementType;
@@ -952,20 +948,8 @@ public class Board {
 		int number = Long.numberOfTrailingZeros(start);
 		byte elementType = getPieceType(number);
 		long extra = 0L;
-		//byte ownColor = getColor(start);
-		//byte oppositeColor = (byte)(((ownColor)+1) & 1);
-		/*
-		 *updateMoveOnBoard(start,end);
-		 		boardIndicatorsUpdate(start,end);
-
-		 */
-		//	System.out.println("sunt pe linia " + rowPosition[number] );
-		//	System.out.println(((end == start << 7) || (end == start << 9)));
-		//	System.out.println(((end == start << 7) || (end == start << 9))&&((end & table)==0L));
-		//				printBoard(table);
 		switch(elementType){
 		case W_PAWN : {
-			//System.out.println("Ce afisez?");
 			if(((end == start << 7) || (end == start << 9))&&((end & table)==0L)){	
 				// este mutare de captura dar nu este piesa la destinatie(deci este enPassant)
 
@@ -982,19 +966,14 @@ public class Board {
 			}
 			if(rowPosition[Long.numberOfTrailingZeros(end)]==7){	//	este in situatie de a face promovare
 				updateMoveOnBoard(start,end);
-				//System.out.println("este promotion");
 
 				//pentru a aplica promotionUpdate este nevoie ca la destinatie sa fie pion propriu
 				promotionUpdate(end,(byte)(promotion&7));
 				boardIndicatorsUpdate(start,end);
 			}
 			else{
-				//System.out.println("simplu");
 				updateMoveOnBoard(start,end);
 				boardIndicatorsUpdate(start,end);
-				//	System.out.println("Asta-i placa");
-				//	printBoard(pieces[1] & color[0]);
-				//	printBoard(table);
 
 			}
 			break;
@@ -1105,7 +1084,7 @@ public class Board {
 			boolean checkPosition,boolean checkMate,boolean capture,byte castlingType,byte promotion){
 
 		/*
-		 *	Initial vorbisem cu Emma sa faca asta, asa ca i-am zis emmasToSAN, dar apoi am scris-o eu.
+		 *	
 		 *	
 		 *
 		 *	Functia scrie traduce in SAN o mutare, conform parametrilor de apel; este posibil sa o introduc
@@ -1129,8 +1108,6 @@ public class Board {
 			if(capture)
 				sb.append("x");
 
-
-
 			sb.append(columnChar[columnPosition[Long.numberOfTrailingZeros(endPosition)]]);
 			sb.append(rowChar[rowPosition[Long.numberOfTrailingZeros(endPosition)]]);
 			if(promotion!=0){
@@ -1144,13 +1121,11 @@ public class Board {
 			sb.append("+");
 
 		return sb.toString();
-
-
 	}
 
 	public String intermediaryToSANMove(long start,long end){
 		/*
-		 *	Functoe intermediara care momentan calculeaza parametrii necesari crearii codificarii
+		 *	Functie intermediara care momentan calculeaza parametrii necesari crearii codificarii
 		 *	SAN.
 		 *	
 		 *	Este posibil sa unesc functia asta cu functia propriu-zisa de generare a codificarii SAN
@@ -1213,7 +1188,6 @@ public class Board {
 				column = columnPosition[Long.numberOfTrailingZeros(start)];
 		}
 
-
 		//	Se face update-ul boardului in conformitate cu mutarea curenta
 		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));
 		//	Pentru noua configuratie a tablei de sah se determina daca adversarul e in sah
@@ -1224,7 +1198,6 @@ public class Board {
 
 		if(extra<9)
 			column = extra;
-
 
 		return emmasToSAN(elementType,end,row,column,checkPosition,checkMate,isCapture,castlingType,promotion);
 
@@ -1239,7 +1212,6 @@ public class Board {
 
 		byte type = getPieceType(numberStart);
 		byte oppositeSide = (byte)((getColor(start)+1) & 1);
-
 
 		StringBuilder sb = new StringBuilder();
 		switch(type){
@@ -1305,7 +1277,7 @@ public class Board {
 				return "resign";
 
 			moveCode = intermediaryToSANMove(piece,endPosition);
-			return moveCode;
+			return "move " + moveCode;
 		}
 		else{		//Black
 			piece = Long.lowestOneBit(piece);
@@ -1321,52 +1293,9 @@ public class Board {
 				return "resign";
 
 			moveCode = intermediaryToSANMove(piece,endPosition);
-			return moveCode;
+			return "move " + moveCode;
 		}
 
-	}
-
-	void testare(){
-
-
-		//	int i=4,j=6;	//linie si coloana
-		//	long piece = 1L <<8*i<<j;
-		//	printBoard(piece);
-		//	color[0] |= piece;
-
-		//	enPassantBlack = 7;
-		//	table = 0xFFFF000080205FFFL;
-		//	color[0] = 0x000000000000FFFFL;
-		//	printBoard(color[0]);
-		//	printBoard(movesOfWhitePawn(piece,(byte)i,(byte)j,false));
-
-		/*	System.out.println("pioni");
-		printBoard(pieces[1]);
-		System.out.println("board");
-		printBoard(table);
-		System.out.println("color[0]");
-		printBoard(color[0]);
-
-		 */	
-		String move="";
-		while(true){
-			move = nextMove((byte)1);
-			if(move.equals("quit"))
-				break;
-			System.out.println(move);
-			printBoard();
-
-		}
-		/*
-		System.out.println(nextMove((byte)0));
-		printBoard();
-		System.out.println(nextMove((byte)0));
-		printBoard();
-		System.out.println(nextMove((byte)0));
-		printBoard();
-		System.out.println(nextMove((byte)0));
-		printBoard();
-		 */
 	}
 
 	//	
@@ -1396,6 +1325,7 @@ public class Board {
 	public byte castling; //retine tipul piesei pe partea careia se face rocada
 	public int pos1,pos2;
 
+	// functia care interpreteaza mutarea data de adversar in SAN
 	public void SAN(String mutare, int clr){
 		int lin = -1, col = -1;
 		check = false;
@@ -1513,6 +1443,5 @@ public class Board {
 		}
 
 	}
-
 
 }
