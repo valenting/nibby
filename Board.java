@@ -1397,14 +1397,18 @@ public class Board {
 		pos1 = -1; pos2 = -1;
 		if (mutare.equals("O-O")){
 			castling = W_KING; //rocada pe partea regelui
+			pos1 = 4; pos2 = 6;
 			if (clr == 1)
 				castling = B_KING;
+				pos1 = 60; pos2 = 62;
 			return;
 		}
 		if (mutare.equals("O-O-O")){
 			castling = W_QUEEN; //rocada pe partea reginei
+			pos1 = 4; pos2 = 2;
 			if (clr == 1)
 				castling = B_QUEEN;
+				pos1 = 60; pos2 = 58;
 			return;
 		}
 		int i = mutare.length()-1;
@@ -1460,6 +1464,7 @@ public class Board {
 					break;
 				}
 			}
+			return;
 		}
 		if (col == -1 && lin != -1) {
 			long bit = pieces[piece_type]&color[clr];
@@ -1498,7 +1503,7 @@ public class Board {
 		}
 		
 	}
-
+	
 	
 	
 	public static void main(String args[]){

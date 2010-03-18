@@ -47,68 +47,69 @@ public class XBoard {
     }
 
     public boolean read() {
-       
+        String line="";
         System.out.flush();
         try {
-            lastMove = inPipe.readLine();
-            log.println(lastMove);
+            line = inPipe.readLine();
+            log.println(line);
             log.flush();
       
         } catch (IOException er) {
             log.println("Eroare citire din pipe");
         }
         
-        if (lastMove.length() > 0) {
-            if (lastMove.startsWith("usermove")) {
+        if (line.length() > 0) {
+            if (line.startsWith("usermove")) {
+            	lastMove=line.substring(8);
                 side = (side + 1) % 2;
                 return true;
 
             }
-            if (lastMove.equals("new")) {
+            if (line.equals("new")) {
                 side = WHITE;
                 engine = BLACK;
                 return true;
             }
-            if (lastMove.equals("xboard")){
+            if (line.equals("xboard")){
             	System.out.println();
             	return true;
             }
-            if (lastMove.startsWith("time")) {
-                time = Integer.parseInt(lastMove.substring(5));
+            if (line.startsWith("time")) {
+                time = Integer.parseInt(line.substring(5));
                 return true;
             }
-            if (lastMove.startsWith("otim")) {
-                otim = Integer.parseInt(lastMove.substring(5));
+            if (line.startsWith("otim")) {
+                otim = Integer.parseInt(line.substring(5));
                 return true;
             }
-            if (lastMove.equals("force")) {
+            if (line.equals("force")) {
                 engine = FORCE;
                 return true;
 
             }
-            if (lastMove.startsWith("protover")) {
+            if (line.startsWith("protover")) {
                 System.out.println("feature done=0 myname=\"nibbyEngine 0.1\" usermove=1 san=1 done=1");
                 return true;
             }
-            if (lastMove.equals("white")) {
+            if (line.equals("white")) {
                 side = WHITE;
                 engine = BLACK;
                 return true;
             }
-            if (lastMove.equals("black")) {
+            if (line.equals("black")) {
                 side = BLACK;
                 engine = WHITE;
                 return true;
             }
-            if (lastMove.equals("go")) {
+            if (line.equals("go")) {
                 engine = side;
                 return true;
             }
-            if (lastMove.equals("ping")) {
+            if (line.equals("ping")) {
                 System.out.println("pong");
                 return true;
             }
-            if (lastMove.equals("quit")) {
+            if (line.equals("quit")) {
                 try {
                     inPipe.close();
                     log.close();
