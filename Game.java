@@ -15,26 +15,11 @@ public class Game {
         while(xboard.isAlive()) {
             boolean citit = xboard.read();
             if(xboard.isTurn()) {
-            	if (xboard.engine == xboard.WHITE) {
-                    if (i < 8) {
-                        xboard.sendToXBoard("move " + xboard.sir.charAt(i) + "4");
-                        brd.move(8+i,24+i);
-                        i++;
-                    }
-                    else xboard.sendToXBoard("resign");
-                }
-                if (xboard.engine == xboard.BLACK) {
-                    if (j < 8) {
-                        xboard.sendToXBoard("move " + xboard.sir.charAt(j) + "5");
-                        brd.move(48+j, 32+j);
-                        j++;
-                    }
-                    else xboard.sendToXBoard("resign");
-                }
+            	xboard.sendToXBoard(brd.nextMove((byte)xboard.engine));
             }
             else 
-            	if (xboard.line.startsWith("usermove")){
-                	String mutare = xboard.line.substring(9);
+            	if (xboard.lastMove.startsWith("usermove")){
+                	String mutare = xboard.lastMove.substring(9);
             		brd.SAN(mutare,xboard.side);
             		brd.move(brd.pos1,brd.pos2);
                 }
