@@ -33,8 +33,8 @@ public class Game {
                 }
             }
             else 
-            	if (xboard.lastMove.startsWith("usermove")){
-                	String mutare = xboard.lastMove.substring(9);
+            	if (xboard.line.startsWith("usermove")){
+                	String mutare = xboard.line.substring(9);
             		brd.SAN(mutare,xboard.side);
             		brd.move(brd.pos1,brd.pos2);
                 }
