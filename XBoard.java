@@ -18,7 +18,6 @@ public class XBoard {
     public boolean on=false;
     public int side = WHITE;
     public int engine = BLACK;
-
     public String lastMove = "";
     public int time;
     public int otim;
@@ -39,15 +38,19 @@ public class XBoard {
    
     public void sendToXBoard(String command) {
         if (command.startsWith("move")) {
-            side = (side + 1) % 2;
+            side = 1 - side;
         }
         System.out.println(command);
         System.out.flush();
 
     }
+    
+    public void chSide() {
+    	side = 1 - side;
+    }
 
     public boolean read() {
-        //String lastMove="";
+    	
         System.out.flush();
         try {
             lastMove = inPipe.readLine();
@@ -59,12 +62,6 @@ public class XBoard {
         }
         
         if (lastMove.length() > 0) {
-            if (lastMove.startsWith("usermove")) {
-            	lastMove=lastMove;
-                side = (side + 1) % 2;
-                return true;
-
-            }
             if (lastMove.equals("new")) {
                 side = WHITE;
                 engine = BLACK;
@@ -118,9 +115,7 @@ public class XBoard {
 
                 } catch (IOException ex) {
                     log.println("Eroare inchidere fisier");    
-                }
-               
-
+                }               
             }  
             return true;
         }
