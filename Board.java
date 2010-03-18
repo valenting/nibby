@@ -739,6 +739,12 @@ public class Board {
 				else
 					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 			}
+			else{
+				updateMoveOnBoard(start,end);
+				result = avoidCheckPosition((byte)(elementType>>>3));
+				updateMoveOnBoard(end,start);
+			}
+				
 		}
 		else{	//	se analizeaza mutarea unei piese diferite de rege
 			elementType = types[Long.numberOfTrailingZeros(end)];
@@ -1383,6 +1389,8 @@ public class Board {
 			piece_type = (byte)"  RNBQK".indexOf(mutare.charAt(i));
 		else 
 			piece_type = 1;
+			
+															
 		if (col != -1 && lin != -1){
 			pos1 = lin*8 + col;
 			return;
@@ -1406,6 +1414,7 @@ public class Board {
 			}
 			return;
 		}
+												
 		if (col == -1 && lin != -1) {
 			long bit = pieces[piece_type]&color[clr];
 			long lin1 = 0xFFL << lin*8;
@@ -1425,6 +1434,7 @@ public class Board {
 			}
 			return;
 		}
+													
 		if (col == -1 && lin == -1){
 			long bit = pieces[piece_type]&color[clr];
 			long firstb;
@@ -1432,7 +1442,7 @@ public class Board {
 			if (clr == 1)
 				piece_type |=8;
 			while (bit != 0L) {
-				firstb = Long.highestOneBit(bit);
+				firstb = Long.highestOneBit(bit);		
 				bit ^= firstb;
 				poz = Long.numberOfTrailingZeros(firstb);
 				if ((getValidMoves(poz)&(1L<<pos2))!= 0) {
