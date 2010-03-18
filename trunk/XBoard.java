@@ -60,7 +60,7 @@ public class XBoard {
         
         if (line.length() > 0) {
             if (line.startsWith("usermove")) {
-            	lastMove=line.substring(8);
+            	lastMove=line;
                 side = (side + 1) % 2;
                 return true;
 
