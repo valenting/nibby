@@ -20,7 +20,7 @@ public class Game {
             if (xboard.lastMove.startsWith("usermove") && xboard.side!=xboard.engine){
                 	String mutare = xboard.lastMove.substring(9);
             		brd.SAN(mutare,xboard.side);
-            		brd.move(brd.pos1,brd.pos2);
+            		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);
             		xboard.chSide();
                 }                                    
         }
