@@ -1371,8 +1371,8 @@ public class Board {
 		}
 		if(mutare.indexOf("=")>0){
 			promotion = (byte)"  RNBQ".indexOf(mutare.charAt(mutare.indexOf("=")+1));
-			mutare = mutare.substring(0,i-2);
-			i = i - 2;
+			i = mutare.indexOf("=")-1;
+			mutare = mutare.substring(0,i+1);
 		}
 		pos2 = Usual.position(mutare.substring(i-1));
 		i = i - 2;
@@ -1392,8 +1392,7 @@ public class Board {
 			piece_type = (byte)"  RNBQK".indexOf(mutare.charAt(i));
 		else 
 			piece_type = 1;
-			
-															
+																
 		if (col != -1 && lin != -1){
 			pos1 = lin*8 + col;
 			return;
@@ -1456,5 +1455,4 @@ public class Board {
 		}
 
 	}
-
 }
