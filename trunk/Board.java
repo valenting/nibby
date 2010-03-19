@@ -20,7 +20,7 @@ public class Board {
 	private long table;
 
 
-	private long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
+	public long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
 	private long[] color = new long[2]; // white.. black
 
 	//	Variabile adaugate de Andrei columnPosition,rowPosition - ca sa nu mai fac calcule
@@ -30,8 +30,8 @@ public class Board {
 	public static long kingMasks[] = new long[64];
 	public static final byte columnPosition[] = new byte[64];
 	public static final byte rowPosition[] = new byte[64]; 
-	private byte enPassantWhite = 9;
-	private byte enPassantBlack = 9;
+	public byte enPassantWhite = 9;
+	public byte enPassantBlack = 9;
 	private boolean canLongCastleWhite = true;
 	private boolean canShortCastleWhite = true;
 	private boolean canShortCastleBlack = true;
@@ -702,6 +702,8 @@ public class Board {
 			possibleMoves ^= oneMove;
 			oneMove = Long.highestOneBit(possibleMoves);
 		}
+							//	System.out.println("masca la nenorocit");	
+							//	printBoard(newMask);
 		return newMask;
 	}
 
@@ -717,7 +719,7 @@ public class Board {
 		byte elementType = types[Long.numberOfTrailingZeros(start)];
 		boolean result = false;
 		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
-			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
+			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mare
 				updateMoveOnBoard(start,start>>>1);
 				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
 				if(result){
@@ -728,7 +730,7 @@ public class Board {
 				else
 					updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 			}
-			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//mutare de rocada
+			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mica
 				updateMoveOnBoard(start,start<<1);
 				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
 				if(result){
@@ -740,9 +742,15 @@ public class Board {
 					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 			}
 			else{
+				elementType = types[Long.numberOfTrailingZeros(end)];
 				updateMoveOnBoard(start,end);
-				result = avoidCheckPosition((byte)(elementType>>>3));
+				if((color[0] & end)!=0)	//se studiaza validitatea mutarii WHITE
+					result = avoidCheckPosition((byte)0);
+				else
+					result = avoidCheckPosition((byte)1);
 				updateMoveOnBoard(end,start);
+				if(elementType != _EMPTY)
+					restorePieceOnBoard(end,elementType);
 			}
 				
 		}
@@ -817,16 +825,18 @@ public class Board {
 		 */
 
 		byte elementType = getPieceType(Long.numberOfTrailingZeros(start));
+		if(elementType == 0)
+			elementType = getPieceType(Long.numberOfTrailingZeros(end));
 		enPassantBlack = 9;
 		enPassantWhite = 9;
 
 		switch(elementType){
-		case W_PAWN : {
+		case W_PAWN : {	System.out.println("Update la enPassantWhite ?");
 			if(start<<16 == end)//mutare initiala de 2 patrate
 				enPassantWhite = columnPosition[Long.numberOfTrailingZeros(start)];
 			break;
 		}
-		case B_PAWN : {
+		case B_PAWN : {	System.out.println("Update la enPassantBlack");
 			if(start>>>16 == end)//mutare initiala de 2 patrate
 				enPassantBlack = columnPosition[Long.numberOfTrailingZeros(start)];
 			break;
@@ -861,7 +871,7 @@ public class Board {
 		}
 		}
 
-		if(((getColor(start) + 1 ) & 1) == 0){//piesele adverse sunt WHITE
+		if(elementType > 8){//piesele proprii sunt BLACK, deci adversarul este WHITE
 			if(!avoidCheckPosition((byte)0)){	//	piesele albe sunt in sah
 				canShortCastleWhite = false;
 				canLongCastleWhite = false;
@@ -962,13 +972,13 @@ public class Board {
 				System.out.println("En Passant");
 
 				extra = end>>8;	//	pozitia pionului capturat
-			pieces[1] ^= extra;
-			color[1] ^= extra;
-			types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
-
-			updateMoveOnBoard(start,end);
-			boardIndicatorsUpdate(start,end);
-			break;
+				pieces[1] ^= extra;
+				color[1] ^= extra;
+				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
+	
+				updateMoveOnBoard(start,end);
+				boardIndicatorsUpdate(start,end);
+				break;
 			}
 			if(rowPosition[Long.numberOfTrailingZeros(end)]==7){	//	este in situatie de a face promovare
 				updateMoveOnBoard(start,end);
@@ -1007,16 +1017,20 @@ public class Board {
 			}
 			break;
 		}
-		case W_KING : {
-			if(start<<2 == end)	//rocada mica
+		case W_KING : {							System.out.println("Am gasit mutare de rege alb");
+			if(start<<2 == end)	{//rocada mica
 				updateMoveOnBoard(start<<3,start<<1);//	se muta tura corespunzator
-			else if(start>>2 == end)	//rocada nare
+				System.out.println("Rocada mica");
+			}
+			else if(start>>2 == end){	//rocada nare
 				updateMoveOnBoard(start>>>4,start>>>1);//	se muta tura corespunzator
+				System.out.println("Rocada mare");
+			}
 			updateMoveOnBoard(start,end);
 			boardIndicatorsUpdate(start,end);
 			break;
 		}
-		case B_KING : {
+		case B_KING : {								System.out.println("Am gasit mutare de rege negru");
 			if(start<<2 == end)	//rocada mica
 				updateMoveOnBoard(start<<3,start<<1);//	se muta tura corespunzator
 			else if(start>>2 == end)	//rocada nare
@@ -1196,15 +1210,30 @@ public class Board {
 			if(elementType == W_PAWN)
 				column = columnPosition[Long.numberOfTrailingZeros(start)];
 		}
-
+		else if(elementType == W_PAWN){	System.out.println("Pion fara piesa la end");
+				if(side == 0){					System.out.println("\t\t de culoare alb");
+					if((start << 7 == end) || (start << 9 == end)){System.out.println("enPass alb");
+						isCapture = true;
+						column = columnPosition[Long.numberOfTrailingZeros(start)];
+					}
+				}
+				else{ System.out.println("\t\t de culoare negru");
+					if((start >>> 7 == end) || (start >>> 9 == end)){System.out.println("enPass negru");
+						isCapture = true;
+						column = columnPosition[Long.numberOfTrailingZeros(start)];
+					}
+				}
+			}
+																				System.out.println("Inainte");		printBoard(pieces[1]&color[1]);
 		//	Se face update-ul boardului in conformitate cu mutarea curenta
-		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));
+		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));				System.out.println("Dupa up");		printBoard(pieces[1]&color[1]);
+
 		//	Pentru noua configuratie a tablei de sah se determina daca adversarul e in sah
-		checkPosition = !avoidCheckPosition((byte)((side+1)&1));
+		checkPosition = !avoidCheckPosition((byte)((side+1)&1));					System.out.println("NAISO");		printBoard(pieces[1]&color[1]);
 
 		//	adversarul este in sah-mat
 		checkMate = isCheckMate((byte)((side+1)&1));
-
+																					System.out.println("after matecheck");		printBoard(pieces[1]&color[1]);
 		if(extra<9)
 			column = extra;
 
@@ -1344,20 +1373,26 @@ public class Board {
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.equals("O-O")){
-			castling = W_KING; //rocada pe partea regelui
-			pos1 = 4; pos2 = 6;
-			if (clr == 1)
+		if (mutare.equals("O-O")){//rocada pe partea regelui
+			if (clr == 1){
 				castling = B_KING;
-			pos1 = 60; pos2 = 62;
+				pos1 = 60; pos2 = 62;
+			}
+			else{
+				castling = W_KING; 
+				pos1 = 4; pos2 = 6;
+			}
 			return;
 		}
-		if (mutare.equals("O-O-O")){
-			castling = W_QUEEN; //rocada pe partea reginei
-			pos1 = 4; pos2 = 2;
-			if (clr == 1)
+		if (mutare.equals("O-O-O")){//rocada pe partea reginei
+			if (clr == 1){
 				castling = B_QUEEN;
-			pos1 = 60; pos2 = 58;
+				pos1 = 60; pos2 = 58;
+			}
+			else{
+				castling = W_QUEEN; 
+				pos1 = 4; pos2 = 2;
+			}
 			return;
 		}
 		int i = mutare.length()-1;
@@ -1436,17 +1471,17 @@ public class Board {
 			}
 			return;
 		}
-													
+													System.out.println("NU am extra indicatii");
 		if (col == -1 && lin == -1){
 			long bit = pieces[piece_type]&color[clr];
 			long firstb;
-			int poz;
+			int poz;							
 			if (clr == 1)
 				piece_type |=8;
 			while (bit != 0L) {
-				firstb = Long.highestOneBit(bit);		
+				firstb = Long.highestOneBit(bit);		System.out.println("incerc piesa:");	printBoard(firstb);
 				bit ^= firstb;
-				poz = Long.numberOfTrailingZeros(firstb);
+				poz = Long.numberOfTrailingZeros(firstb);	System.out.println("afisez posibil piesa:");printBoard(getValidMoves(poz));	
 				if ((getValidMoves(poz)&(1L<<pos2))!= 0) {
 					pos1 = poz;
 					break;

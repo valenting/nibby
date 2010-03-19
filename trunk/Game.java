@@ -15,12 +15,14 @@ public class Game {
         while(xboard.isAlive()) {       	
         	if(xboard.isTurn()) {
             	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
+            																		brd.printBoard();brd.printBoard(brd.getValidMoves(4));
             }
         	boolean citit = xboard.read();
             if (xboard.lastMove.startsWith("usermove") && xboard.side!=xboard.engine){
                 	String mutare = xboard.lastMove.substring(9);
             		brd.SAN(mutare,xboard.side);
-            		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);
+            		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	brd.printBoard();brd.printBoard(brd.getValidMoves(4));
+            															//	System.out.println(brd.enPassantBlack+ " si white " + brd.enPassantWhite);
             		xboard.chSide();
                 }                                    
         }
