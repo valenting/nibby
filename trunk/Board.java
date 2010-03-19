@@ -527,17 +527,20 @@ public class Board {
 		oneMove = piece;
 		while(i>0){
 			oneMove = oneMove >>> 8;
-		mask |= oneMove;
-		if((oneMove & table)==0)
-			i--;
-		else
-			break;
+			mask |= oneMove;
+			if((oneMove & table)==0)
+				i--;
+			else
+				break;
 		}
+						//	System.out.println("fara eliminare culoare");	printBoard(mask);
 
-		if((piece & pieces[1])!=0)
-			i = 1;	//	piesa este BLACK
+		if((piece & color[0])!=0)
+			i = 0;	//	piesa este WHITE cu adversar BLACK
 		else
-			i = 0;	//	piesa este WHITE
+			i = 1;	//	piesa este BLACK
+								//		System.out.println("Verificare tura");			printBoard(mask ^ (mask & color[i]));
+																						
 		return mask ^ (mask & color[i]);	//se elimina mutarile peste piese proprii
 	}
 
@@ -605,15 +608,15 @@ public class Board {
 				break;
 		}
 
-		if((piece & pieces[1])!=0)
-			shifts = 1;	//	piesa este BLACK
+		if((piece & color[0])!=0)
+			shifts = 0;	//	piesa este WHITE cu adversar BLACK
 		else
-			shifts = 0;	//	piesa este WHITE
+			shifts = 1;	//	piesa este BLACK
 		return mask ^ (mask & color[shifts]);	//se elimina mutarile peste piese proprii
 	}
 
 	long movesOfKnight(int position){
-		byte side = (byte)((types[position] & 8) >> 3);
+		byte side = (byte)(types[position] >> 3);
 		return knightMasks[position] ^ (knightMasks[position] & color[side]);
 	}
 
@@ -1017,7 +1020,7 @@ public class Board {
 			}
 			break;
 		}
-		case W_KING : {							System.out.println("Am gasit mutare de rege alb");
+		case W_KING : {						//	System.out.println("Am gasit mutare de rege alb");
 			if(start<<2 == end)	{//rocada mica
 				updateMoveOnBoard(start<<3,start<<1);//	se muta tura corespunzator
 				System.out.println("Rocada mica");
@@ -1030,7 +1033,7 @@ public class Board {
 			boardIndicatorsUpdate(start,end);
 			break;
 		}
-		case B_KING : {								System.out.println("Am gasit mutare de rege negru");
+		case B_KING : {							//	System.out.println("Am gasit mutare de rege negru");
 			if(start<<2 == end)	//rocada mica
 				updateMoveOnBoard(start<<3,start<<1);//	se muta tura corespunzator
 			else if(start>>2 == end)	//rocada nare
@@ -1224,16 +1227,16 @@ public class Board {
 					}
 				}
 			}
-																				System.out.println("Inainte");		printBoard(pieces[1]&color[1]);
+																			//	System.out.println("Inainte");		printBoard(pieces[1]&color[1]);
 		//	Se face update-ul boardului in conformitate cu mutarea curenta
-		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));				System.out.println("Dupa up");		printBoard(pieces[1]&color[1]);
+		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));			//	System.out.println("Dupa up");		printBoard(pieces[1]&color[1]);
 
 		//	Pentru noua configuratie a tablei de sah se determina daca adversarul e in sah
-		checkPosition = !avoidCheckPosition((byte)((side+1)&1));					System.out.println("NAISO");		printBoard(pieces[1]&color[1]);
+		checkPosition = !avoidCheckPosition((byte)((side+1)&1));			//		System.out.println("NAISO");		printBoard(pieces[1]&color[1]);
 
 		//	adversarul este in sah-mat
 		checkMate = isCheckMate((byte)((side+1)&1));
-																					System.out.println("after matecheck");		printBoard(pieces[1]&color[1]);
+																				//	System.out.println("after matecheck");		printBoard(pieces[1]&color[1]);
 		if(extra<9)
 			column = extra;
 
