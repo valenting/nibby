@@ -84,7 +84,7 @@ public class XBoard {
 
             }
             if (lastMove.startsWith("protover")) {
-                System.out.println("feature done=0 myname=\"nibbyEngine 0.1\" usermove=1 san=1 done=1");
+                System.out.println("feature done=0 myname=\"nibbyEngine 0.1\" usermove=1 san=1 sigint=0 done=1");
                 return true;
             }
             if (lastMove.equals("white")) {
