@@ -960,6 +960,7 @@ public class Board {
 				extra = end>>8;	//	pozitia pionului capturat
 				pieces[1] ^= extra;
 				color[1] ^= extra;
+				table ^= extra;
 				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
 	
 				updateMoveOnBoard(start,end);
@@ -984,8 +985,9 @@ public class Board {
 			if(((end == start >>> 7) || (end == start >>> 9))&&((end & table)==0L)){ 
 
 				extra = end<<8;
-				pieces[0] ^= extra;
+				pieces[1] ^= extra;
 				color[0] ^= extra;
+				table ^= extra;
 				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
 
 				updateMoveOnBoard(start,end);
