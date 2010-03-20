@@ -31,7 +31,7 @@ Fisiere:
 		
 Implementat pentru etapa 1:
 	Programul este capabil sa mute pioni. Au fost implementate inclusiv promovarile si miscarile en-passant.
-	Jocul selecteaza la fiecare mutare primul pion. Daca acesta poate face mutari, se executa prima dintre ele. Daca pionul nu poate face nicio mutare, engine-ul da 'resign'.
+	Jocul selecteaza de fiecare data pionul cel mai din stanga, si executa prima mutare pe care acesta poate sa o faca. Daca pionul nu poate face nicio mutare, sau daca nu mai exista pioni, engine-ul da 'resign'.
 	
 
 	
