@@ -1,5 +1,3 @@
-//package chess;
-
 import java.io.*;
 
 /**
@@ -18,7 +16,6 @@ public class XBoard {
     public boolean on=false;
     public int side = WHITE;
     public int engine = BLACK;
-
     public String lastMove = "";
     public int time;
     public int otim;
@@ -39,15 +36,19 @@ public class XBoard {
    
     public void sendToXBoard(String command) {
         if (command.startsWith("move")) {
-            side = (side + 1) % 2;
+            side = 1 - side;
         }
         System.out.println(command);
         System.out.flush();
 
     }
+    
+    public void chSide() {
+    	side = 1 - side;
+    }
 
     public boolean read() {
-       
+    	
         System.out.flush();
         try {
             lastMove = inPipe.readLine();
@@ -59,11 +60,6 @@ public class XBoard {
         }
         
         if (lastMove.length() > 0) {
-            if (lastMove.startsWith("usermove")) {
-                side = (side + 1) % 2;
-                return true;
-
-            }
             if (lastMove.equals("new")) {
                 side = WHITE;
                 engine = BLACK;
@@ -87,7 +83,7 @@ public class XBoard {
 
             }
             if (lastMove.startsWith("protover")) {
-                System.out.println("feature done=0 myname=\"nibbyEngine 0.1\" usermove=1 san=1 done=1");
+                System.out.println("feature done=0 myname=\"nibbyEngine 0.1\" usermove=1 san=1 sigint=0 done=1");
                 return true;
             }
             if (lastMove.equals("white")) {
@@ -117,9 +113,7 @@ public class XBoard {
 
                 } catch (IOException ex) {
                     log.println("Eroare inchidere fisier");    
-                }
-               
-
+                }               
             }  
             return true;
         }

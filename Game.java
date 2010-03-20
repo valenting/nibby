@@ -4,41 +4,27 @@ import java.io.*;
 /* Author: Nibblonians
  * Etapa 1: 
  * 			implementare comenzi xboard
+ * 			mutare pion cat timp are mutari valide
  */
 
 public class Game {
     public static Board brd=new Board();
     
     public static void main(String []args) throws Exception{
-    	int i = 0, j = 0;
         XBoard xboard = new XBoard();
-        while(xboard.isAlive()) {
-            boolean citit = xboard.read();
-            if(xboard.isTurn()) {
-            	if (xboard.engine == xboard.WHITE) {
-                    if (i < 8) {
-                        xboard.sendToXBoard("move " + xboard.sir.charAt(i) + "4");
-                        brd.move(8+i,24+i);
-                        i++;
-                    }
-                    else xboard.sendToXBoard("resign");
-                }
-                if (xboard.engine == xboard.BLACK) {
-                    if (j < 8) {
-                        xboard.sendToXBoard("move " + xboard.sir.charAt(j) + "5");
-                        brd.move(48+j, 32+j);
-                        j++;
-                    }
-                    else xboard.sendToXBoard("resign");
-                }
+        while(xboard.isAlive()) {       	
+        	if(xboard.isTurn()) {
+            	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
             }
-            else 
-            	if (xboard.lastMove.startsWith("usermove")){
+        	boolean citit = xboard.read();
+            if (xboard.lastMove.startsWith("usermove") && xboard.side!=xboard.engine){
                 	String mutare = xboard.lastMove.substring(9);
-            		brd.SAN(mutare,xboard.side);
-            		brd.move(brd.pos1,brd.pos2);
-                }
-
+            		brd.SAN(mutare,xboard.side);					
+            		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
+            		xboard.chSide();
+                }     
+            else if (xboard.lastMove.startsWith("new"))
+            		brd = new Board();
         }
     }
 }
