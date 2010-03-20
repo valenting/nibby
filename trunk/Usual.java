@@ -32,17 +32,4 @@ public class Usual {
 		System.out.println();
 	}
 	
-	private static HashMap<Long, Integer> h = null;
-	
-	public static void initHash() {
-		h=new HashMap<Long, Integer>();
-		for (int i=0;i<64;i++)
-			h.put(1L << i, i);
-	}
-	
-	public static int getPosition(long bitboard){
-		if (h==null)
-			initHash();
-		return h.get(Long.highestOneBit(bitboard));
-	}
 }
