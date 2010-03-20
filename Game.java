@@ -21,7 +21,9 @@ public class Game {
                 	String mutare = xboard.lastMove.substring(9);
             		brd.SAN(mutare,xboard.side);					
             		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
+            		//brd.printBoard();
             		xboard.chSide();
+            		
                 }     
             else if (xboard.lastMove.startsWith("new"))
             		brd = new Board();
