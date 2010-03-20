@@ -15,17 +15,16 @@ public class Game {
         while(xboard.isAlive()) {       	
         	if(xboard.isTurn()) {
             	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
-            																		brd.printBoard();//brd.printBoard(brd.getValidMoves(4));
-            																		brd.printBoard(brd.table);	
             }
         	boolean citit = xboard.read();
             if (xboard.lastMove.startsWith("usermove") && xboard.side!=xboard.engine){
                 	String mutare = xboard.lastMove.substring(9);
-            		brd.SAN(mutare,xboard.side);					//	System.out.println(brd.pos1+" "+brd.pos2);
-            		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	brd.printBoard();//brd.printBoard(brd.getValidMoves(4));
-            						brd.printBoard(brd.table);									//	System.out.println(brd.enPassantBlack+ " si white " + brd.enPassantWhite);
+            		brd.SAN(mutare,xboard.side);					
+            		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
             		xboard.chSide();
-                }                                    
+                }     
+            else if (xboard.lastMove.startsWith("new"))
+            		brd = new Board();
         }
     }
 }
