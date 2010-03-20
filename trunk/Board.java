@@ -17,7 +17,7 @@ import java.util.Random;
 public class Board {
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
 	public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGRU
-	private long table;
+	public long table;
 
 
 	public long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
@@ -1474,7 +1474,7 @@ public class Board {
 			}
 			return;
 		}
-													System.out.println("NU am extra indicatii");
+													//System.out.println("NU am extra indicatii");
 		if (col == -1 && lin == -1){
 			long bit = pieces[piece_type]&color[clr];
 			long firstb;
@@ -1482,9 +1482,9 @@ public class Board {
 			if (clr == 1)
 				piece_type |=8;
 			while (bit != 0L) {
-				firstb = Long.highestOneBit(bit);		System.out.println("incerc piesa:");	printBoard(firstb);
+				firstb = Long.highestOneBit(bit);	///	System.out.println("incerc piesa:");	printBoard(firstb);
 				bit ^= firstb;
-				poz = Long.numberOfTrailingZeros(firstb);	System.out.println("afisez posibil piesa:");printBoard(getValidMoves(poz));	
+				poz = Long.numberOfTrailingZeros(firstb);	//System.out.println("afisez posibil piesa:");printBoard(getValidMoves(poz));	
 				if ((getValidMoves(poz)&(1L<<pos2))!= 0) {
 					pos1 = poz;
 					break;
