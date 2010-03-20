@@ -427,11 +427,11 @@ public class MyBoard {
 			}
 			if(column<7){	//	nu este pe coloana ultima
 				oneMove = piece >>> 7;
-			hostile |= oneMove;//printBoard(hostile);
+			hostile |= oneMove;
 			}
 			if(column>0){	//	nu este pe pima coloana
 				oneMove = piece >>> 9;
-		hostile |= oneMove;//printBoard(hostile);
+		hostile |= oneMove;
 			}
 
 			hostile = hostile & color[0];	//	captura piessa alba
