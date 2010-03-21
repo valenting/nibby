@@ -20,18 +20,19 @@ Rularea programului:
         A fost testat totusi cu succes si pe Ubuntu.
 	
 Fisiere:
-	Board.java
-		Aceasta sursa contine implementarea tablei de sah, si a pieselor continute, sub forma de Bitboard. Tot aici se face parsarea mutarilor in format SAN, deoarece acestea depind de pozitia pieselor pe tabla.
-	Usual.java
-		Aceasta sursa contine niste functii statice folosite in cadrul proiectului.
-	XBoard.java
-		Aceasta sursa contine implementarea protocolului Xboard.
-	Game.java
-		Aceasta sursa contine programul principal.
+    Board.java
+        Aceasta sursa contine implementarea tablei de sah, si a pieselor continute, sub forma de Bitboard. Tot aici se face parsarea mutarilor in format SAN, deoarece acestea depind de pozitia pieselor pe tabla.
+    Usual.java
+        Aceasta sursa contine niste functii statice folosite in cadrul proiectului.
+    XBoard.java
+        Aceasta sursa contine implementarea protocolului Xboard.
+        La executie creaza un fisier 'out[0-20].txt' ce contine output-ul Winboard-ului.
+    Game.java
+        Aceasta sursa contine programul principal.
 		
 Implementat pentru etapa 1:
         Programul este capabil sa mute pioni. Au fost implementate inclusiv promovarile si miscarile en-passant.
         Jocul selecteaza de fiecare data pionul cel mai din stanga, si executa prima mutare pe care acesta poate sa o faca. Daca pionul nu poate face nicio mutare, sau daca nu mai exista pioni, engine-ul da 'resign'.
-	
+        Pot fi primite de la jucator orice mutari, pentru toate tipurile de piese, inclusiv rocade. Daca egine-ul este pus in sah, acesa da 'resign'		
 
 	
