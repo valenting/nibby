@@ -31,8 +31,8 @@ Fisiere:
         Aceasta sursa contine programul principal.
 		
 Implementat pentru etapa 1:
-        Programul este capabil sa mute pioni. Au fost implementate inclusiv promovarile si miscarile en-passant.
+        Programul este capabil sa mute pioni. Au fost implementate inclusiv promovarile (preferandu-se doar promovarea in regina, pentru usurinta) si miscarile en-passant.
         Jocul selecteaza de fiecare data pionul cel mai din stanga, si executa prima mutare pe care acesta poate sa o faca. Daca pionul nu poate face nicio mutare, sau daca nu mai exista pioni, engine-ul da 'resign'.
-        Pot fi primite de la jucator orice mutari, pentru toate tipurile de piese, inclusiv rocade. Daca egine-ul este pus in sah, acesa da 'resign'		
+        Pot fi primite de la jucator orice mutari, pentru toate tipurile de piese, inclusiv rocade si chiar promovari. Daca egine-ul este pus in sah, acesta da 'resign' .		
 
 	
