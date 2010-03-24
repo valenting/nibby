@@ -1230,8 +1230,9 @@ public class Board {
 		Random r = new Random();
 		int position = 0;;
 		long onePiece = 0L,allMoves=0L,oneMove=0L;
-		byte i = 127;
-		
+		int i = 10000;
+		if (checkmate)
+			return "resign";
 		while(i>0){
 			r = new Random();
 			position = r.nextInt(64);
@@ -1250,7 +1251,7 @@ public class Board {
 					
 				}
 			}
-		//	i--;
+			i--;
 		}
 		return "resign";
 		
