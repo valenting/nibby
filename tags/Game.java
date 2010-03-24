@@ -28,6 +28,7 @@ public class Game {
             		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
             		xboard.chSide();
             		rf.writeBytes(brd.printAndreiBoard());
+            		rf.writeBytes("Promovare la "+brd.promotion+"\r\n");
                 }     
             else if (xboard.lastMove.startsWith("new"))
             		brd = new Board();

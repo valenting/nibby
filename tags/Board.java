@@ -1162,7 +1162,7 @@ public class Board {
 			byte endColumn = columnPosition[number];
 
 			if(elementType == W_PAWN)	//	daca este pion
-				if(endRow == 0 || endRow==7)	//	pe ultimul rand
+				if(rowPosition[Long.numberOfTrailingZeros(end)] == 0 || rowPosition[Long.numberOfTrailingZeros(end)]==7)	//	pe ultimul rand
 					promotion = W_QUEEN;
 
 			while(onePiece != 0L){	//	mai exista piese de acest tip
@@ -1385,6 +1385,7 @@ public class Board {
 		}
 		if(mutare.indexOf("=")>0){
 			promotion = (byte)"  RNBQ".indexOf(mutare.charAt(mutare.indexOf("=")+1));
+																
 			i = mutare.indexOf("=")-1;
 			mutare = mutare.substring(0,i+1);
 		}
