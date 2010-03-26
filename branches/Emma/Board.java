@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 //Asta random este doar de test
 import java.util.Random;
 
+
 public class Board {
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
 	public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGRU
@@ -1156,12 +1157,12 @@ public class Board {
 			long onePiece = Long.highestOneBit(allPieces);
 
 			//	calculul destinatiei in termeni de coordonate carteziene
-			number = (byte)Long.numberOfTrailingZeros(end);
+			number = (byte)Long.numberOfTrailingZeros(start);
 			byte endRow = rowPosition[number];
 			byte endColumn = columnPosition[number];
 
 			if(elementType == W_PAWN)	//	daca este pion
-				if(endRow == 0 || endRow==7)	//	pe ultimul rand
+				if(rowPosition[Long.numberOfTrailingZeros(end)] == 0 || rowPosition[Long.numberOfTrailingZeros(end)]==7)	//	pe ultimul rand
 					promotion = W_QUEEN;
 
 			while(onePiece != 0L){	//	mai exista piese de acest tip
@@ -1169,9 +1170,9 @@ public class Board {
 					number = (byte)Long.numberOfTrailingZeros(onePiece);
 					if((getValidMoves(number) & end)!=0L){	//	mutari suprapuse
 						if(columnPosition[number] == endColumn)	//	aceeasi coloana
-							column = endColumn;
-						else if(rowPosition[number] == endRow)	//	aceeasi linie
 							row = endRow;
+						else if(rowPosition[number] == endRow)	//	aceeasi linie
+							column = endColumn;
 						else 
 							extra = endColumn;
 					}
@@ -1205,7 +1206,7 @@ public class Board {
 		updateBoard(start,end,(byte)(W_QUEEN | (side << 3)));			
 
 		//	Pentru noua configuratie a tablei de sah se determina daca adversarul e in sah
-		checkPosition = !avoidCheckPosition((byte)((side+1)&1));			
+		checkPosition = !avoidCheckPosition((byte)((side+1)&(byte)1));			
 
 		//	adversarul este in sah-mat
 		checkMate = isCheckMate((byte)((side+1)&1));
@@ -1226,10 +1227,37 @@ public class Board {
 	 */
 
 	public String nextMove(byte side){
-		long piece = color[side] & pieces[1];
+		Random r = new Random();
+		int position = 0;;
+		long onePiece = 0L,allMoves=0L,oneMove=0L;
+		int i = 10000;
+		if (checkmate)
+			return "resign";
+		while(i>0){
+			r = new Random();
+			position = r.nextInt(64);
+			onePiece = 1L << position;
+			if((onePiece & color[side]) != 0L){//este piesa proprie
+				
+				allMoves = getValidMoves(position);
+				if(allMoves != 0L){	//	exista mutari valide pentru piesa selectata
+					while(allMoves != 0L){
+						oneMove = Long.highestOneBit(allMoves);
+						allMoves ^= oneMove;
+						if(r.nextInt(12)<2)
+							break;
+					}
+				return "move " + intermediaryToSANMove(onePiece,oneMove);			
+					
+				}
+			}
+			i--;
+		}
+		return "resign";
+		
+		/*long piece = color[side] & pieces[1];
 		String moveCode = "";
 
-		boolean isCheck=false,isCapture=false;
 		
 		long endPosition;
 		int number;
@@ -1265,7 +1293,7 @@ public class Board {
 			moveCode = intermediaryToSANMove(piece,endPosition);
 			return "move " + moveCode;
 		}
-
+		*/
 	}
 
 	//	
@@ -1285,6 +1313,26 @@ public class Board {
 				System.out.print(type[getPieceType(i<<3|j)]+"\t");
 			System.out.println();
 		}	
+	}
+	
+	String printAndreiBoard() {
+		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
+		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
+		String chars=" abcdefgh"; 
+		String s ="";
+		s+="\t";
+		for (int i=1;i<=8;i++)
+			s+=chars.charAt(i)+"\t";
+		s+="\r\n";
+		for (int i=7;i>=0;i--) {
+			s+=(i+1)+"\t";
+			for (int j=0;j<8;j++)
+				s+=type[getPieceType(i<<3|j)]+"\t";
+			s+="\r\n";
+			
+		}
+		s+="\r\n";
+		return s;
 	}
 
 	public boolean check;
@@ -1338,6 +1386,7 @@ public class Board {
 		}
 		if(mutare.indexOf("=")>0){
 			promotion = (byte)"  RNBQ".indexOf(mutare.charAt(mutare.indexOf("=")+1));
+																
 			i = mutare.indexOf("=")-1;
 			mutare = mutare.substring(0,i+1);
 		}
