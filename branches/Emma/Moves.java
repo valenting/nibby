@@ -1,10 +1,131 @@
-public class Moves{
-static long[] wPawns={0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x1010000L,0x2020000L,0x4040000L,0x8080000L,0x10100000L,0x20200000L,0x40400000L,0x80800000L,0x1000000L,0x2000000L,0x4000000L,0x8000000L,0x10000000L,0x20000000L,0x40000000L,0x80000000L,0x100000000L,0x200000000L,0x400000000L,0x800000000L,0x1000000000L,0x2000000000L,0x4000000000L,0x8000000000L,0x10000000000L,0x20000000000L,0x40000000000L,0x80000000000L,0x100000000000L,0x200000000000L,0x400000000000L,0x800000000000L,0x1000000000000L,0x2000000000000L,0x4000000000000L,0x8000000000000L,0x10000000000000L,0x20000000000000L,0x40000000000000L,0x80000000000000L,0x100000000000000L,0x200000000000000L,0x400000000000000L,0x800000000000000L,0x1000000000000000L,0x2000000000000000L,0x4000000000000000L,0x8000000000000000L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0};// Size: 64++
-static long[] wPawnTakes={0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x20000L,0x50000L,0xa0000L,0x140000L,0x280000L,0x500000L,0xa00000L,0x400000L,0x2000000L,0x5000000L,0xa000000L,0x14000000L,0x28000000L,0x50000000L,0xa0000000L,0x40000000L,0x200000000L,0x500000000L,0xa00000000L,0x1400000000L,0x2800000000L,0x5000000000L,0xa000000000L,0x4000000000L,0x20000000000L,0x50000000000L,0xa0000000000L,0x140000000000L,0x280000000000L,0x500000000000L,0xa00000000000L,0x400000000000L,0x2000000000000L,0x5000000000000L,0xa000000000000L,0x14000000000000L,0x28000000000000L,0x50000000000000L,0xa0000000000000L,0x40000000000000L,0x200000000000000L,0x500000000000000L,0xa00000000000000L,0x1400000000000000L,0x2800000000000000L,0x5000000000000000L,0xa000000000000000L,0x4000000000000000L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0};// Size: 64++
-static long[] bPawns={0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x1L,0x2L,0x4L,0x8L,0x10L,0x20L,0x40L,0x80L,0x100L,0x200L,0x400L,0x800L,0x1000L,0x2000L,0x4000L,0x8000L,0x10000L,0x20000L,0x40000L,0x80000L,0x100000L,0x200000L,0x400000L,0x800000L,0x1000000L,0x2000000L,0x4000000L,0x8000000L,0x10000000L,0x20000000L,0x40000000L,0x80000000L,0x100000000L,0x200000000L,0x400000000L,0x800000000L,0x1000000000L,0x2000000000L,0x4000000000L,0x8000000000L,0x10100000000L,0x20200000000L,0x40400000000L,0x80800000000L,0x101000000000L,0x202000000000L,0x404000000000L,0x808000000000L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0};// Size: 64++
-static long[] bPawnTakes={0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x2L,0x5L,0xaL,0x14L,0x28L,0x50L,0xa0L,0x40L,0x200L,0x500L,0xa00L,0x1400L,0x2800L,0x5000L,0xa000L,0x4000L,0x20000L,0x50000L,0xa0000L,0x140000L,0x280000L,0x500000L,0xa00000L,0x400000L,0x2000000L,0x5000000L,0xa000000L,0x14000000L,0x28000000L,0x50000000L,0xa0000000L,0x40000000L,0x200000000L,0x500000000L,0xa00000000L,0x1400000000L,0x2800000000L,0x5000000000L,0xa000000000L,0x4000000000L,0x20000000000L,0x50000000000L,0xa0000000000L,0x140000000000L,0x280000000000L,0x500000000000L,0xa00000000000L,0x400000000000L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0L,0x0};// Size: 64++
-static long[][] Pawns={wPawns,bPawns};
-static long[][] PawnTakes={wPawnTakes,bPawnTakes};
-static byte[] types={2,3,4,5,6,4,3,2,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,9,9,9,9,9,9,9,10,11,12,13,14,12,11,10};
-static long[][] all={ {0}, wPawns, {0}, {0}, {0}, {0}, {0}, {0}, {0}, bPawns, {0}, {0}, {0}, {0}, {0} };
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Vector;
+
+import org.omg.CORBA.NVList;
+
+
+class Move implements Comparable {
+	private int p1,p2;
+	
+	public Move(String str) {
+		p1=Usual.pos1(str);
+		p2=Usual.pos2(str);
+	}
+	
+	public int getP1() {
+		return p1;
+	}
+	
+	public int getP2() {
+		return p2;
+	}
+	
+	public long getLongP1() {
+		return 1L<<p1;
+	}
+	
+	public long getLongP2() {
+		return 1L<<p2;
+	}
+	
+	public boolean equals(Object obj) {
+		Move move2 = (Move) obj;
+		return move2.getP1() == p1 && move2.getP2() == p2;
+	}
+	
+	static char colo[] = {'a','b','c','d','e','f','g','h','i'};
+	
+	public String toString() {
+		
+		return Usual.stringPos(p1)+Usual.stringPos(p2);
+	}
+	@Override
+	public int compareTo(Object arg0) {
+		Move move2 = (Move) arg0;
+		if  (move2.getP1() == p1 && move2.getP2() == p2)
+			return 0;
+		return 1;
+	}
+}
+
+class Node implements Comparable{
+	private Move move;
+	private Vector<Node> moves;// = new Vector<Node>();
+	public Node(Move mv){
+		move = mv;
+		moves = new Vector<Node>();
+	} 
+	
+	public Node() {
+		new Move("iiii");
+		moves = new Vector<Node>();
+	}
+	
+	public Node addChild(Move mv){
+		for (int i=0;i<moves.size();i++)
+			if (moves.get(i).getMove().equals(mv))
+				return moves.get(i);
+		//if (moves.contains(new Node(mv))) 
+			//return moves.elementAt(moves.indexOf(new Node(mv)));
+		moves.add(new Node(mv));
+		return moves.lastElement();
+	}
+
+	public Move getMove() {
+		return move;
+	}
+	@Override
+	public int compareTo(Object o) {
+		Node nod = (Node) o;
+		return move.compareTo(nod.getMove());
+	}
+	public Vector<Node> getChildren() {
+		return moves;
+	}
+}
+
+class MoveTree {
+	private Node root = new Node();
+	MoveTree(String filename) throws IOException{
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		String line;
+		while ((line=reader.readLine()) != null) {
+			Node nod = root;
+			while (line.length()>=4) {
+				String move = line.substring(0,4);
+				nod = nod.addChild(new Move(move));
+				line = line.substring(4);
+			}
+			
+		}
+	}
+	public Node getRoot() {
+		return root;
+	}
+}
+
+public class Moves {
+	static FileWriter w;
+	public static void Afis(Node nod, String indent) throws IOException{
+		Move mv = nod.getMove();
+		if (mv!=null )
+			//System.out.println(indent + nod.getMove().toString());
+			w.write(indent+nod.getMove().toString()+"\n");
+		Vector<Node> v = nod.getChildren();
+		for (int i=0;i<v.size();i++)
+			Afis(v.elementAt(i),indent+"   ");
+	}
+	public static void main(String args[]) throws IOException{
+		MoveTree tree = new MoveTree("pulsarCrazyWhite.txt");
+		w = new FileWriter(new File("arb.txt"));
+		Afis(tree.getRoot(),"");
+		w.close();
+		
+	}
 }
