@@ -1233,7 +1233,7 @@ public class Board {
 		while (pieces!=0L) {
 			long p1 = Long.highestOneBit(pieces);
 			int pos1 = Long.numberOfTrailingZeros(p1);
-			long p2 = this.potentialMovesBoard(p1);
+			long p2 = this.getValidMoves(pos1);
 			while (p2!=0) {
 				long p3 = Long.highestOneBit(p2);
 				int pos3 = Long.numberOfTrailingZeros(p3);
@@ -1490,4 +1490,34 @@ public class Board {
 		}
 
 	}
+	
+	public int evaluateBoard(Board board, int side) {
+        int whiteMaterial = 0, blackMaterial = 0;
+        int[] values = {0, 100, 500, 300, 300, 900};
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
+            blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(pieces[4] & color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(pieces[4] & color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(pieces[1] & color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(pieces[1] & color[1]) == 0) {
+            whiteMaterial -= 50;
+        }
+        
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
 }
