@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 
 //Asta random este doar de test
 import java.util.Random;
+import java.util.Vector;
 
 
 public class Board {
@@ -1226,6 +1227,24 @@ public class Board {
 	 *	minimizeaza ordinul.
 	 */
 
+	public Vector<Move> getAllMoves(byte clr) {
+		long pieces = color[clr];
+		Vector<Move> v = new Vector<Move>();
+		while (pieces!=0L) {
+			long p1 = Long.highestOneBit(pieces);
+			int pos1 = Long.numberOfTrailingZeros(p1);
+			long p2 = this.potentialMovesBoard(p1);
+			while (p2!=0) {
+				long p3 = Long.highestOneBit(p2);
+				int pos3 = Long.numberOfTrailingZeros(p3);
+				v.add(new Move(pos1,pos3));
+				p2=p2^p3;
+			}
+			pieces=pieces^p1;
+		}
+		return v;
+	}
+	
 	public String nextMove(byte side){
 		Random r = new Random();
 		int position = 0;;
