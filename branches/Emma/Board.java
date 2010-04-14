@@ -97,12 +97,6 @@ public class Board {
 		return (byte)1;
 	}
 
-
-	public void move(int pos1, int pos2){
-		this.move(pos1, pos2, this.getPieceType(pos1));
-	}
-
-
 	public void generateStatic(){
 		knightMasks[0]=0x20400L;
 		knightMasks[1]=0x50800L;
@@ -365,25 +359,6 @@ public class Board {
 
 	}
 
-	public void move(int pos1, int pos2, byte type){
-		long mask1 = 1L << pos1;
-		long mask2 = 1L << pos2;
-
-		byte type2= getPieceType(pos2);
-
-		if (type2 !=_EMPTY) {
-			pieces[type2&7]^= mask2;
-			color[type2>>>3]^=mask2;
-		}
-
-		table  = table ^ mask1 | mask2;
-		pieces[type&7] ^= mask1 | mask2;//(pieces[type&7] ^ mask1) | mask2;
-		color[type>>>3] ^= mask1 | mask2;
-
-		types[pos2]=types[pos1];
-		types[pos1]=_EMPTY;
-	}
-
 	//	Functie care afiseaza un long ca un bitboard, folosita la testare
 	public void printBoard(long n){
 		long mask = 1L;
@@ -401,13 +376,9 @@ public class Board {
 		System.out.println();
 	}
 
-	/********************************************************************************************************
-	 *																										*
-	 *										Inceput metode de generare mutari								*
-	 *																										*
-	 ********************************************************************************************************/
 
-
+	
+	 /*********************************** Inceput metode de generare mutari ************************************/
 
 	long movesOfWhitePawn(long piece,byte row,byte column){
 		long forward = 0L,hostile=0L,oneMove;
@@ -663,17 +634,13 @@ public class Board {
 		| movesOfRook(piece,rowPosition[pozitie],columnPosition[pozitie]);	
 		}
 	}
+									
+	 /************************************* Sfarsit metode de generare mutari *********************************/
 
-	/*
-	 *										Sfarsit metode de generare mutari
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
 
-	/********************************************************************************************************
-	 *																										*
-	 *											Metode de analiza mutarilor									*
-	 *																										*
-	 ********************************************************************************************************/
+
+	
+	 /**************************************** Metode de analiza mutarilor ***************************************/
 
 	/*
 	 *	Intoarce masca de mutari valide pentru piesa aflata in patratul cu numarul de ordine
@@ -781,10 +748,9 @@ public class Board {
 		}
 		return true;
 	}
-	
-	/*
-	 *	Functia determina daca regele de culoare data ca parametru este in mat
-	 */
+
+	//	Functia determina daca regele de culoare data ca parametru este in mat
+
 	boolean isCheckMate(byte defendingSide){
 		long allPieces = color[defendingSide];
 		long onePiece = Long.highestOneBit(allPieces);
@@ -797,16 +763,12 @@ public class Board {
 		return true;
 
 	}
+									
+	 /******************************  Sfarsit metode de analiza a mutarilor  ********************************/
 
-	/*
-	 *										Sfarsit metode de analiza a mutarilor
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
-	/********************************************************************************************************
-	 *																										*
-	 *											Board update methods										*
-	 *																										*
-	 ********************************************************************************************************/
+
+	
+	 /**************************************  Board update methods  ****************************************/
 	
 	/*
 	 *	Metoda modifica indicatorii tablei de sah in conformitate cu mutarea curenta(mutare deja efectuata):
@@ -1035,18 +997,10 @@ public class Board {
 	public void updateBoard(int poz1, int poz2, byte promotion){
 		updateBoard(1L<<poz1,1L<<poz2,promotion);
 	}
+								
+	 /*******************************  Sfarsit metode de update al baordului  *******************************/
 
-	/*
-	 *										Sfarsit metode de update al baordului
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
-
-	/*
-	 *	Functia primeste ca parametru culoarea si alege o mutare care ii este
-	 *	convenabila, urmand sa o transforme in SAN prin apelul unei functii
-	 *	corespunzatoare din clasa definita de Emma
-	 */
-
+	
 	public String futureGetNextMove(byte side){
 		long optimumStart = 0L;
 		long optimumEnd = 0L;
@@ -1125,13 +1079,8 @@ public class Board {
 		return sb.toString();
 	}
 
-	/*
-	 *	Functie intermediara care momentan calculeaza parametrii necesari crearii codificarii
-	 *	SAN.
-	 *	
-	 *	Este posibil sa unesc functia asta cu functia propriu-zisa de generare a codificarii SAN
-	 *	prezentata mai sus.
-	 */
+	
+	//	Functie intermediara care momentan calculeaza parametrii necesari crearii codificarii SAN
 	public String intermediaryToSANMove(long start,long end){
 		byte castlingType = 0;
 		boolean isCapture = false;
@@ -1217,14 +1166,6 @@ public class Board {
 
 	}
 
-	/*
-	 *	Functie folosita pentru a selecta mutarea urmatoare(cel putin pentru etapa 1);
-	 *	Functia intoarce un string cu mutarea transpusa in SAN
-	 *
-	 *	Functia va selecta pionul dcu ordinul(pozitia pe tabla) cel mai mare(WHITE) respectiv
-	 *	cel mai mic(BLACK) si va alege mereu mutarea disponibila ce ii maximizeaza respectiv
-	 *	minimizeaza ordinul.
-	 */
 
 	public String nextMove(byte side){
 		Random r = new Random();
@@ -1254,46 +1195,6 @@ public class Board {
 			i--;
 		}
 		return "resign";
-		
-		/*long piece = color[side] & pieces[1];
-		String moveCode = "";
-
-		
-		long endPosition;
-		int number;
-		if(side==0)	{//WHITE
-			piece = Long.highestOneBit(piece);
-
-			if(piece==0L)
-				return "resign";
-
-			number = Long.numberOfTrailingZeros(piece);
-			endPosition = getValidMoves(number);
-			endPosition = Long.highestOneBit(endPosition);
-
-			if(endPosition==0L)
-				return "resign";
-
-			moveCode = intermediaryToSANMove(piece,endPosition);
-			return "move " + moveCode;
-		}
-		else{		//Black
-			piece = Long.lowestOneBit(piece);
-
-			if(piece==0L)
-				return "resign";
-
-			number = Long.numberOfTrailingZeros(piece);
-			endPosition = getValidMoves(number);
-			endPosition = Long.lowestOneBit(endPosition);
-
-			if(endPosition==0L)
-				return "resign";
-
-			moveCode = intermediaryToSANMove(piece,endPosition);
-			return "move " + moveCode;
-		}
-		*/
 	}
 
 	//	
@@ -1314,27 +1215,12 @@ public class Board {
 			System.out.println();
 		}	
 	}
-	
-	String printAndreiBoard() {
-		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
-		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
-		String chars=" abcdefgh"; 
-		String s ="";
-		s+="\t";
-		for (int i=1;i<=8;i++)
-			s+=chars.charAt(i)+"\t";
-		s+="\r\n";
-		for (int i=7;i>=0;i--) {
-			s+=(i+1)+"\t";
-			for (int j=0;j<8;j++)
-				s+=type[getPieceType(i<<3|j)]+"\t";
-			s+="\r\n";
-			
-		}
-		s+="\r\n";
-		return s;
-	}
 
+
+	
+	
+	/***************************************  GET SAN FROM OPPONENT *****************************************/
+	
 	public boolean check;
 	public boolean checkmate;
 	public byte promotion; //retine tipul piesei la care a fost promovat pionul
