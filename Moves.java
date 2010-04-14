@@ -18,6 +18,11 @@ class Move implements Comparable {
 		p2=Usual.pos2(str);
 	}
 	
+	public Move(int pos1, int pos2){
+		p1=pos1;
+		p2=pos2;
+	}
+	
 	public int getP1() {
 		return p1;
 	}
