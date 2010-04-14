@@ -20,7 +20,6 @@ public class Board {
 	public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGRU
 	private long table;
 
-
 	private long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
 	private long[] color = new long[2]; // white.. black
 
@@ -358,24 +357,7 @@ public class Board {
 		kingMasks[63]=0x40c0000000000000L;
 
 	}
-
-	//	Functie care afiseaza un long ca un bitboard, folosita la testare
-	public void printBoard(long n){
-		long mask = 1L;
-		System.out.println();
-		for(int i=7;i>=0;i--){
-			for(int j=0;j<8;j++){
-				mask = 1L << 8*i << j;
-				if((mask & n)!=0)
-					System.out.print("1 ");
-				else
-					System.out.print("0 ");
-			}
-			System.out.println();
-		}
-		System.out.println();
-	}
-
+	
 
 	
 	 /*********************************** Inceput metode de generare mutari ************************************/
@@ -1040,12 +1022,76 @@ public class Board {
 		return "La Asta va fi ceva de lucru";
 	}
 
-	/*
-	 *	Functia scrie traduce in SAN o mutare, conform parametrilor de apel; este posibil sa o introduc
-	 *	in functia apelanta (intermediaryToSANMove) pentru ca primeste prea multi parametrii
-	 *
-	 *	elementType este de fapt unul din tipurile de piese de la 1 la 6, corespunzator mastilor
-	 */
+	public String nextMove(byte side){
+		Random r = new Random();
+		int position = 0;;
+		long onePiece = 0L,allMoves=0L,oneMove=0L;
+		int i = 10000;
+		if (checkmate)
+			return "resign";
+		while(i>0){
+			r = new Random();
+			position = r.nextInt(64);
+			onePiece = 1L << position;
+			if((onePiece & color[side]) != 0L){//este piesa proprie
+				
+				allMoves = getValidMoves(position);
+				if(allMoves != 0L){	//	exista mutari valide pentru piesa selectata
+					while(allMoves != 0L){
+						oneMove = Long.highestOneBit(allMoves);
+						allMoves ^= oneMove;
+						if(r.nextInt(12)<2)
+							break;
+					}
+				return "move " + intermediaryToSANMove(onePiece,oneMove);			
+					
+				}
+			}
+			i--;
+		}
+		return "resign";
+	}
+
+
+	
+	
+	/*********************************** Afisari ale tablei ************************************************/
+
+	void printBoard() {
+		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
+		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
+		String chars=" abcdefgh"; 
+		System.out.print("\t");
+		for (int i=1;i<=8;i++)
+			System.out.print(chars.charAt(i)+"\t");
+		System.out.println();
+		for (int i=7;i>=0;i--) {
+			System.out.print((i+1)+"\t");
+			for (int j=0;j<8;j++)
+				System.out.print(type[getPieceType(i<<3|j)]+"\t");
+			System.out.println();
+		}	
+	}
+	//	Functie care afiseaza un long ca un bitboard, folosita la testare
+	public void printBoard(long n){
+		long mask = 1L;
+		System.out.println();
+		for(int i=7;i>=0;i--){
+			for(int j=0;j<8;j++){
+				mask = 1L << 8*i << j;
+				if((mask & n)!=0)
+					System.out.print("1 ");
+				else
+					System.out.print("0 ");
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+
+	
+	/***************************************** GET OUR SAN ************************************************/
+	
 	public String emmasToSAN(byte elementType,long endPosition,byte row,byte column,
 			boolean checkPosition,boolean checkMate,boolean capture,byte castlingType,byte promotion){
 
@@ -1078,7 +1124,6 @@ public class Board {
 
 		return sb.toString();
 	}
-
 	
 	//	Functie intermediara care momentan calculeaza parametrii necesari crearii codificarii SAN
 	public String intermediaryToSANMove(long start,long end){
@@ -1165,58 +1210,6 @@ public class Board {
 		return emmasToSAN(elementType,end,row,column,checkPosition,checkMate,isCapture,castlingType,promotion);
 
 	}
-
-
-	public String nextMove(byte side){
-		Random r = new Random();
-		int position = 0;;
-		long onePiece = 0L,allMoves=0L,oneMove=0L;
-		int i = 10000;
-		if (checkmate)
-			return "resign";
-		while(i>0){
-			r = new Random();
-			position = r.nextInt(64);
-			onePiece = 1L << position;
-			if((onePiece & color[side]) != 0L){//este piesa proprie
-				
-				allMoves = getValidMoves(position);
-				if(allMoves != 0L){	//	exista mutari valide pentru piesa selectata
-					while(allMoves != 0L){
-						oneMove = Long.highestOneBit(allMoves);
-						allMoves ^= oneMove;
-						if(r.nextInt(12)<2)
-							break;
-					}
-				return "move " + intermediaryToSANMove(onePiece,oneMove);			
-					
-				}
-			}
-			i--;
-		}
-		return "resign";
-	}
-
-	//	
-	//.............................................................................................
-
-	void printBoard() {
-		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
-		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
-		String chars=" abcdefgh"; 
-		System.out.print("\t");
-		for (int i=1;i<=8;i++)
-			System.out.print(chars.charAt(i)+"\t");
-		System.out.println();
-		for (int i=7;i>=0;i--) {
-			System.out.print((i+1)+"\t");
-			for (int j=0;j<8;j++)
-				System.out.print(type[getPieceType(i<<3|j)]+"\t");
-			System.out.println();
-		}	
-	}
-
-
 	
 	
 	/***************************************  GET SAN FROM OPPONENT *****************************************/
