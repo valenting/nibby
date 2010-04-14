@@ -22,6 +22,9 @@ public class Usual {
 		return ( move.charAt(3) - '1' ) << 3 | ( move.charAt(2) - 'a' );
 	}
 	
+	public static String stringPos(int pos) {
+		return ((char)('a'+(pos&7)))+""+((pos>>3)+1)+"";
+	}
 	
 	public static void printBoard(long board){
 		String rep0=Long.toBinaryString(board);
