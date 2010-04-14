@@ -13,6 +13,7 @@ import java.io.InputStreamReader;
 
 //Asta random este doar de test
 import java.util.Random;
+import java.util.Vector;
 
 
 public class Board {
@@ -1052,7 +1053,56 @@ public class Board {
 		return "resign";
 	}
 
+	// gaseste toate mutarile posbile ale tuturor pieselor pentru un jucator (depinde de culoare)
+	public Vector<Move> getAllMoves(byte clr) {
+		long pieces = color[clr];
+		Vector<Move> v = new Vector<Move>();
+		while (pieces!=0L) {
+			long p1 = Long.highestOneBit(pieces);
+			int pos1 = Long.numberOfTrailingZeros(p1);
+			long p2 = this.getValidMoves(pos1);
+			while (p2!=0) {
+				long p3 = Long.highestOneBit(p2);
+				int pos3 = Long.numberOfTrailingZeros(p3);
+				v.add(new Move(pos1,pos3));
+				p2=p2^p3;
+			}
+			pieces=pieces^p1;
+		}
+		return v;
+	}
+	
+	/******************************** Functia de evaluare folosita de Negamax *********************************/
+	
+	public int evaluateBoard(int side) {
+        int whiteMaterial = 0, blackMaterial = 0;
+        int[] values = {0, 100, 500, 300, 300, 900};
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
+            blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
 
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(pieces[4] & color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(pieces[4] & color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(pieces[1] & color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(pieces[1] & color[1]) == 0) {
+            whiteMaterial -= 50;
+        }
+        
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
 	
 	
 	/*********************************** Afisari ale tablei ************************************************/
