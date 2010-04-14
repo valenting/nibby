@@ -10,8 +10,9 @@ import java.io.*;
 public class Game {
     public static Board brd=new Board();
     
+    
     public static void main(String []args) throws Exception{
-        XBoard xboard = new XBoard();
+       	XBoard xboard = new XBoard();
         while(xboard.isAlive()) {       	
         	if(xboard.isTurn()) {
             	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
@@ -22,6 +23,7 @@ public class Game {
             		brd.SAN(mutare,xboard.side);					
             		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
             		xboard.chSide();
+            		
                 }     
             else if (xboard.lastMove.startsWith("new"))
             		brd = new Board();
