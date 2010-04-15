@@ -28,6 +28,8 @@ public class NegaMax {
 	return max;
 	}
 	
+	
+	
 	public Move returnBestMove(){
 		int bestMove = -1;
 		int best = -INF;
@@ -35,6 +37,7 @@ public class NegaMax {
 	    for (int i = 0; i < v.size(); i++){
 	    	Move m = v.get(i);
 	    	Board b = brd.getCopy();
+	    	//b.printBoard();
 	    	b.updateBoard(m.getP1(), m.getP2(), (byte)0);
 	    	if (bestMove == -1)
 	    		bestMove = i;

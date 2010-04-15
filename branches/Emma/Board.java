@@ -16,27 +16,15 @@ import java.util.Random;
 import java.util.Vector;
 
 
-public class Board {
+public class Board implements Cloneable{
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
 	public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGRU
-	private long table;
-
-	private long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
-	private long[] color = new long[2]; // white.. black
-
-	//	Variabile adaugate de Andrei columnPosition,rowPosition - ca sa nu mai fac calcule
-	//	de asemenea enPassantWhite - pe ce coloana se poate face captura en passant la 
-	//	piesa White si analog enPassantBlack
+	
 	public static long knightMasks[] = new long[64];
 	public static long kingMasks[] = new long[64];
 	public static final byte columnPosition[] = new byte[64];
 	public static final byte rowPosition[] = new byte[64]; 
-	public byte enPassantWhite = 9;
-	public byte enPassantBlack = 9;
-	private boolean canLongCastleWhite = true;
-	private boolean canShortCastleWhite = true;
-	private boolean canShortCastleBlack = true;
-	private boolean canLongCastleBlack = true;
+	
 	public static char columnChar[] = {'a','b','c','d','e','f','g','h'};
 	public static char rowChar[] = {'1','2','3','4','5','6','7','8'};
 	public static char pieceForSAN[] = {' ',' ','R','N','B','Q','K'};
@@ -46,9 +34,24 @@ public class Board {
 	public static final long longCastlingBlack = 0xE00000000000000L;
 	public static final long shortCastlingBlack = 0x6000000000000000L;
 
-	byte types[];
 
-
+	private long table;
+	private long[] pieces ; // = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
+	private long[] color ;  // = new long[2]; // white.. black
+	
+	//	Variabile adaugate de Andrei columnPosition,rowPosition - ca sa nu mai fac calcule
+	//	de asemenea enPassantWhite - pe ce coloana se poate face captura en passant la 
+	//	piesa White si analog enPassantBlack
+	
+	private byte enPassantWhite = 9;
+	private byte enPassantBlack = 9;
+	private boolean canLongCastleWhite = true;
+	private boolean canShortCastleWhite = true;
+	private boolean canShortCastleBlack = true;
+	private boolean canLongCastleBlack = true;
+	private byte types[];
+	
+	
 	public Board(){
 		// la Start:
 
@@ -56,7 +59,10 @@ public class Board {
 		/* h8 ->> a8 | h7 ->> a7 | ...                                                       | h1 ->> a1 */
 
 		table = 0xFFFF00000000FFFFL;
-
+		
+		pieces = new long[7];
+		color = new long[2];
+		
 		color[0]= 0x000000000000FFFFL; //white
 		color[1]= 0xFFFF000000000000L; //black
 
@@ -70,7 +76,7 @@ public class Board {
 		types=initTypes();
 
 		//	Adaugat de Andrei - preferabil sa nu se initialize astea statice aici
-		generateStatic();
+		//generateStatic();
 	}
 
 	byte [] initTypes() {
@@ -79,14 +85,43 @@ public class Board {
 	}
 
 	public Board getCopy(){
+		return (Board) this.clone();		
+	}
+
+	public  void setVars(byte enPasW, byte enPasB, boolean a, boolean b, boolean c, boolean d) {
+		enPassantWhite = enPasW;
+		enPassantBlack = enPasB;
+		canLongCastleWhite = a;
+		canLongCastleBlack = b;
+		canShortCastleWhite = c;
+		canShortCastleBlack = d;
+	}
+	
+	public void setTypes(byte typ[]) {
+		types = typ;
+	}
+	
+	public void setBitboards(long tbl, long[] pis, long []clr) {
+		table = tbl;
+		pieces = pis;
+		color = clr;
+	}
+
+	@Override
+	public Board clone() {
 		try {
-			return (Board)this.clone();
+			Board b = (Board)super.clone(); 
+			b.setVars(enPassantWhite, enPassantWhite, canLongCastleWhite, canLongCastleBlack, canShortCastleWhite, canShortCastleBlack);
+			b.setTypes(types.clone());
+			b.setBitboards(table, pieces.clone(), color.clone());
+			return b;
 		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
-
+	
 	public byte getPieceType(int pos){
 		return types[pos];
 	}
@@ -97,7 +132,7 @@ public class Board {
 		return (byte)1;
 	}
 
-	public void generateStatic(){
+	public static void generateStatic(){
 		knightMasks[0]=0x20400L;
 		knightMasks[1]=0x50800L;
 		knightMasks[2]=0xa1100L;
@@ -1024,7 +1059,12 @@ public class Board {
 	}
 
 	public String nextMove(byte side){
-		Random r = new Random();
+		
+		NegaMax nm = new NegaMax(this, side, 3);
+		Move m = nm.returnBestMove();
+		System.out.println(m.getP1()+ "\t"+m.getP2());
+		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+		/*Random r = new Random();
 		int position = 0;;
 		long onePiece = 0L,allMoves=0L,oneMove=0L;
 		int i = 10000;
@@ -1050,7 +1090,7 @@ public class Board {
 			}
 			i--;
 		}
-		return "resign";
+		return "resign";*/
 	}
 
 	// gaseste toate mutarile posbile ale tuturor pieselor pentru un jucator (depinde de culoare)
