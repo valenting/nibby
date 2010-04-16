@@ -28,6 +28,8 @@ public class Game {
                 }     
             else if (xboard.lastMove.startsWith("new"))
             		brd = new Board();
+            else if (xboard.lastMove.contains("printboard"))
+            	brd.printBoard();
         }
     }
 }
