@@ -1060,37 +1060,10 @@ public class Board implements Cloneable{
 
 	public String nextMove(byte side){
 		
-		NegaMax nm = new NegaMax(this, side, 3);
-		Move m = nm.returnBestMove();
-		System.out.println(m.getP1()+ "\t"+m.getP2());
+		//NegaMax nm = new NegaMax(this, side, 3);
+		AlphaBeta ab = new AlphaBeta(this,4,side);
+		Move m = ab.returnBestMove();
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
-		/*Random r = new Random();
-		int position = 0;;
-		long onePiece = 0L,allMoves=0L,oneMove=0L;
-		int i = 10000;
-		if (checkmate)
-			return "resign";
-		while(i>0){
-			r = new Random();
-			position = r.nextInt(64);
-			onePiece = 1L << position;
-			if((onePiece & color[side]) != 0L){//este piesa proprie
-				
-				allMoves = getValidMoves(position);
-				if(allMoves != 0L){	//	exista mutari valide pentru piesa selectata
-					while(allMoves != 0L){
-						oneMove = Long.highestOneBit(allMoves);
-						allMoves ^= oneMove;
-						if(r.nextInt(12)<2)
-							break;
-					}
-				return "move " + intermediaryToSANMove(onePiece,oneMove);			
-					
-				}
-			}
-			i--;
-		}
-		return "resign";*/
 	}
 
 	// gaseste toate mutarile posbile ale tuturor pieselor pentru un jucator (depinde de culoare)
