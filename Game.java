@@ -13,6 +13,7 @@ public class Game {
     
     public static void main(String []args) throws Exception{
        	XBoard xboard = new XBoard();
+       	Board.generateStatic();
         while(xboard.isAlive()) {       	
         	if(xboard.isTurn()) {
             	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
@@ -27,6 +28,8 @@ public class Game {
                 }     
             else if (xboard.lastMove.startsWith("new"))
             		brd = new Board();
+            else if (xboard.lastMove.contains("printboard"))
+            	brd.printBoard();
         }
     }
 }
