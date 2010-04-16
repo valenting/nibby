@@ -28,8 +28,6 @@ public class NegaMax {
 	return max;
 	}
 	
-	
-	
 	public Move returnBestMove(){
 		int bestMove = -1;
 		int best = -INF;
