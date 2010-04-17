@@ -14,7 +14,7 @@ public class NegaMax {
 	
 	public int negamax(Board brd,byte Play,int d){
 		if ( d == 0)
-			return brd.evaluateBoard(Play);
+			return brd.evaluateBoard2(Play);
 		int max = -INF;
 		Vector<Move> v = brd.getAllMoves(Play);
 		for (int i = 0; i < v.size(); i++){
@@ -45,8 +45,9 @@ public class NegaMax {
 	    		best = score;
 	    	}
 	    }
-	   //if (bestMove != -1)
+	   if (bestMove != -1)
 		   return v.get(bestMove);
+	   else return null;
 	}
 	
 }

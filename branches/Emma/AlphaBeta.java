@@ -17,7 +17,7 @@ public class AlphaBeta {
 	
 	public int alphaBeta(Board brd, int alpha,int beta, int depthleft, byte Play){
 		if (depthleft == 0)
-			return brd.evaluateBoard(Play);
+			return brd.evaluateBoard2(Play);
 		Vector<Move> v = brd.getAllMoves(Play);
 		for (int i = 0; i < v.size(); i++){
 			Move m = v.get(i);
@@ -48,6 +48,8 @@ public class AlphaBeta {
 	    		best = score;
 	    	}
 	    }
-	   return v.get(bestMove);
+	   if (bestMove != -1)
+		   return v.get(bestMove);
+	   else return null;
 	}
 }
