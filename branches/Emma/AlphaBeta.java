@@ -22,7 +22,7 @@ public class AlphaBeta {
 		for (int i = 0; i < v.size(); i++){
 			Move m = v.get(i);
 			Board b = brd.getCopy();
-			b.updateBoard(m.getP1(),m.getP2(),(byte)0);
+			b.updateBoard(m.getP1(),m.getP2(),(byte)b.W_QUEEN);
 			int score = -alphaBeta(b,-beta,-alpha,depthleft-1,(byte)(1-Play));
 			if (score >= beta)
 				return beta;
@@ -39,7 +39,7 @@ public class AlphaBeta {
 	    for (int i = 0; i < v.size(); i++){
 	    	Move m = v.get(i);
 	    	Board b = brd.getCopy();
-	    	b.updateBoard(m.getP1(), m.getP2(), (byte)0);
+	    	b.updateBoard(m.getP1(), m.getP2(), (byte)b.W_QUEEN);
 	    	if (bestMove == -1)
 	    		bestMove = i;
 	    	int score = -alphaBeta(b,alpha,beta,depth,(byte)(1-Player));
