@@ -1061,8 +1061,10 @@ public class Board implements Cloneable{
 	public String nextMove(byte side){
 		
 		//NegaMax nm = new NegaMax(this, side, 3);
-		AlphaBeta ab = new AlphaBeta(this,4,side);
+		AlphaBeta ab = new AlphaBeta(this,3,side);
 		Move m = ab.returnBestMove();
+		if (m == null)
+			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 	}
 
@@ -1085,7 +1087,7 @@ public class Board implements Cloneable{
 		return v;
 	}
 	
-	/******************************** Functia de evaluare folosita de Negamax *********************************/
+	/******************************** Functii de evaluare folosite de Negamax *********************************/
 	
 	public int evaluateBoard(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
@@ -1117,6 +1119,44 @@ public class Board implements Cloneable{
         }
     }
 	
+	public int evaluateBoard2(int side) {
+        int whiteMaterial = 0, blackMaterial = 0;
+        int[] values = {0, 100, 500, 300, 300, 900};
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
+            blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(pieces[4] & color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(pieces[4] & color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(pieces[1] & color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(pieces[1] & color[1]) == 0) {
+            whiteMaterial -= 50;
+        }
+		
+        if (!avoidCheckPosition((byte)0))
+        	blackMaterial+=1000;
+        if (!avoidCheckPosition((byte)1))
+        	whiteMaterial+=1000;
+        if (isCheckMate((byte)0))
+        	blackMaterial+=20000;
+        if (isCheckMate((byte)1))
+        	whiteMaterial+=20000;
+        
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
 	
 	/*********************************** Afisari ale tablei ************************************************/
 
