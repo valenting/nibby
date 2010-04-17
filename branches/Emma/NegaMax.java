@@ -20,7 +20,7 @@ public class NegaMax {
 		for (int i = 0; i < v.size(); i++){
 			Move m = v.get(i); 
 			Board b = brd.getCopy();
-			b.updateBoard(m.getP1(),m.getP2(),(byte)0);
+			b.updateBoard(m.getP1(),m.getP2(),(byte)b.W_QUEEN);
 			int score = -negamax(b,(byte)(1-Play), d-1);
 			if (score > max)
 				max = score;
@@ -36,7 +36,7 @@ public class NegaMax {
 	    	Move m = v.get(i);
 	    	Board b = brd.getCopy();
 	    	//b.printBoard();
-	    	b.updateBoard(m.getP1(), m.getP2(), (byte)0);
+	    	b.updateBoard(m.getP1(), m.getP2(), (byte)b.W_QUEEN);
 	    	if (bestMove == -1)
 	    		bestMove = i;
 	    	int score = -negamax(b,(byte)(1-Player),depth);
@@ -45,7 +45,8 @@ public class NegaMax {
 	    		best = score;
 	    	}
 	    }
-	   return v.get(bestMove);
+	   //if (bestMove != -1)
+		   return v.get(bestMove);
 	}
 	
 }
