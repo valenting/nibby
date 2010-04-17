@@ -24,7 +24,7 @@ public class dePusInBoard {
             whiteMaterial -= 50;
         }
 		
-		if (!avoidCheckPosition((byte)0))
+	if (!avoidCheckPosition((byte)0))
         	blackMaterial+=1000;
         if (!avoidCheckPosition((byte)1))
         	whiteMaterial+=1000;
