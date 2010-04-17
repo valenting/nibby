@@ -30,7 +30,7 @@ public class dePusInBoard {
         	whiteMaterial+=1000;
         if (isCheckMate((byte)0))
         	blackMaterial+=20000;
-        if (isCheckmate((byte)1))
+        if (isCheckMate((byte)1))
         	whiteMaterial+=20000;
         
         if (side == 0) {
