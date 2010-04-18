@@ -195,12 +195,12 @@ public class eval {
             colPawns[pos % 8]++;
         }
         if (colPawns[0]!=0 && colPawns[1]==0)
-            whiteMaterial-= IsolatedPawnPenalty[0];
+            blackMaterial-= IsolatedPawnPenalty[0];
         for(int i=1;i<7;i++)
             if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
-                whiteMaterial-= IsolatedPawnPenalty[i];
+                blackMaterial-= IsolatedPawnPenalty[i];
         if (colPawns[7]!=0 && colPawns[6]==0)
-            whiteMaterial-= IsolatedPawnPenalty[7];
+            blackMaterial-= IsolatedPawnPenalty[7];
 
 
         if (side == 0) {
