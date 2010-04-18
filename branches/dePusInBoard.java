@@ -5,7 +5,7 @@ public class dePusInBoard {
         int whiteMaterial = 0, blackMaterial = 0;
         int[] values = {0, 100, 500, 300, 300, 900};
 		
-		if (isCheckMate(side)
+	if (isCheckMate(side)
 			return 	-20000;
 			
         for (int i = 1; i <= 5; i++) {
