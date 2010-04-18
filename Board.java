@@ -1060,9 +1060,10 @@ public class Board implements Cloneable{
 
 	public String nextMove(byte side){
 		
-		//NegaMax nm = new NegaMax(this, side, 3);
-		AlphaBeta ab = new AlphaBeta(this,3,side);
-		Move m = ab.returnBestMove();
+		NegaMax nm = new NegaMax(this, side, 4);
+		AlphaBeta ab = new AlphaBeta(this,4,side);
+		NegaScout ns = new NegaScout(this,side,3);
+		Move m = nm.returnBestMove();
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
@@ -1157,6 +1158,126 @@ public class Board implements Cloneable{
             return blackMaterial - whiteMaterial;
         }
     }
+	
+	private static final int PAWN_SCORE = 100;
+	private static final int KNIGHT_SCORE = 310;
+	private static final int BISHOP_SCORE = 305;
+	private static final int ROOK_SCORE = 500;
+	private static final int QUEEN_SCORE = 850;
+	private static final int KING_SCORE = 64000;
+	
+	private static final int PieceScore[] = { PAWN_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
+        										ROOK_SCORE, QUEEN_SCORE, KING_SCORE
+    										 };
+	private static final int AttackScore[] = { 0,  0,  0,  0,  0,  0,  0,  0,
+        									   0,  1,  1,  1,  1,  1,  1,  0,
+        									   0,  1,  8,  8,  8,  8,  1,  0,
+        									   0,  1,  8, 25, 25,  8,  1,  0,
+        									   0,  1,  8, 25, 25,  8,  1,  0,
+        									   0,  1,  8,  8,  8,  8,  1,  0,
+        									   0,  1,  1,  1,  1,  1,  1,  0,
+        									   0,  0,  0,  0,  0,  0,  0,  0,
+    										};
+	private static final int IsolatedPawnPenalty[] = {10, 12, 14, 18, 18, 14, 12, 10};
+	private static final int PiecePosScore[][] = {
+		// Pawn scores White
+		{
+			 0,  0,  0,  0,  0,  0,  0,  0,
+			20, 26, 26, 28, 28, 26, 26, 20,
+	        12, 14, 16, 21, 21, 16, 14, 12,
+	         8, 10, 12, 18, 18, 12, 10,  8,
+	         4,  6,  8, 16, 16,  8,  6,  4,
+	         2,  2,  4,  6,  6,  4,  2,  2,
+	         0,  0,  0, -4, -4,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0
+	    },
+	    // Knight scores White
+	    {
+	        -40, -10,  - 5,  - 5,  - 5,  - 5, -10, -40,
+	        - 5,   5,    5,    5,    5,    5,   5, - 5,
+	        - 5,   5,   10,   15,   15,   10,   5, - 5,
+	        - 5,   5,   10,   15,   15,   10,   5, - 5,
+	        - 5,   5,   10,   15,   15,   10,   5, - 5,
+	        - 5,   5,    8,    8,    8,    8,   5, - 5,
+	        - 5,   0,    5,    5,    5,    5,   0, - 5,
+	        -50, -20,  -10,  -10,  -10,  -10, -20, -50,
+	    },
+	    // Bishop scores White
+	    {
+	        -40, -20, -15, -15, -15, -15, -20, -40,
+	          0,   5,   5,   5,   5,   5,   5,   0,
+	          0,  10,  10,  18,  18,  10,  10,   0,
+	          0,  10,  10,  18,  18,  10,  10,   0,
+	          0,   5,  10,  18,  18,  10,   5,   0,
+	          0,   0,   5,   5,   5,   5,   0,   0,
+	          0,   5,   0,   0,   0,   0,   5,   0,
+	        -50, -20, -10, -20, -20, -10, -20, -50
+	    },
+	    // Rook scores White
+	    {
+	        10, 10, 10, 10, 10, 10, 10, 10,
+	         5,  5,  5, 10, 10,  5,  5,  5,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	    },
+	    // Queen scores White
+	    {
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0, 10, 10, 10, 10,  0,  0,
+	         0,  0, 10, 15, 15, 10,  0,  0,
+	         0,  0, 10, 15, 15, 10,  0,  0,
+	         0,  0, 10, 10, 10, 10,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0
+	    },
+	    // King scores White
+	    {
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	        12,  8,  4,  0,  0,  4,  8, 12,
+	        16, 12,  8,  4,  4,  8, 12, 16,
+	        24, 20, 16, 12, 12, 16, 20, 24,
+	        24, 24, 24, 16, 16,  6, 32, 32
+	    },
+		// King end-game scores White
+	    {
+	        -30, -5,  0,  0,  0,  0, -5,-30,
+	         -5,  0,  0,  0,  0,  0,  0, -5,
+	          0,  0,  0,  0,  0,  0,  0,  0,
+	          0,  0,  0,  5,  5,  0,  0,  0,
+	          0,  0,  0,  5,  5,  0,  0,  0,
+	          0,  0,  0,  0,  0,  0,  0,  0,
+	        -10,  0,  0,  0,  0,  0,  0,-10,
+	        -40,-10, -5, -5, -5, -5,-10,-40
+	    }
+	};
+	
+	public int evalPieces(byte side){
+		int score = 0;
+		for (int i = 1; i <= 6; i++)
+			score += PieceScore[i-1]*Long.bitCount(pieces[i] & color[side]);
+		return score;
+	}
+	
+	public int evalPawns(int stage,byte side){
+		int score = 0;
+		float PPieceScale = 0,PPosScale = 1;
+		if (stage == 1) { PPieceScale = (float)0.25; PPosScale = (float)1.3;}
+	    if (stage == 2) { PPieceScale = (float)0.40; PPosScale = (float)1.7;}
+	    if (stage == 3) { PPieceScale = (float)0.70; PPosScale = (float)2.0;}
+	    long pawnTable = pieces[1] & color[side];
+	    score += Long.bitCount(pawnTable)*PieceScore[0]*PPieceScale;
+	    // de completat
+	    //
+		return score;
+	}
 	
 	/*********************************** Afisari ale tablei ************************************************/
 
