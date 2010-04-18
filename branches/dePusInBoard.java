@@ -163,6 +163,45 @@ public class eval {
 
         }
 
+        // pawn penalty
+        int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0 };
+        
+		//white
+		
+        remainingPieces = board.pieces[1] & board.color[0];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0]!=0 && colPawns[1]==0)
+            whiteMaterial-= IsolatedPawnPenalty[0];
+        for(int i=1;i<7;i++)
+            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
+                whiteMaterial-= IsolatedPawnPenalty[i];
+        if (colPawns[7]!=0 && colPawns[6]==0)
+            whiteMaterial-= IsolatedPawnPenalty[7];
+
+        
+		//black
+		
+        for(int i=0;i<8;i++) colPawns[i] = 0;
+        remainingPieces = board.pieces[1] & board.color[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0]!=0 && colPawns[1]==0)
+            whiteMaterial-= IsolatedPawnPenalty[0];
+        for(int i=1;i<7;i++)
+            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
+                whiteMaterial-= IsolatedPawnPenalty[i];
+        if (colPawns[7]!=0 && colPawns[6]==0)
+            whiteMaterial-= IsolatedPawnPenalty[7];
+
 
         if (side == 0) {
             return whiteMaterial - blackMaterial;
@@ -171,4 +210,5 @@ public class eval {
         }
     }
 
+    
 }
