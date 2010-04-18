@@ -27,11 +27,11 @@ public class dePusInBoard {
 	if (isCheckMate(side)
 			return 	-20000;
 	
-		if (!avoidCheckPosition(side))
-		if (side ==0)
-        	blackMaterial+=1000;
-		else
-			whiteMaterial+=1000;
+	if (!avoidCheckPosition(side))
+	if (side ==0)
+        blackMaterial+=1000;
+	else
+		whiteMaterial+=1000;
         
         
         if (side == 0) {
