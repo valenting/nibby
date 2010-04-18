@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 package javaapplication37;
-
+import java.util.*;
 /**
  *
  * @author Costin
@@ -109,7 +109,7 @@ public class eval {
 
 
     public int evaluateBoard(Board board, int side) {
-        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0;
+        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
         long onePiece, table, remainingPieces;
         
         if (board.isCheckMate((byte) side)) {
@@ -135,6 +135,10 @@ public class eval {
             blackMaterial -= 50;
         }
 
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) gameStage = 1;
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) gameStage = 2;
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) gameStage = 3;
+
         if (!board.avoidCheckPosition((byte) side)) {
             if (side == 0) {
                 blackMaterial += 1000;
@@ -143,8 +147,8 @@ public class eval {
             }
         }
 
-        // position scores 
-        remainingPieces = board.table & board.color[0];
+        // position scores without kings
+        remainingPieces = board.table & board.color[0]  & ~board.pieces[6];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -153,7 +157,7 @@ public class eval {
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
-        remainingPieces = board.table & board.color[1];
+        remainingPieces = board.table & board.color[1]  & ~board.pieces[6];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -162,12 +166,24 @@ public class eval {
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }
+        // position scores kings
+            //white
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
+        if (gameStage > 1)
+            whiteMaterial += PiecePosScore[6][63-pos];
+        else
+            whiteMaterial+= PiecePosScore[5][63-pos];
+            //black
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
+        if (gameStage >1)
+            blackMaterial += PiecePosScore[6][63 - (pos%8 + (7-(pos/8))*8)];
+        else
+            blackMaterial += PiecePosScore[5][63 - (pos%8 + (7-(pos/8))*8)];
+
 
         // pawn penalty
         int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0 };
-        
-		//white
-		
+        //white
         remainingPieces = board.pieces[1] & board.color[0];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
@@ -183,10 +199,9 @@ public class eval {
         if (colPawns[7]!=0 && colPawns[6]==0)
             whiteMaterial-= IsolatedPawnPenalty[7];
 
-        
-		//black
-		
+        //black
         for(int i=0;i<8;i++) colPawns[i] = 0;
+
         remainingPieces = board.pieces[1] & board.color[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
@@ -195,13 +210,16 @@ public class eval {
             colPawns[pos % 8]++;
         }
         if (colPawns[0]!=0 && colPawns[1]==0)
-            blackMaterial-= IsolatedPawnPenalty[0];
+            whiteMaterial-= IsolatedPawnPenalty[0];
         for(int i=1;i<7;i++)
             if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
-                blackMaterial-= IsolatedPawnPenalty[i];
+                whiteMaterial-= IsolatedPawnPenalty[i];
         if (colPawns[7]!=0 && colPawns[6]==0)
-            blackMaterial-= IsolatedPawnPenalty[7];
+            whiteMaterial-= IsolatedPawnPenalty[7];
 
+
+        if ((whiteMaterial - blackMaterial) > 1200 || (whiteMaterial - blackMaterial) < -1200)
+            return whiteMaterial - blackMaterial;
 
         if (side == 0) {
             return whiteMaterial - blackMaterial;
@@ -210,5 +228,5 @@ public class eval {
         }
     }
 
-    
+ 
 }
