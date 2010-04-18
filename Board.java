@@ -1018,52 +1018,13 @@ public class Board implements Cloneable{
 								
 	 /*******************************  Sfarsit metode de update al baordului  *******************************/
 
-	
-	public String futureGetNextMove(byte side){
-		long optimumStart = 0L;
-		long optimumEnd = 0L;
-		boolean isCheck,isCapture;
-		byte castling = 0;	//1 daca este rocada mica, 2 daca este rocada mare
-		byte elementType = 0;
-
-		/*{
-		 *	Un cod care apeleaza convenabil o functie astfel incat sa intoarca mutarea
-		 *	cea mai onvenabila... ne vom love de el la minimx si la tot felul de optimizari
-		 *	asa ca nu vreau sa scriu asta deocamdata, dar voi presupune ca in urma
-		 *	prelucrarilor functia va considera drept solutie optima mutarea 
-		 *		long optimumStart,long optimumEnd
-		 *
-		 *	Inainte sa scrie careva ceva aici(mai ales Vali) as sugera ca functia asta sa
-		 *	semene ca structura cu functia recursiva... Din nou, scopul sugestiei este de a va
-		 *	impiedica sa scrieti cod inainte de a discuta implementarea.
-		 *
-		 *}
-		 */
-		if((elementType | 7) == W_KING){
-			if(optimumEnd == optimumStart << 2)	//	rocada mica
-				castling = 1;
-			else if(optimumEnd == optimumStart >>> 2)	//	rocada mare
-				castling = 2;
-		}
-		else{
-			elementType = getPieceType(Long.numberOfTrailingZeros(optimumEnd));
-			updateMoveOnBoard(optimumStart,optimumEnd);
-			isCheck = !avoidCheckPosition((byte)((side+1)&1));	//	verifica daca adversarul este in sah
-			updateMoveOnBoard(optimumEnd,optimumStart);
-			restorePieceOnBoard(optimumEnd,elementType);
-
-			if(elementType!=0)	//	captura
-				isCapture = true;
-		}
-		return "La Asta va fi ceva de lucru";
-	}
 
 	public String nextMove(byte side){
 		
 		NegaMax nm = new NegaMax(this, side, 4);
-		AlphaBeta ab = new AlphaBeta(this,4,side);
+		AlphaBeta ab = new AlphaBeta(this,5,side);
 		NegaScout ns = new NegaScout(this,side,3);
-		Move m = nm.returnBestMove();
+		Move m = ab.returnBestMove();
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
@@ -1088,7 +1049,7 @@ public class Board implements Cloneable{
 		return v;
 	}
 	
-	/******************************** Functii de evaluare folosite de Negamax *********************************/
+	/******************************** Functii de evaluare folosite  *********************************/
 	
 	public int evaluateBoard(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
@@ -1167,7 +1128,7 @@ public class Board implements Cloneable{
 	private static final int KING_SCORE = 64000;
 	
 	private static final int PieceScore[] = { PAWN_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
-        										ROOK_SCORE, QUEEN_SCORE, KING_SCORE
+        									  ROOK_SCORE, QUEEN_SCORE, KING_SCORE
     										 };
 	private static final int AttackScore[] = { 0,  0,  0,  0,  0,  0,  0,  0,
         									   0,  1,  1,  1,  1,  1,  1,  0,
@@ -1278,6 +1239,83 @@ public class Board implements Cloneable{
 	    //
 		return score;
 	}
+	
+	public int evaluateBoard3(Board board,int side) {
+        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0;
+        long onePiece, table, remainingPieces;
+        
+        if (board.isCheckMate((byte) side)) {
+            return -20000;
+        }
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += PieceScore[i-1] * Long.bitCount(board.pieces[i] & board.color[0]);
+            blackMaterial += PieceScore[i-1] * Long.bitCount(board.pieces[i] & board.color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(board.pieces[4] & board.color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(board.pieces[4] & board.color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(board.pieces[1] & board.color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(board.pieces[1] & board.color[1]) == 0) {
+            blackMaterial -= 50;
+        }
+//<<<<<<< .mine
+		
+        if (!avoidCheckPosition((byte)0))
+        	blackMaterial+=1000;
+        if (!avoidCheckPosition((byte)1))
+        	whiteMaterial+=1000;
+        if (isCheckMate((byte)0))
+        	blackMaterial+=20000;
+        if (isCheckMate((byte)1))
+        	whiteMaterial+=20000;
+        
+//=======
+
+        if (!board.avoidCheckPosition((byte) side)) {
+            if (side == 0) {
+                blackMaterial += 1000;
+            } else {
+                whiteMaterial += 1000;
+            }
+        }
+
+        // position scores 
+        remainingPieces = board.table & board.color[0];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            tip = board.getPieceType(pos) & 7;
+            remainingPieces -= onePiece;
+            whiteMaterial += PiecePosScore[tip - 1][pos];
+
+        }
+        remainingPieces = board.table & board.color[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            tip = board.getPieceType(pos) & 7;
+            remainingPieces -= onePiece;
+            blackMaterial += PiecePosScore[tip - 1][63 - pos];
+
+        }
+
+
+//>>>>>>> .r149
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
+
 	
 	/*********************************** Afisari ale tablei ************************************************/
 

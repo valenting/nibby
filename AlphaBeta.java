@@ -17,7 +17,7 @@ public class AlphaBeta {
 	
 	public int alphaBeta(Board brd, int alpha,int beta, int depthleft, byte Play){
 		if (depthleft == 0)
-			return brd.evaluateBoard(Play);
+			return brd.evaluateBoard3(brd,Play);
 		Vector<Move> v = brd.getAllMoves(Play);
 		for (Move m : v){
 			Board b = brd.getCopy();
