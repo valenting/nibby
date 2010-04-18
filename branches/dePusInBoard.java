@@ -21,17 +21,18 @@ public class dePusInBoard {
             whiteMaterial -= 50;
         }
         if (Long.bitCount(pieces[1] & color[1]) == 0) {
-            whiteMaterial -= 50;
+            blackMaterial -= 50;
         }
 		
-	if (!avoidCheckPosition((byte)0))
+	if (isCheckMate(side)
+			return 	-20000;
+	
+		if (!avoidCheckPosition(side))
+		if (side ==0)
         	blackMaterial+=1000;
-        if (!avoidCheckPosition((byte)1))
-        	whiteMaterial+=1000;
-        if (isCheckMate((byte)0))
-        	blackMaterial+=20000;
-        if (isCheckMate((byte)1))
-        	whiteMaterial+=20000;
+		else
+			whiteMaterial+=1000;
+        
         
         if (side == 0) {
             return whiteMaterial - blackMaterial;
