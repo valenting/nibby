@@ -83,6 +83,11 @@ class Node implements Comparable{
 		return moves.lastElement();
 	}
 
+	
+	public boolean equals(Node n) {
+		return move.equals(n.getMove());
+	}
+	
 	public Move getMove() {
 		return move;
 	}
@@ -91,6 +96,7 @@ class Node implements Comparable{
 		Node nod = (Node) o;
 		return move.compareTo(nod.getMove());
 	}
+	
 	public Vector<Node> getChildren() {
 		return moves;
 	}
@@ -130,55 +136,48 @@ class MoveTree {
 }
 
 class Openings {
-	static MoveTree whiteMoves,blackMoves;
-	static Node wcurrent,bcurrent;
-	static boolean wvalid,bvalid;
-	static void init() throws IOException {
-		MoveTree whiteMoves = new MoveTree("pulsarCrazyWhite.txt");
-		whiteMoves.addTree("atomicBookWhite.txt");
-		MoveTree blackMoves = new MoveTree("pulsarCrazyBlack.txt");
-		blackMoves.addTree("atomicBookBlack.txt");
-		wcurrent=whiteMoves.getRoot();
-		bcurrent=blackMoves.getRoot();
-		wvalid=true;
-		bvalid=true;
-	}
-	
+	private static MoveTree tree;
+	private static Node current;
+	private static boolean valid;
 	public static void reset() {
-		wcurrent=whiteMoves.getRoot();
-		bcurrent=blackMoves.getRoot();
-		wvalid=true;
-		bvalid=true;
+		tree = null;
+		valid = false;
 	}
-	public static boolean hasNext(byte color) {
-		if (color==0)
-			return wcurrent.getChildren().size()!=0 && wvalid;
-		return bcurrent.getChildren().size()!=0 && bvalid;
+	public static boolean isSet() {
+		return tree!=null;
 	}
-	public static Move getMove(byte color) {
+	public static void init(int color) throws IOException {
 		if (color==0) {
-			int n = wcurrent.getChildren().size();
-			Random r = new Random(n);
-			Node next = wcurrent.getChildren().elementAt(r.nextInt(n));
-			wcurrent=next;
-			return next.getMove();
-		}
-		int n = bcurrent.getChildren().size();
-		Random r = new Random(n);
-		Node next = bcurrent.getChildren().elementAt(r.nextInt(n));
-		bcurrent = next;
-		return next.getMove();
+			tree = new MoveTree("pulsarCrazyWhite.txt");
+			tree.addTree("atomicBookWhite.txt");
+			valid=true;
+			current = tree.getRoot();
+			} else { 
+			tree = new MoveTree("pulsarCrazyBlack.txt");
+			tree.addTree("atomicBookBlack.txt");
+			valid=true;
+			current = tree.getRoot();
+			}
 	}
-	public static void updateMove(Move m,byte color) {
-		if (color==0) {
-			if (wcurrent.getChildren().contains(new Node(m))) 
-				wcurrent=wcurrent.getChildren().elementAt(wcurrent.getChildren().indexOf(m));
-			else wvalid=false;
-			return;
+	public static Move getMove() {
+		if (tree==null || valid==false)
+			return null;
+		if (current.getChildren().size()==0) {
+			valid=false;
+			return null;
 		}
-		if (bcurrent.getChildren().contains(new Node(m))) 
-			bcurrent=bcurrent.getChildren().elementAt(bcurrent.getChildren().indexOf(m));
-		else bvalid=false;
+		Random r = new Random(System.currentTimeMillis());
+		Node n = current.getChildren().elementAt(r.nextInt(current.getChildren().size()));
+		current = n;
+		return n.getMove();
+	}
+	public static void makeMove(Move m) {
+		if (current.getChildren().contains(new Node(m))) {
+			current = current.getChildren().elementAt(current.getChildren().indexOf(new Node(m)));
+		} else valid=false;
+	}
+	public static boolean hasNext() {
+		return valid && current!=null && isSet();
 	}
 }
 
