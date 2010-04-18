@@ -39,7 +39,7 @@ public class NegaMax {
 	    	b.updateBoard(m.getP1(), m.getP2(), (byte)b.W_QUEEN);
 	    	if (bestMove == -1)
 	    		bestMove = i;
-	    	int score = -negamax(b,(byte)(1-Player),depth);
+	    	int score = -negamax(b,(byte)(1-Player),depth-1);
 	    	if (score > best){
 	    		bestMove = i;
 	    		best = score;
