@@ -218,8 +218,7 @@ public class eval {
             whiteMaterial-= IsolatedPawnPenalty[7];
 
 
-        if ((whiteMaterial - blackMaterial) > 1200 || (whiteMaterial - blackMaterial) < -1200)
-            return whiteMaterial - blackMaterial;
+    
 
         if (side == 0) {
             return whiteMaterial - blackMaterial;
@@ -228,5 +227,5 @@ public class eval {
         }
     }
 
- 
+
 }
