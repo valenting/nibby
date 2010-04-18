@@ -4,6 +4,10 @@ public class dePusInBoard {
     public int evaluateBoard(Board board, int side) {
         int whiteMaterial = 0, blackMaterial = 0;
         int[] values = {0, 100, 500, 300, 300, 900};
+		
+		if (isCheckMate(side)
+			return 	-20000;
+			
         for (int i = 1; i <= 5; i++) {
             whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
             blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
@@ -24,8 +28,6 @@ public class dePusInBoard {
             blackMaterial -= 50;
         }
 		
-	if (isCheckMate(side)
-			return 	-20000;
 	
 	if (!avoidCheckPosition(side))
 		if (side ==0)
