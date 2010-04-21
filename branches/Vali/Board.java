@@ -1020,6 +1020,8 @@ public class Board implements Cloneable{
 
 	public String nextMove(byte side){
 		
+		//NegaMax nm = new NegaMax(this, side, 3);
+		//NegaScout ns = new NegaScout(this,side,3);
 		if (Openings.hasNext()) {
 			Move m = Openings.getMove();
 			if (m!=null) {
@@ -1029,7 +1031,7 @@ public class Board implements Cloneable{
 		}
 		AlphaBeta ab = new AlphaBeta(this,5,side);
 		Move m = ab.returnBestMove();
-		//Openings.makeMove(m);
+		Openings.makeMove(m);
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());

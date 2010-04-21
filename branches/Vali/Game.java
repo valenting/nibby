@@ -2,9 +2,9 @@ import java.util.*;
 import java.io.*;
 
 /* Author: Nibblonians
- * Etapa 1: 
- * 			implementare comenzi xboard
- * 			mutare pion cat timp are mutari valide
+ * Etapa 3: 
+ * 			implementare NegaMax si AlphaBeta
+ * 			deschideri
  */
 
 public class Game {
