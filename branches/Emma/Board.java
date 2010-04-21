@@ -1275,9 +1275,9 @@ public class Board implements Cloneable{
 
         if (!board.avoidCheckPosition((byte) side)) {
             if (side == 0) {
-                blackMaterial += 1000;
+                blackMaterial += 100;
             } else {
-                whiteMaterial += 1000;
+                whiteMaterial += 100;
             }
         }
 
