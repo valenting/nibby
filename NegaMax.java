@@ -14,13 +14,13 @@ public class NegaMax {
 	
 	public int negamax(Board brd,byte Play,int d){
 		if ( d == 0)
-			return brd.evaluateBoard2(Play);
+			return brd.evaluateBoard(Play);
 		int max = -INF;
 		Vector<Move> v = brd.getAllMoves(Play);
 		for (int i = 0; i < v.size(); i++){
 			Move m = v.get(i); 
 			Board b = brd.getCopy();
-			b.updateBoard(m.getP1(),m.getP2(),(byte)b.W_QUEEN);
+			b.updateBoard(m.getP1(),m.getP2(),(byte)0);
 			int score = -negamax(b,(byte)(1-Play), d-1);
 			if (score > max)
 				max = score;
@@ -36,18 +36,16 @@ public class NegaMax {
 	    	Move m = v.get(i);
 	    	Board b = brd.getCopy();
 	    	//b.printBoard();
-	    	b.updateBoard(m.getP1(), m.getP2(), (byte)b.W_QUEEN);
+	    	b.updateBoard(m.getP1(), m.getP2(), (byte)0);
 	    	if (bestMove == -1)
 	    		bestMove = i;
-	    	int score = -negamax(b,(byte)(1-Player),depth-1);
+	    	int score = -negamax(b,(byte)(1-Player),depth);
 	    	if (score > best){
 	    		bestMove = i;
 	    		best = score;
 	    	}
 	    }
-	   if (bestMove != -1)
-		   return v.get(bestMove);
-	   else return null;
+	   return v.get(bestMove);
 	}
 	
 }

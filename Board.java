@@ -1018,13 +1018,20 @@ public class Board implements Cloneable{
 								
 	 /*******************************  Sfarsit metode de update al baordului  *******************************/
 
-
 	public String nextMove(byte side){
 		
-		NegaMax nm = new NegaMax(this, side, 4);
+		//NegaMax nm = new NegaMax(this, side, 3);
+		//NegaScout ns = new NegaScout(this,side,3);
+		if (Openings.hasNext()) {
+			Move m = Openings.getMove();
+			if (m!=null) {
+				Openings.makeMove(m);
+				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+				}
+		}
 		AlphaBeta ab = new AlphaBeta(this,5,side);
-		NegaScout ns = new NegaScout(this,side,3);
 		Move m = ab.returnBestMove();
+		Openings.makeMove(m);
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
@@ -1220,28 +1227,8 @@ public class Board implements Cloneable{
 	    }
 	};
 	
-	public int evalPieces(byte side){
-		int score = 0;
-		for (int i = 1; i <= 6; i++)
-			score += PieceScore[i-1]*Long.bitCount(pieces[i] & color[side]);
-		return score;
-	}
-	
-	public int evalPawns(int stage,byte side){
-		int score = 0;
-		float PPieceScale = 0,PPosScale = 1;
-		if (stage == 1) { PPieceScale = (float)0.25; PPosScale = (float)1.3;}
-	    if (stage == 2) { PPieceScale = (float)0.40; PPosScale = (float)1.7;}
-	    if (stage == 3) { PPieceScale = (float)0.70; PPosScale = (float)2.0;}
-	    long pawnTable = pieces[1] & color[side];
-	    score += Long.bitCount(pawnTable)*PieceScore[0]*PPieceScale;
-	    // de completat
-	    //
-		return score;
-	}
-	
-	public int evaluateBoard3(Board board,int side) {
-        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0;
+    public int evaluateBoard3(Board board, int side) {
+        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
         long onePiece, table, remainingPieces;
         
         if (board.isCheckMate((byte) side)) {
@@ -1266,18 +1253,10 @@ public class Board implements Cloneable{
         if (Long.bitCount(board.pieces[1] & board.color[1]) == 0) {
             blackMaterial -= 50;
         }
-//<<<<<<< .mine
-		
-        if (!avoidCheckPosition((byte)0))
-        	blackMaterial+=1000;
-        if (!avoidCheckPosition((byte)1))
-        	whiteMaterial+=1000;
-        if (isCheckMate((byte)0))
-        	blackMaterial+=20000;
-        if (isCheckMate((byte)1))
-        	whiteMaterial+=20000;
-        
-//=======
+
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) gameStage = 1;
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) gameStage = 2;
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) gameStage = 3;
 
         if (!board.avoidCheckPosition((byte) side)) {
             if (side == 0) {
@@ -1287,8 +1266,8 @@ public class Board implements Cloneable{
             }
         }
 
-        // position scores 
-        remainingPieces = board.table & board.color[0];
+        // position scores without kings
+        remainingPieces = board.table & board.color[0]  & ~board.pieces[6];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -1297,7 +1276,7 @@ public class Board implements Cloneable{
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
-        remainingPieces = board.table & board.color[1];
+        remainingPieces = board.table & board.color[1]  & ~board.pieces[6];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -1306,9 +1285,60 @@ public class Board implements Cloneable{
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }
+        // position scores kings
+            //white
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
+        if (gameStage > 1)
+            whiteMaterial += PiecePosScore[6][63-pos];
+        else
+            whiteMaterial+= PiecePosScore[5][63-pos];
+            //black
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
+        if (gameStage >1)
+            blackMaterial += PiecePosScore[6][63 - (pos%8 + (7-(pos/8))*8)];
+        else
+            blackMaterial += PiecePosScore[5][63 - (pos%8 + (7-(pos/8))*8)];
 
 
-//>>>>>>> .r149
+        // pawn penalty
+        int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0 };
+        //white
+        remainingPieces = board.pieces[1] & board.color[0];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0]!=0 && colPawns[1]==0)
+            whiteMaterial-= IsolatedPawnPenalty[0];
+        for(int i=1;i<7;i++)
+            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
+                whiteMaterial-= IsolatedPawnPenalty[i];
+        if (colPawns[7]!=0 && colPawns[6]==0)
+            whiteMaterial-= IsolatedPawnPenalty[7];
+
+        //black
+        for(int i=0;i<8;i++) colPawns[i] = 0;
+
+        remainingPieces = board.pieces[1] & board.color[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0]!=0 && colPawns[1]==0)
+            whiteMaterial-= IsolatedPawnPenalty[0];
+        for(int i=1;i<7;i++)
+            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
+                whiteMaterial-= IsolatedPawnPenalty[i];
+        if (colPawns[7]!=0 && colPawns[6]==0)
+            whiteMaterial-= IsolatedPawnPenalty[7];
+
+
+    
+
         if (side == 0) {
             return whiteMaterial - blackMaterial;
         } else {

@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Random;
 import java.util.Vector;
 
 import org.omg.CORBA.NVList;
@@ -44,7 +45,7 @@ class Move implements Comparable {
 		return move2.getP1() == p1 && move2.getP2() == p2;
 	}
 	
-	static char colo[] = {'a','b','c','d','e','f','g','h','i'};
+	static char colo[] = {'a','b','c','d','e','f','g','h'};
 	
 	public String toString() {
 		
@@ -68,7 +69,7 @@ class Node implements Comparable{
 	} 
 	
 	public Node() {
-		new Move("iiii");
+		move = null;//new Move("iiii");
 		moves = new Vector<Node>();
 	}
 	
@@ -82,6 +83,11 @@ class Node implements Comparable{
 		return moves.lastElement();
 	}
 
+	@Override 
+	public boolean equals(Object n) {
+		return move.equals(((Node) n).getMove());
+	}
+	
 	public Move getMove() {
 		return move;
 	}
@@ -90,6 +96,7 @@ class Node implements Comparable{
 		Node nod = (Node) o;
 		return move.compareTo(nod.getMove());
 	}
+	
 	public Vector<Node> getChildren() {
 		return moves;
 	}
@@ -110,27 +117,91 @@ class MoveTree {
 			
 		}
 	}
+	public void addTree(String filename) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(filename));
+		String line;
+		while ((line=reader.readLine()) != null) {
+			Node nod = root;
+			while (line.length()>=4) {
+				String move = line.substring(0,4);
+				nod = nod.addChild(new Move(move));
+				line = line.substring(4);
+			}
+			
+		}
+	}
 	public Node getRoot() {
 		return root;
 	}
 }
 
+class Openings {
+	private static MoveTree tree;
+	private static Node current;
+	private static boolean valid;
+	public static void reset() {
+		tree = null;
+		valid = false;
+	}
+	public static boolean isSet() {
+		return tree!=null;
+	}
+	public static void init(int color) throws IOException {
+		if (color==0) {
+			tree = new MoveTree("pulsarCrazyWhite.txt");
+			//tree.addTree("atomicBookWhite.txt");
+			valid=true;
+			current = tree.getRoot();
+			} else { 
+			tree = new MoveTree("pulsarCrazyBlack.txt");
+			//tree.addTree("atomicBookBlack.txt");
+			valid=true;
+			current = tree.getRoot();
+			}
+	}
+	public static Move getMove() {
+		if (tree==null || valid==false)
+			return null;
+		if (current.getChildren().size()==0) {
+			valid=false;
+			return null;
+		}
+		Random r = new Random(System.currentTimeMillis());
+		Node n = current.getChildren().elementAt(r.nextInt(current.getChildren().size()));
+		//current = n;
+		return n.getMove();
+	}
+	public static void makeMove(Move m) {
+		if (current.getChildren().contains(new Node(m))) {
+			current = current.getChildren().elementAt(current.getChildren().indexOf(new Node(m)));
+		} else valid=false;
+	}
+	public static boolean hasNext() {
+		return valid && current!=null && isSet();
+	}
+}
+
 public class Moves {
-	static FileWriter w;
-	public static void Afis(Node nod, String indent) throws IOException{
+
+	public static void Afis(FileWriter a,Node nod, String indent) throws IOException{
 		Move mv = nod.getMove();
 		if (mv!=null )
-			//System.out.println(indent + nod.getMove().toString());
-			w.write(indent+nod.getMove().toString()+"\n");
+			a.write(indent+nod.getMove().toString()+"\n");
 		Vector<Node> v = nod.getChildren();
 		for (int i=0;i<v.size();i++)
-			Afis(v.elementAt(i),indent+"   ");
+			Afis(a,v.elementAt(i),indent+"\t");
 	}
 	public static void main(String args[]) throws IOException{
-		MoveTree tree = new MoveTree("pulsarCrazyWhite.txt");
-		w = new FileWriter(new File("arb.txt"));
-		Afis(tree.getRoot(),"");
+		MoveTree wtree = new MoveTree("pulsarCrazyWhite.txt");
+		wtree.addTree("atomicBookWhite.txt");
+		MoveTree btree = new MoveTree("pulsarCrazyBlack.txt");
+		btree.addTree("atomicBookBlack.txt");
+		FileWriter w = new FileWriter(new File("arbw.txt"));
+		Afis(w,wtree.getRoot(),"");
 		w.close();
+		FileWriter b = new FileWriter(new File("arbb.txt"));
+		Afis(b,wtree.getRoot(),"");
+		b.close();
 		
 	}
 }
