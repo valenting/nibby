@@ -1127,116 +1127,135 @@ public class Board implements Cloneable{
         }
     }
 	
-	private static final int PAWN_SCORE = 100;
-	private static final int KNIGHT_SCORE = 310;
-	private static final int BISHOP_SCORE = 305;
-	private static final int ROOK_SCORE = 500;
-	private static final int QUEEN_SCORE = 850;
-	private static final int KING_SCORE = 64000;
-	
-	private static final int PieceScore[] = { PAWN_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
-        									  ROOK_SCORE, QUEEN_SCORE, KING_SCORE
-    										 };
-	private static final int AttackScore[] = { 0,  0,  0,  0,  0,  0,  0,  0,
-        									   0,  1,  1,  1,  1,  1,  1,  0,
-        									   0,  1,  8,  8,  8,  8,  1,  0,
-        									   0,  1,  8, 25, 25,  8,  1,  0,
-        									   0,  1,  8, 25, 25,  8,  1,  0,
-        									   0,  1,  8,  8,  8,  8,  1,  0,
-        									   0,  1,  1,  1,  1,  1,  1,  0,
-        									   0,  0,  0,  0,  0,  0,  0,  0,
-    										};
-	private static final int IsolatedPawnPenalty[] = {10, 12, 14, 18, 18, 14, 12, 10};
-	private static final int PiecePosScore[][] = {
-		// Pawn scores White
-		{
-			 0,  0,  0,  0,  0,  0,  0,  0,
-			20, 26, 26, 28, 28, 26, 26, 20,
-	        12, 14, 16, 21, 21, 16, 14, 12,
-	         8, 10, 12, 18, 18, 12, 10,  8,
-	         4,  6,  8, 16, 16,  8,  6,  4,
-	         2,  2,  4,  6,  6,  4,  2,  2,
-	         0,  0,  0, -4, -4,  0,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0
-	    },
-	    // Knight scores White
-	    {
-	        -40, -10,  - 5,  - 5,  - 5,  - 5, -10, -40,
-	        - 5,   5,    5,    5,    5,    5,   5, - 5,
-	        - 5,   5,   10,   15,   15,   10,   5, - 5,
-	        - 5,   5,   10,   15,   15,   10,   5, - 5,
-	        - 5,   5,   10,   15,   15,   10,   5, - 5,
-	        - 5,   5,    8,    8,    8,    8,   5, - 5,
-	        - 5,   0,    5,    5,    5,    5,   0, - 5,
-	        -50, -20,  -10,  -10,  -10,  -10, -20, -50,
-	    },
-	    // Bishop scores White
-	    {
-	        -40, -20, -15, -15, -15, -15, -20, -40,
-	          0,   5,   5,   5,   5,   5,   5,   0,
-	          0,  10,  10,  18,  18,  10,  10,   0,
-	          0,  10,  10,  18,  18,  10,  10,   0,
-	          0,   5,  10,  18,  18,  10,   5,   0,
-	          0,   0,   5,   5,   5,   5,   0,   0,
-	          0,   5,   0,   0,   0,   0,   5,   0,
-	        -50, -20, -10, -20, -20, -10, -20, -50
-	    },
-	    // Rook scores White
-	    {
-	        10, 10, 10, 10, 10, 10, 10, 10,
-	         5,  5,  5, 10, 10,  5,  5,  5,
-	         0,  0,  5, 10, 10,  5,  0,  0,
-	         0,  0,  5, 10, 10,  5,  0,  0,
-	         0,  0,  5, 10, 10,  5,  0,  0,
-	         0,  0,  5, 10, 10,  5,  0,  0,
-	         0,  0,  5, 10, 10,  5,  0,  0,
-	         0,  0,  5, 10, 10,  5,  0,  0,
-	    },
-	    // Queen scores White
-	    {
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	         0,  0, 10, 10, 10, 10,  0,  0,
-	         0,  0, 10, 15, 15, 10,  0,  0,
-	         0,  0, 10, 15, 15, 10,  0,  0,
-	         0,  0, 10, 10, 10, 10,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0
-	    },
-	    // King scores White
-	    {
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	         0,  0,  0,  0,  0,  0,  0,  0,
-	        12,  8,  4,  0,  0,  4,  8, 12,
-	        16, 12,  8,  4,  4,  8, 12, 16,
-	        24, 20, 16, 12, 12, 16, 20, 24,
-	        24, 24, 24, 16, 16,  6, 32, 32
-	    },
-		// King end-game scores White
-	    {
-	        -30, -5,  0,  0,  0,  0, -5,-30,
-	         -5,  0,  0,  0,  0,  0,  0, -5,
-	          0,  0,  0,  0,  0,  0,  0,  0,
-	          0,  0,  0,  5,  5,  0,  0,  0,
-	          0,  0,  0,  5,  5,  0,  0,  0,
-	          0,  0,  0,  0,  0,  0,  0,  0,
-	        -10,  0,  0,  0,  0,  0,  0,-10,
-	        -40,-10, -5, -5, -5, -5,-10,-40
-	    }
-	};
-	
+    private static final int PAWN_SCORE = 100;
+    private static final int KNIGHT_SCORE = 310;
+    private static final int BISHOP_SCORE = 305;
+    private static final int ROOK_SCORE = 500;
+    private static final int QUEEN_SCORE = 850;
+    private static final int KING_SCORE = 64000;
+    private static final int PieceScore[] = {PAWN_SCORE, ROOK_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
+        QUEEN_SCORE, KING_SCORE
+    };
+    private static final int AttackScore[] = {0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 1, 1, 1, 1, 1, 0,
+        0, 1, 8, 8, 8, 8, 1, 0,
+        0, 1, 8, 25, 25, 8, 1, 0,
+        0, 1, 8, 25, 25, 8, 1, 0,
+        0, 1, 8, 8, 8, 8, 1, 0,
+        0, 1, 1, 1, 1, 1, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,};
+    private static final int IsolatedPawnPenalty[] = {10, 12, 14, 18, 18, 14, 12, 10};
+    private static final int PiecePosScore[][] = {
+        // Pawn scores White
+        {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            20, 26, 26, 28, 28, 26, 26, 20,
+            12, 14, 16, 21, 21, 16, 14, 12,
+            8, 10, 12, 18, 18, 12, 10, 8,
+            4, 6, 8, 16, 16, 8, 6, 4,
+            2, 2, 4, 6, 6, 4, 2, 2,
+            0, 0, 0, -4, -4, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0
+        },
+        // Rook scores White
+        {
+            10, 10, 10, 10, 10, 10, 10, 10,
+            5, 5, 5, 10, 10, 5, 5, 5,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,},
+        // Knight scores White
+        {
+            -40, -10, - 5, - 5, - 5, - 5, -10, -40,
+            - 5, 5, 5, 5, 5, 5, 5, - 5,
+            - 5, 5, 10, 15, 15, 10, 5, - 5,
+            - 5, 5, 10, 15, 15, 10, 5, - 5,
+            - 5, 5, 10, 15, 15, 10, 5, - 5,
+            - 5, 5, 8, 8, 8, 8, 5, - 5,
+            - 5, 0, 5, 5, 5, 5, 0, - 5,
+            -50, -20, -10, -10, -10, -10, -20, -50,},
+        // Bishop scores White
+        {
+            -40, -20, -15, -15, -15, -15, -20, -40,
+            0, 5, 5, 5, 5, 5, 5, 0,
+            0, 10, 10, 18, 18, 10, 10, 0,
+            0, 10, 10, 18, 18, 10, 10, 0,
+            0, 5, 10, 18, 18, 10, 5, 0,
+            0, 0, 5, 5, 5, 5, 0, 0,
+            0, 5, 0, 0, 0, 0, 5, 0,
+            -50, -20, -10, -20, -20, -10, -20, -50
+        },
+        // Queen scores White
+        {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 10, 10, 10, 10, 0, 0,
+            0, 0, 10, 15, 15, 10, 0, 0,
+            0, 0, 10, 15, 15, 10, 0, 0,
+            0, 0, 10, 10, 10, 10, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0
+        },
+        // King scores White
+        {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            12, 8, 4, 0, 0, 4, 8, 12,
+            16, 12, 8, 4, 4, 8, 12, 16,
+            24, 20, 16, 12, 12, 16, 20, 24,
+            24, 24, 24, 16, 16, 6, 32, 32
+        },
+        // King end-game scores White
+        {
+            -30, -5, 0, 0, 0, 0, -5, -30,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 5, 5, 0, 0, 0,
+            0, 0, 0, 5, 5, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            -10, 0, 0, 0, 0, 0, 0, -10,
+            -40, -10, -5, -5, -5, -5, -10, -40
+        }
+    };
+
     public int evaluateBoard3(Board board, int side) {
         int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
         long onePiece, table, remainingPieces;
-        
+        float pawnPieceScale = 1, pawnPosScale = 1;
+
         if (board.isCheckMate((byte) side)) {
             return -20000;
         }
-        for (int i = 1; i <= 5; i++) {
-            whiteMaterial += PieceScore[i-1] * Long.bitCount(board.pieces[i] & board.color[0]);
-            blackMaterial += PieceScore[i-1] * Long.bitCount(board.pieces[i] & board.color[1]);
+
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) {
+            gameStage = 1;
+            pawnPieceScale = 0.25F;
+            pawnPosScale = 1.3F;
+        }
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) {
+            gameStage = 2;
+            pawnPieceScale = 0.40F;
+            pawnPosScale = 1.7F;
+        }
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) {
+            gameStage = 3;
+            pawnPieceScale = 0.70F;
+            pawnPosScale = 2.0F;
+        }
+
+        //pawns
+        whiteMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[0]);
+        blackMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[1]);
+
+        //rest of the pieces
+        for (int i = 2; i <= 5; i++) {
+            whiteMaterial += PieceScore[i - 1] * Long.bitCount(board.pieces[i] & board.color[0]);
+            blackMaterial += PieceScore[i - 1] * Long.bitCount(board.pieces[i] & board.color[1]);
 
         }
         // Bonus for bishop pair
@@ -1254,10 +1273,6 @@ public class Board implements Cloneable{
             blackMaterial -= 50;
         }
 
-        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) gameStage = 1;
-        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) gameStage = 2;
-        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) gameStage = 3;
-
         if (!board.avoidCheckPosition((byte) side)) {
             if (side == 0) {
                 blackMaterial += 1000;
@@ -1266,8 +1281,8 @@ public class Board implements Cloneable{
             }
         }
 
-        // position scores without kings
-        remainingPieces = board.table & board.color[0]  & ~board.pieces[6];
+        // position scores without kings and pawns
+        remainingPieces = board.table & board.color[0] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -1276,7 +1291,7 @@ public class Board implements Cloneable{
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
-        remainingPieces = board.table & board.color[1]  & ~board.pieces[6];
+        remainingPieces = board.table & board.color[1] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -1286,23 +1301,60 @@ public class Board implements Cloneable{
 
         }
         // position scores kings
-            //white
-        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
-        if (gameStage > 1)
-            whiteMaterial += PiecePosScore[6][63-pos];
-        else
-            whiteMaterial+= PiecePosScore[5][63-pos];
-            //black
-        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
-        if (gameStage >1)
-            blackMaterial += PiecePosScore[6][63 - (pos%8 + (7-(pos/8))*8)];
-        else
-            blackMaterial += PiecePosScore[5][63 - (pos%8 + (7-(pos/8))*8)];
-
-
-        // pawn penalty
-        int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0 };
         //white
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
+        if (gameStage > 1) {
+            whiteMaterial += PiecePosScore[6][63 - pos];
+        } else {
+            whiteMaterial += PiecePosScore[5][63 - pos];
+        }
+        //black
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
+        if (gameStage > 1) {
+            blackMaterial += PiecePosScore[6][63 - (pos % 8 + (7 - (pos / 8)) * 8)];
+        } else {
+            blackMaterial += PiecePosScore[5][63 - (pos % 8 + (7 - (pos / 8)) * 8)];
+        }
+
+        // PAWNS scores
+
+        remainingPieces = board.table & board.color[0] & board.pieces[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            whiteMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
+
+        }
+
+        remainingPieces = board.table & board.color[1] & board.pieces[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            blackMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
+
+        }
+
+        //bonus if pawn is on an empty file or a half-empty file
+        long columns = 0x0101010101010101L;
+
+        for (int i = 0; i < 8; i++) {
+            long col = board.table & (columns << i);
+            long pawnColWhite = board.pieces[1] & board.color[0] & (columns << i);
+            long pawnColBlack = board.pieces[1] & board.color[1] & (columns << i);
+            
+            if (Long.highestOneBit(col) == Long.highestOneBit(pawnColWhite)) {
+                whiteMaterial += (int) (PieceScore[0] * (pawnPieceScale / 2));
+            }
+            if (Long.lowestOneBit(col) == Long.lowestOneBit(pawnColBlack)) {
+                blackMaterial += (int) (PieceScore[0] * (pawnPieceScale / 2));
+            }
+        }
+
+        // pawn penalty - isolated pawns
+        int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0};
+            //white
         remainingPieces = board.pieces[1] & board.color[0];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
@@ -1310,16 +1362,22 @@ public class Board implements Cloneable{
             remainingPieces -= onePiece;
             colPawns[pos % 8]++;
         }
-        if (colPawns[0]!=0 && colPawns[1]==0)
-            whiteMaterial-= IsolatedPawnPenalty[0];
-        for(int i=1;i<7;i++)
-            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
-                whiteMaterial-= IsolatedPawnPenalty[i];
-        if (colPawns[7]!=0 && colPawns[6]==0)
-            whiteMaterial-= IsolatedPawnPenalty[7];
+        if (colPawns[0] != 0 && colPawns[1] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[0];
+        }
+        for (int i = 1; i < 7; i++) {
+            if (colPawns[i - 1] == 0 && colPawns[i] != 0 && colPawns[i + 1] == 0) {
+                whiteMaterial -= IsolatedPawnPenalty[i];
+            }
+        }
+        if (colPawns[7] != 0 && colPawns[6] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[7];
+        }
 
-        //black
-        for(int i=0;i<8;i++) colPawns[i] = 0;
+            //black
+        for (int i = 0; i < 8; i++) {
+            colPawns[i] = 0;
+        }
 
         remainingPieces = board.pieces[1] & board.color[1];
         while (remainingPieces != 0) {
@@ -1328,16 +1386,17 @@ public class Board implements Cloneable{
             remainingPieces -= onePiece;
             colPawns[pos % 8]++;
         }
-        if (colPawns[0]!=0 && colPawns[1]==0)
-            whiteMaterial-= IsolatedPawnPenalty[0];
-        for(int i=1;i<7;i++)
-            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
-                whiteMaterial-= IsolatedPawnPenalty[i];
-        if (colPawns[7]!=0 && colPawns[6]==0)
-            whiteMaterial-= IsolatedPawnPenalty[7];
-
-
-    
+        if (colPawns[0] != 0 && colPawns[1] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[0];
+        }
+        for (int i = 1; i < 7; i++) {
+            if (colPawns[i - 1] == 0 && colPawns[i] != 0 && colPawns[i + 1] == 0) {
+                whiteMaterial -= IsolatedPawnPenalty[i];
+            }
+        }
+        if (colPawns[7] != 0 && colPawns[6] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[7];
+        }
 
         if (side == 0) {
             return whiteMaterial - blackMaterial;
