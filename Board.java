@@ -1018,49 +1018,8 @@ public class Board implements Cloneable{
 								
 	 /*******************************  Sfarsit metode de update al baordului  *******************************/
 
-	
-	public String futureGetNextMove(byte side){
-		long optimumStart = 0L;
-		long optimumEnd = 0L;
-		boolean isCheck,isCapture;
-		byte castling = 0;	//1 daca este rocada mica, 2 daca este rocada mare
-		byte elementType = 0;
-
-		/*{
-		 *	Un cod care apeleaza convenabil o functie astfel incat sa intoarca mutarea
-		 *	cea mai onvenabila... ne vom love de el la minimx si la tot felul de optimizari
-		 *	asa ca nu vreau sa scriu asta deocamdata, dar voi presupune ca in urma
-		 *	prelucrarilor functia va considera drept solutie optima mutarea 
-		 *		long optimumStart,long optimumEnd
-		 *
-		 *	Inainte sa scrie careva ceva aici(mai ales Vali) as sugera ca functia asta sa
-		 *	semene ca structura cu functia recursiva... Din nou, scopul sugestiei este de a va
-		 *	impiedica sa scrieti cod inainte de a discuta implementarea.
-		 *
-		 *}
-		 */
-		if((elementType | 7) == W_KING){
-			if(optimumEnd == optimumStart << 2)	//	rocada mica
-				castling = 1;
-			else if(optimumEnd == optimumStart >>> 2)	//	rocada mare
-				castling = 2;
-		}
-		else{
-			elementType = getPieceType(Long.numberOfTrailingZeros(optimumEnd));
-			updateMoveOnBoard(optimumStart,optimumEnd);
-			isCheck = !avoidCheckPosition((byte)((side+1)&1));	//	verifica daca adversarul este in sah
-			updateMoveOnBoard(optimumEnd,optimumStart);
-			restorePieceOnBoard(optimumEnd,elementType);
-
-			if(elementType!=0)	//	captura
-				isCapture = true;
-		}
-		return "La Asta va fi ceva de lucru";
-	}
-
 	public String nextMove(byte side){
 		
-		//NegaMax nm = new NegaMax(this, side, 3);
 		if (Openings.hasNext()) {
 			Move m = Openings.getMove();
 			if (m!=null) {
@@ -1068,9 +1027,11 @@ public class Board implements Cloneable{
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
-		AlphaBeta ab = new AlphaBeta(this,4,side);
+		AlphaBeta ab = new AlphaBeta(this,5,side);
 		Move m = ab.returnBestMove();
-		Openings.makeMove(m);
+		//Openings.makeMove(m);
+		if (m == null)
+			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 	}
 
@@ -1093,7 +1054,7 @@ public class Board implements Cloneable{
 		return v;
 	}
 	
-	/******************************** Functia de evaluare folosita de Negamax *********************************/
+	/******************************** Functii de evaluare folosite  *********************************/
 	
 	public int evaluateBoard(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
@@ -1125,6 +1086,264 @@ public class Board implements Cloneable{
         }
     }
 	
+	public int evaluateBoard2(int side) {
+        int whiteMaterial = 0, blackMaterial = 0;
+        int[] values = {0, 100, 500, 300, 300, 900};
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
+            blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(pieces[4] & color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(pieces[4] & color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(pieces[1] & color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(pieces[1] & color[1]) == 0) {
+            whiteMaterial -= 50;
+        }
+		
+        if (!avoidCheckPosition((byte)0))
+        	blackMaterial+=1000;
+        if (!avoidCheckPosition((byte)1))
+        	whiteMaterial+=1000;
+        if (isCheckMate((byte)0))
+        	blackMaterial+=20000;
+        if (isCheckMate((byte)1))
+        	whiteMaterial+=20000;
+        
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
+	
+	private static final int PAWN_SCORE = 100;
+	private static final int KNIGHT_SCORE = 310;
+	private static final int BISHOP_SCORE = 305;
+	private static final int ROOK_SCORE = 500;
+	private static final int QUEEN_SCORE = 850;
+	private static final int KING_SCORE = 64000;
+	
+	private static final int PieceScore[] = { PAWN_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
+        									  ROOK_SCORE, QUEEN_SCORE, KING_SCORE
+    										 };
+	private static final int AttackScore[] = { 0,  0,  0,  0,  0,  0,  0,  0,
+        									   0,  1,  1,  1,  1,  1,  1,  0,
+        									   0,  1,  8,  8,  8,  8,  1,  0,
+        									   0,  1,  8, 25, 25,  8,  1,  0,
+        									   0,  1,  8, 25, 25,  8,  1,  0,
+        									   0,  1,  8,  8,  8,  8,  1,  0,
+        									   0,  1,  1,  1,  1,  1,  1,  0,
+        									   0,  0,  0,  0,  0,  0,  0,  0,
+    										};
+	private static final int IsolatedPawnPenalty[] = {10, 12, 14, 18, 18, 14, 12, 10};
+	private static final int PiecePosScore[][] = {
+		// Pawn scores White
+		{
+			 0,  0,  0,  0,  0,  0,  0,  0,
+			20, 26, 26, 28, 28, 26, 26, 20,
+	        12, 14, 16, 21, 21, 16, 14, 12,
+	         8, 10, 12, 18, 18, 12, 10,  8,
+	         4,  6,  8, 16, 16,  8,  6,  4,
+	         2,  2,  4,  6,  6,  4,  2,  2,
+	         0,  0,  0, -4, -4,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0
+	    },
+	    // Knight scores White
+	    {
+	        -40, -10,  - 5,  - 5,  - 5,  - 5, -10, -40,
+	        - 5,   5,    5,    5,    5,    5,   5, - 5,
+	        - 5,   5,   10,   15,   15,   10,   5, - 5,
+	        - 5,   5,   10,   15,   15,   10,   5, - 5,
+	        - 5,   5,   10,   15,   15,   10,   5, - 5,
+	        - 5,   5,    8,    8,    8,    8,   5, - 5,
+	        - 5,   0,    5,    5,    5,    5,   0, - 5,
+	        -50, -20,  -10,  -10,  -10,  -10, -20, -50,
+	    },
+	    // Bishop scores White
+	    {
+	        -40, -20, -15, -15, -15, -15, -20, -40,
+	          0,   5,   5,   5,   5,   5,   5,   0,
+	          0,  10,  10,  18,  18,  10,  10,   0,
+	          0,  10,  10,  18,  18,  10,  10,   0,
+	          0,   5,  10,  18,  18,  10,   5,   0,
+	          0,   0,   5,   5,   5,   5,   0,   0,
+	          0,   5,   0,   0,   0,   0,   5,   0,
+	        -50, -20, -10, -20, -20, -10, -20, -50
+	    },
+	    // Rook scores White
+	    {
+	        10, 10, 10, 10, 10, 10, 10, 10,
+	         5,  5,  5, 10, 10,  5,  5,  5,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	         0,  0,  5, 10, 10,  5,  0,  0,
+	    },
+	    // Queen scores White
+	    {
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0, 10, 10, 10, 10,  0,  0,
+	         0,  0, 10, 15, 15, 10,  0,  0,
+	         0,  0, 10, 15, 15, 10,  0,  0,
+	         0,  0, 10, 10, 10, 10,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0
+	    },
+	    // King scores White
+	    {
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	         0,  0,  0,  0,  0,  0,  0,  0,
+	        12,  8,  4,  0,  0,  4,  8, 12,
+	        16, 12,  8,  4,  4,  8, 12, 16,
+	        24, 20, 16, 12, 12, 16, 20, 24,
+	        24, 24, 24, 16, 16,  6, 32, 32
+	    },
+		// King end-game scores White
+	    {
+	        -30, -5,  0,  0,  0,  0, -5,-30,
+	         -5,  0,  0,  0,  0,  0,  0, -5,
+	          0,  0,  0,  0,  0,  0,  0,  0,
+	          0,  0,  0,  5,  5,  0,  0,  0,
+	          0,  0,  0,  5,  5,  0,  0,  0,
+	          0,  0,  0,  0,  0,  0,  0,  0,
+	        -10,  0,  0,  0,  0,  0,  0,-10,
+	        -40,-10, -5, -5, -5, -5,-10,-40
+	    }
+	};
+	
+    public int evaluateBoard3(Board board, int side) {
+        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
+        long onePiece, table, remainingPieces;
+        
+        if (board.isCheckMate((byte) side)) {
+            return -20000;
+        }
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += PieceScore[i-1] * Long.bitCount(board.pieces[i] & board.color[0]);
+            blackMaterial += PieceScore[i-1] * Long.bitCount(board.pieces[i] & board.color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(board.pieces[4] & board.color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(board.pieces[4] & board.color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(board.pieces[1] & board.color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(board.pieces[1] & board.color[1]) == 0) {
+            blackMaterial -= 50;
+        }
+
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) gameStage = 1;
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) gameStage = 2;
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) gameStage = 3;
+
+        if (!board.avoidCheckPosition((byte) side)) {
+            if (side == 0) {
+                blackMaterial += 1000;
+            } else {
+                whiteMaterial += 1000;
+            }
+        }
+
+        // position scores without kings
+        remainingPieces = board.table & board.color[0]  & ~board.pieces[6];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            tip = board.getPieceType(pos) & 7;
+            remainingPieces -= onePiece;
+            whiteMaterial += PiecePosScore[tip - 1][pos];
+
+        }
+        remainingPieces = board.table & board.color[1]  & ~board.pieces[6];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            tip = board.getPieceType(pos) & 7;
+            remainingPieces -= onePiece;
+            blackMaterial += PiecePosScore[tip - 1][63 - pos];
+
+        }
+        // position scores kings
+            //white
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
+        if (gameStage > 1)
+            whiteMaterial += PiecePosScore[6][63-pos];
+        else
+            whiteMaterial+= PiecePosScore[5][63-pos];
+            //black
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
+        if (gameStage >1)
+            blackMaterial += PiecePosScore[6][63 - (pos%8 + (7-(pos/8))*8)];
+        else
+            blackMaterial += PiecePosScore[5][63 - (pos%8 + (7-(pos/8))*8)];
+
+
+        // pawn penalty
+        int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0 };
+        //white
+        remainingPieces = board.pieces[1] & board.color[0];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0]!=0 && colPawns[1]==0)
+            whiteMaterial-= IsolatedPawnPenalty[0];
+        for(int i=1;i<7;i++)
+            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
+                whiteMaterial-= IsolatedPawnPenalty[i];
+        if (colPawns[7]!=0 && colPawns[6]==0)
+            whiteMaterial-= IsolatedPawnPenalty[7];
+
+        //black
+        for(int i=0;i<8;i++) colPawns[i] = 0;
+
+        remainingPieces = board.pieces[1] & board.color[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0]!=0 && colPawns[1]==0)
+            whiteMaterial-= IsolatedPawnPenalty[0];
+        for(int i=1;i<7;i++)
+            if (colPawns[i-1]==0 && colPawns[i]!=0 && colPawns[i+1]==0)
+                whiteMaterial-= IsolatedPawnPenalty[i];
+        if (colPawns[7]!=0 && colPawns[6]==0)
+            whiteMaterial-= IsolatedPawnPenalty[7];
+
+
+    
+
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
+
 	
 	/*********************************** Afisari ale tablei ************************************************/
 
