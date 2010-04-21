@@ -1029,7 +1029,7 @@ public class Board implements Cloneable{
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
-		AlphaBeta ab = new AlphaBeta(this,5,side);
+		AlphaBeta ab = new AlphaBeta(this,4,side);
 		Move m = ab.returnBestMove();
 		//Openings.makeMove(m);
 		if (m == null)
