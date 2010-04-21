@@ -19,15 +19,15 @@ public class AlphaBeta {
 		if (depthleft == 0)
 			return brd.evaluateBoard3(brd,Play);
 		Vector<Move> v = brd.getAllMoves(Play);
-		for (Move m : v){
+		for (int i = 0; i < v.size(); i++){
+			Move m = v.get(i);
 			Board b = brd.getCopy();
-			b.updateBoard(m.getP1(),m.getP2(),(byte)b.W_QUEEN);
+			b.updateBoard(m.getP1(),m.getP2(),(byte)0);
 			int score = -alphaBeta(b,-beta,-alpha,depthleft-1,(byte)(1-Play));
 			if (score >= beta)
 				return beta;
-			if (score > alpha){
+			if (score > alpha)
 				alpha = score;
-			}
 		} 
 		return alpha;
 	}
@@ -37,8 +37,9 @@ public class AlphaBeta {
 		int best = -INF;
 	    Vector<Move> v = brd.getAllMoves(Player);
 	    for (Move m : v){
+	    	//Move m = v.get(i);
 	    	Board b = brd.getCopy();
-	    	b.updateBoard(m.getP1(), m.getP2(), (byte)b.W_QUEEN);
+	    	b.updateBoard(m.getP1(), m.getP2(), (byte)0);
 	    	if (bestMove == null)
 	    		bestMove = m;
 	    	int score = -alphaBeta(b,alpha,beta,depth-1,(byte)(1-Player));
