@@ -37,6 +37,7 @@ public class XBoard {
     public void sendToXBoard(String command) {
         if (command.startsWith("move")) {
             side = 1 - side;
+            //command =command + " {"+Openings.hasNext()+"}";
         }
         System.out.println(command);
         System.out.flush();
