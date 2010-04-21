@@ -83,9 +83,9 @@ class Node implements Comparable{
 		return moves.lastElement();
 	}
 
-	
-	public boolean equals(Node n) {
-		return move.equals(n.getMove());
+	@Override 
+	public boolean equals(Object n) {
+		return move.equals(((Node) n).getMove());
 	}
 	
 	public Move getMove() {
@@ -149,12 +149,12 @@ class Openings {
 	public static void init(int color) throws IOException {
 		if (color==0) {
 			tree = new MoveTree("pulsarCrazyWhite.txt");
-			tree.addTree("atomicBookWhite.txt");
+			//tree.addTree("atomicBookWhite.txt");
 			valid=true;
 			current = tree.getRoot();
 			} else { 
 			tree = new MoveTree("pulsarCrazyBlack.txt");
-			tree.addTree("atomicBookBlack.txt");
+			//tree.addTree("atomicBookBlack.txt");
 			valid=true;
 			current = tree.getRoot();
 			}
@@ -168,7 +168,7 @@ class Openings {
 		}
 		Random r = new Random(System.currentTimeMillis());
 		Node n = current.getChildren().elementAt(r.nextInt(current.getChildren().size()));
-		current = n;
+		//current = n;
 		return n.getMove();
 	}
 	public static void makeMove(Move m) {

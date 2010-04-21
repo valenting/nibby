@@ -14,7 +14,7 @@ public class Game {
     public static void main(String []args) throws Exception{
        	XBoard xboard = new XBoard();
        	Board.generateStatic();
-       	Openings.reset();
+        Openings.reset();
         while(xboard.isAlive()) {       	
         	if(xboard.isTurn()) {
         		if (!Openings.isSet())
@@ -35,8 +35,10 @@ public class Game {
             		brd = new Board();
             		Openings.reset();
             }
-            else if (xboard.lastMove.contains("printboard"))
+            else if (xboard.lastMove.contains("printboard")){
             	brd.printBoard();
+            	//System.out.println("#"+Openings.getMove().toString()+"\n");
+            }
         }
     }
 }
