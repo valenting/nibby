@@ -1282,16 +1282,16 @@ public class Board implements Cloneable{
         }
 
         // position scores without kings and pawns
-        remainingPieces = board.table & board.color[0] & ~board.pieces[6] & ~board.pieces[1];
+        remainingPieces = board.color[0] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
-            remainingPieces -= onePiece;
+            remainingPieces ^= onePiece;
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
-        remainingPieces = board.table & board.color[1] & ~board.pieces[6] & ~board.pieces[1];
+        remainingPieces = board.color[1] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -1318,7 +1318,7 @@ public class Board implements Cloneable{
 
         // PAWNS scores
 
-        remainingPieces = board.table & board.color[0] & board.pieces[1];
+        remainingPieces = board.color[0] & board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
@@ -1327,7 +1327,7 @@ public class Board implements Cloneable{
 
         }
 
-        remainingPieces = board.table & board.color[1] & board.pieces[1];
+        remainingPieces = board.color[1] & board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
