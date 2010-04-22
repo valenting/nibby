@@ -3,13 +3,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/*
- *	Forma simplificata la insistentele lui Vali
- *	Am mai modificat ceva si acum muta toti pionii
- *	Functioneaza corect pentru mutarea pionilor albi si negri (la nivelul etapei I)
- *
- *	Am implementat si o functie de determinare a situatiei de sah-mat
- */
 
 //Asta random este doar de test
 import java.util.Random;
@@ -1057,6 +1050,7 @@ public class Board implements Cloneable{
 	
 	/******************************** Functii de evaluare folosite  *********************************/
 	
+	// functie de evaluare simpla, folosita pentru testarea initiala
 	public int evaluateBoard(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
         int[] values = {0, 100, 500, 300, 300, 900};
@@ -1087,6 +1081,7 @@ public class Board implements Cloneable{
         }
     }
 	
+	// functie de evaluare simpla ce tine cont si de situatia de sah/sah mat, folosita pentru testare
 	public int evaluateBoard2(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
         int[] values = {0, 100, 500, 300, 300, 900};
@@ -1222,6 +1217,7 @@ public class Board implements Cloneable{
         }
     };
 
+    // functia de evaluare folosita 
     public int evaluateBoard3(Board board, int side) {
         int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
         long onePiece, table, remainingPieces;
