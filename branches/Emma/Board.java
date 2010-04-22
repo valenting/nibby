@@ -1296,7 +1296,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
-            remainingPieces -= onePiece;
+            remainingPieces ^= onePiece;
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }
