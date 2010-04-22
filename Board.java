@@ -1031,7 +1031,6 @@ public class Board implements Cloneable{
 		}
 		AlphaBeta ab = new AlphaBeta(this,4,side);
 		Move m = ab.returnBestMove();
-		//Openings.makeMove(m);
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
