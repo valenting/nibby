@@ -37,6 +37,7 @@ public class XBoard {
     public void sendToXBoard(String command) {
         if (command.startsWith("move")) {
             side = 1 - side;
+            //command =command + " {"+Openings.hasNext()+"}";
         }
         System.out.println(command);
         System.out.flush();
@@ -83,7 +84,7 @@ public class XBoard {
 
             }
             if (lastMove.startsWith("protover")) {
-                System.out.println("feature done=0 myname=\"nibbyEngine 0.1\" usermove=1 san=1 sigint=0 done=1");
+                System.out.println("feature done=0 myname=\"nibbyEngine 0.3\" usermove=1 san=1 sigint=0 done=1");
                 return true;
             }
             if (lastMove.equals("white")) {

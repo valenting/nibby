@@ -13,30 +13,18 @@ import java.io.InputStreamReader;
 
 //Asta random este doar de test
 import java.util.Random;
+import java.util.Vector;
 
 
-public class Board {
+public class Board implements Cloneable{
 	public static final byte _EMPTY=0, W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6; // CONSTANTE ALB
 	public static final byte           B_PAWN=9, B_ROOK=10, B_KNIGHT=11, B_BISHOP=12, B_QUEEN=13, B_KING=14; // CONSTANTE NEGRU
-	private long table;
-
-
-	private long[] pieces = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
-	private long[] color = new long[2]; // white.. black
-
-	//	Variabile adaugate de Andrei columnPosition,rowPosition - ca sa nu mai fac calcule
-	//	de asemenea enPassantWhite - pe ce coloana se poate face captura en passant la 
-	//	piesa White si analog enPassantBlack
+	
 	public static long knightMasks[] = new long[64];
 	public static long kingMasks[] = new long[64];
 	public static final byte columnPosition[] = new byte[64];
 	public static final byte rowPosition[] = new byte[64]; 
-	public byte enPassantWhite = 9;
-	public byte enPassantBlack = 9;
-	private boolean canLongCastleWhite = true;
-	private boolean canShortCastleWhite = true;
-	private boolean canShortCastleBlack = true;
-	private boolean canLongCastleBlack = true;
+	
 	public static char columnChar[] = {'a','b','c','d','e','f','g','h'};
 	public static char rowChar[] = {'1','2','3','4','5','6','7','8'};
 	public static char pieceForSAN[] = {' ',' ','R','N','B','Q','K'};
@@ -46,9 +34,24 @@ public class Board {
 	public static final long longCastlingBlack = 0xE00000000000000L;
 	public static final long shortCastlingBlack = 0x6000000000000000L;
 
-	byte types[];
 
-
+	private long table;
+	private long[] pieces ; // = new long[7]; // pieces[1] = pion, pieces[2] = rook... etc 
+	private long[] color ;  // = new long[2]; // white.. black
+	
+	//	Variabile adaugate de Andrei columnPosition,rowPosition - ca sa nu mai fac calcule
+	//	de asemenea enPassantWhite - pe ce coloana se poate face captura en passant la 
+	//	piesa White si analog enPassantBlack
+	
+	private byte enPassantWhite = 9;
+	private byte enPassantBlack = 9;
+	private boolean canLongCastleWhite = true;
+	private boolean canShortCastleWhite = true;
+	private boolean canShortCastleBlack = true;
+	private boolean canLongCastleBlack = true;
+	private byte types[];
+	
+	
 	public Board(){
 		// la Start:
 
@@ -56,7 +59,10 @@ public class Board {
 		/* h8 ->> a8 | h7 ->> a7 | ...                                                       | h1 ->> a1 */
 
 		table = 0xFFFF00000000FFFFL;
-
+		
+		pieces = new long[7];
+		color = new long[2];
+		
 		color[0]= 0x000000000000FFFFL; //white
 		color[1]= 0xFFFF000000000000L; //black
 
@@ -70,7 +76,7 @@ public class Board {
 		types=initTypes();
 
 		//	Adaugat de Andrei - preferabil sa nu se initialize astea statice aici
-		generateStatic();
+		//generateStatic();
 	}
 
 	byte [] initTypes() {
@@ -79,14 +85,43 @@ public class Board {
 	}
 
 	public Board getCopy(){
+		return (Board) this.clone();		
+	}
+
+	public  void setVars(byte enPasW, byte enPasB, boolean a, boolean b, boolean c, boolean d) {
+		enPassantWhite = enPasW;
+		enPassantBlack = enPasB;
+		canLongCastleWhite = a;
+		canLongCastleBlack = b;
+		canShortCastleWhite = c;
+		canShortCastleBlack = d;
+	}
+	
+	public void setTypes(byte typ[]) {
+		types = typ;
+	}
+	
+	public void setBitboards(long tbl, long[] pis, long []clr) {
+		table = tbl;
+		pieces = pis;
+		color = clr;
+	}
+
+	@Override
+	public Board clone() {
 		try {
-			return (Board)this.clone();
+			Board b = (Board)super.clone(); 
+			b.setVars(enPassantWhite, enPassantWhite, canLongCastleWhite, canLongCastleBlack, canShortCastleWhite, canShortCastleBlack);
+			b.setTypes(types.clone());
+			b.setBitboards(table, pieces.clone(), color.clone());
+			return b;
 		} catch (CloneNotSupportedException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return null;
 	}
-
+	
 	public byte getPieceType(int pos){
 		return types[pos];
 	}
@@ -97,13 +132,7 @@ public class Board {
 		return (byte)1;
 	}
 
-
-	public void move(int pos1, int pos2){
-		this.move(pos1, pos2, this.getPieceType(pos1));
-	}
-
-
-	public void generateStatic(){
+	public static void generateStatic(){
 		knightMasks[0]=0x20400L;
 		knightMasks[1]=0x50800L;
 		knightMasks[2]=0xa1100L;
@@ -364,50 +393,10 @@ public class Board {
 		kingMasks[63]=0x40c0000000000000L;
 
 	}
+	
 
-	public void move(int pos1, int pos2, byte type){
-		long mask1 = 1L << pos1;
-		long mask2 = 1L << pos2;
-
-		byte type2= getPieceType(pos2);
-
-		if (type2 !=_EMPTY) {
-			pieces[type2&7]^= mask2;
-			color[type2>>>3]^=mask2;
-		}
-
-		table  = table ^ mask1 | mask2;
-		pieces[type&7] ^= mask1 | mask2;//(pieces[type&7] ^ mask1) | mask2;
-		color[type>>>3] ^= mask1 | mask2;
-
-		types[pos2]=types[pos1];
-		types[pos1]=_EMPTY;
-	}
-
-	//	Functie care afiseaza un long ca un bitboard, folosita la testare
-	public void printBoard(long n){
-		long mask = 1L;
-		System.out.println();
-		for(int i=7;i>=0;i--){
-			for(int j=0;j<8;j++){
-				mask = 1L << 8*i << j;
-				if((mask & n)!=0)
-					System.out.print("1 ");
-				else
-					System.out.print("0 ");
-			}
-			System.out.println();
-		}
-		System.out.println();
-	}
-
-	/********************************************************************************************************
-	 *																										*
-	 *										Inceput metode de generare mutari								*
-	 *																										*
-	 ********************************************************************************************************/
-
-
+	
+	 /*********************************** Inceput metode de generare mutari ************************************/
 
 	long movesOfWhitePawn(long piece,byte row,byte column){
 		long forward = 0L,hostile=0L,oneMove;
@@ -663,17 +652,13 @@ public class Board {
 		| movesOfRook(piece,rowPosition[pozitie],columnPosition[pozitie]);	
 		}
 	}
+									
+	 /************************************* Sfarsit metode de generare mutari *********************************/
 
-	/*
-	 *										Sfarsit metode de generare mutari
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
 
-	/********************************************************************************************************
-	 *																										*
-	 *											Metode de analiza mutarilor									*
-	 *																										*
-	 ********************************************************************************************************/
+
+	
+	 /**************************************** Metode de analiza mutarilor ***************************************/
 
 	/*
 	 *	Intoarce masca de mutari valide pentru piesa aflata in patratul cu numarul de ordine
@@ -781,10 +766,9 @@ public class Board {
 		}
 		return true;
 	}
-	
-	/*
-	 *	Functia determina daca regele de culoare data ca parametru este in mat
-	 */
+
+	//	Functia determina daca regele de culoare data ca parametru este in mat
+
 	boolean isCheckMate(byte defendingSide){
 		long allPieces = color[defendingSide];
 		long onePiece = Long.highestOneBit(allPieces);
@@ -797,16 +781,12 @@ public class Board {
 		return true;
 
 	}
+									
+	 /******************************  Sfarsit metode de analiza a mutarilor  ********************************/
 
-	/*
-	 *										Sfarsit metode de analiza a mutarilor
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
-	/********************************************************************************************************
-	 *																										*
-	 *											Board update methods										*
-	 *																										*
-	 ********************************************************************************************************/
+
+	
+	 /**************************************  Board update methods  ****************************************/
 	
 	/*
 	 *	Metoda modifica indicatorii tablei de sah in conformitate cu mutarea curenta(mutare deja efectuata):
@@ -1035,63 +1015,433 @@ public class Board {
 	public void updateBoard(int poz1, int poz2, byte promotion){
 		updateBoard(1L<<poz1,1L<<poz2,promotion);
 	}
+								
+	 /*******************************  Sfarsit metode de update al baordului  *******************************/
 
-	/*
-	 *										Sfarsit metode de update al baordului
-	 ********************************************************************************************************
-	 ********************************************************************************************************/
-
-	/*
-	 *	Functia primeste ca parametru culoarea si alege o mutare care ii este
-	 *	convenabila, urmand sa o transforme in SAN prin apelul unei functii
-	 *	corespunzatoare din clasa definita de Emma
-	 */
-
-	public String futureGetNextMove(byte side){
-		long optimumStart = 0L;
-		long optimumEnd = 0L;
-		boolean isCheck,isCapture;
-		byte castling = 0;	//1 daca este rocada mica, 2 daca este rocada mare
-		byte elementType = 0;
-
-		/*{
-		 *	Un cod care apeleaza convenabil o functie astfel incat sa intoarca mutarea
-		 *	cea mai onvenabila... ne vom love de el la minimx si la tot felul de optimizari
-		 *	asa ca nu vreau sa scriu asta deocamdata, dar voi presupune ca in urma
-		 *	prelucrarilor functia va considera drept solutie optima mutarea 
-		 *		long optimumStart,long optimumEnd
-		 *
-		 *	Inainte sa scrie careva ceva aici(mai ales Vali) as sugera ca functia asta sa
-		 *	semene ca structura cu functia recursiva... Din nou, scopul sugestiei este de a va
-		 *	impiedica sa scrieti cod inainte de a discuta implementarea.
-		 *
-		 *}
-		 */
-		if((elementType | 7) == W_KING){
-			if(optimumEnd == optimumStart << 2)	//	rocada mica
-				castling = 1;
-			else if(optimumEnd == optimumStart >>> 2)	//	rocada mare
-				castling = 2;
+	public String nextMove(byte side){
+		
+		//NegaMax nm = new NegaMax(this, side, 3);
+		//NegaScout ns = new NegaScout(this,side,3);
+		if (Openings.hasNext()) {
+			Move m = Openings.getMove();
+			if (m!=null) {
+				Openings.makeMove(m);
+				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+				}
 		}
-		else{
-			elementType = getPieceType(Long.numberOfTrailingZeros(optimumEnd));
-			updateMoveOnBoard(optimumStart,optimumEnd);
-			isCheck = !avoidCheckPosition((byte)((side+1)&1));	//	verifica daca adversarul este in sah
-			updateMoveOnBoard(optimumEnd,optimumStart);
-			restorePieceOnBoard(optimumEnd,elementType);
-
-			if(elementType!=0)	//	captura
-				isCapture = true;
-		}
-		return "La Asta va fi ceva de lucru";
+		AlphaBeta ab = new AlphaBeta(this,4,side);
+		Move m = ab.returnBestMove();
+		if (m == null)
+			return "";
+		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 	}
 
-	/*
-	 *	Functia scrie traduce in SAN o mutare, conform parametrilor de apel; este posibil sa o introduc
-	 *	in functia apelanta (intermediaryToSANMove) pentru ca primeste prea multi parametrii
-	 *
-	 *	elementType este de fapt unul din tipurile de piese de la 1 la 6, corespunzator mastilor
-	 */
+	// gaseste toate mutarile posbile ale tuturor pieselor pentru un jucator (depinde de culoare)
+	public Vector<Move> getAllMoves(byte clr) {
+		long pieces = color[clr];
+		Vector<Move> v = new Vector<Move>();
+		while (pieces!=0L) {
+			long p1 = Long.highestOneBit(pieces);
+			int pos1 = Long.numberOfTrailingZeros(p1);
+			long p2 = this.getValidMoves(pos1);
+			while (p2!=0) {
+				long p3 = Long.highestOneBit(p2);
+				int pos3 = Long.numberOfTrailingZeros(p3);
+				v.add(new Move(pos1,pos3));
+				p2=p2^p3;
+			}
+			pieces=pieces^p1;
+		}
+		return v;
+	}
+	
+	/******************************** Functii de evaluare folosite  *********************************/
+	
+	public int evaluateBoard(int side) {
+        int whiteMaterial = 0, blackMaterial = 0;
+        int[] values = {0, 100, 500, 300, 300, 900};
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
+            blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(pieces[4] & color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(pieces[4] & color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(pieces[1] & color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(pieces[1] & color[1]) == 0) {
+            whiteMaterial -= 50;
+        }
+        
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
+	
+	public int evaluateBoard2(int side) {
+        int whiteMaterial = 0, blackMaterial = 0;
+        int[] values = {0, 100, 500, 300, 300, 900};
+        for (int i = 1; i <= 5; i++) {
+            whiteMaterial += values[i] * Long.bitCount(pieces[i] & color[0]);
+            blackMaterial += values[i] * Long.bitCount(pieces[i] & color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(pieces[4] & color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(pieces[4] & color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(pieces[1] & color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(pieces[1] & color[1]) == 0) {
+            whiteMaterial -= 50;
+        }
+		
+        if (!avoidCheckPosition((byte)0))
+        	blackMaterial+=1000;
+        if (!avoidCheckPosition((byte)1))
+        	whiteMaterial+=1000;
+        if (isCheckMate((byte)0))
+        	blackMaterial+=20000;
+        if (isCheckMate((byte)1))
+        	whiteMaterial+=20000;
+        
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
+	
+    private static final int PAWN_SCORE = 100;
+    private static final int KNIGHT_SCORE = 310;
+    private static final int BISHOP_SCORE = 305;
+    private static final int ROOK_SCORE = 500;
+    private static final int QUEEN_SCORE = 850;
+    private static final int KING_SCORE = 64000;
+    private static final int PieceScore[] = {PAWN_SCORE, ROOK_SCORE, KNIGHT_SCORE, BISHOP_SCORE,
+        QUEEN_SCORE, KING_SCORE
+    };
+    private static final int AttackScore[] = {0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 1, 1, 1, 1, 1, 0,
+        0, 1, 8, 8, 8, 8, 1, 0,
+        0, 1, 8, 25, 25, 8, 1, 0,
+        0, 1, 8, 25, 25, 8, 1, 0,
+        0, 1, 8, 8, 8, 8, 1, 0,
+        0, 1, 1, 1, 1, 1, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0,};
+    private static final int IsolatedPawnPenalty[] = {10, 12, 14, 18, 18, 14, 12, 10};
+    private static final int PiecePosScore[][] = {
+        // Pawn scores White
+        {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            20, 26, 26, 28, 28, 26, 26, 20,
+            12, 14, 16, 21, 21, 16, 14, 12,
+            8, 10, 12, 18, 18, 12, 10, 8,
+            4, 6, 8, 16, 16, 8, 6, 4,
+            2, 2, 4, 6, 6, 4, 2, 2,
+            0, 0, 0, -4, -4, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0
+        },
+        // Rook scores White
+        {
+            10, 10, 10, 10, 10, 10, 10, 10,
+            5, 5, 5, 10, 10, 5, 5, 5,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,
+            0, 0, 5, 10, 10, 5, 0, 0,},
+        // Knight scores White
+        {
+            -40, -10, - 5, - 5, - 5, - 5, -10, -40,
+            - 5, 5, 5, 5, 5, 5, 5, - 5,
+            - 5, 5, 10, 15, 15, 10, 5, - 5,
+            - 5, 5, 10, 15, 15, 10, 5, - 5,
+            - 5, 5, 10, 15, 15, 10, 5, - 5,
+            - 5, 5, 8, 8, 8, 8, 5, - 5,
+            - 5, 0, 5, 5, 5, 5, 0, - 5,
+            -50, -20, -10, -10, -10, -10, -20, -50,},
+        // Bishop scores White
+        {
+            -40, -20, -15, -15, -15, -15, -20, -40,
+            0, 5, 5, 5, 5, 5, 5, 0,
+            0, 10, 10, 18, 18, 10, 10, 0,
+            0, 10, 10, 18, 18, 10, 10, 0,
+            0, 5, 10, 18, 18, 10, 5, 0,
+            0, 0, 5, 5, 5, 5, 0, 0,
+            0, 5, 0, 0, 0, 0, 5, 0,
+            -50, -20, -10, -20, -20, -10, -20, -50
+        },
+        // Queen scores White
+        {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 10, 10, 10, 10, 0, 0,
+            0, 0, 10, 15, 15, 10, 0, 0,
+            0, 0, 10, 15, 15, 10, 0, 0,
+            0, 0, 10, 10, 10, 10, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0
+        },
+        // King scores White
+        {
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            12, 8, 4, 0, 0, 4, 8, 12,
+            16, 12, 8, 4, 4, 8, 12, 16,
+            24, 20, 16, 12, 12, 16, 20, 24,
+            24, 24, 24, 16, 16, 6, 32, 32
+        },
+        // King end-game scores White
+        {
+            -30, -5, 0, 0, 0, 0, -5, -30,
+            -5, 0, 0, 0, 0, 0, 0, -5,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 5, 5, 0, 0, 0,
+            0, 0, 0, 5, 5, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0,
+            -10, 0, 0, 0, 0, 0, 0, -10,
+            -40, -10, -5, -5, -5, -5, -10, -40
+        }
+    };
+
+    public int evaluateBoard3(Board board, int side) {
+        int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
+        long onePiece, table, remainingPieces;
+        float pawnPieceScale = 1, pawnPosScale = 1;
+
+        if (board.isCheckMate((byte) side)) {
+            return -20000;
+        }
+
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) {
+            gameStage = 1;
+            pawnPieceScale = 0.25F;
+            pawnPosScale = 1.3F;
+        }
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) {
+            gameStage = 2;
+            pawnPieceScale = 0.40F;
+            pawnPosScale = 1.7F;
+        }
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) {
+            gameStage = 3;
+            pawnPieceScale = 0.70F;
+            pawnPosScale = 2.0F;
+        }
+
+        //pawns
+        whiteMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[0]);
+        blackMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[1]);
+
+        //rest of the pieces
+        for (int i = 2; i <= 5; i++) {
+            whiteMaterial += PieceScore[i - 1] * Long.bitCount(board.pieces[i] & board.color[0]);
+            blackMaterial += PieceScore[i - 1] * Long.bitCount(board.pieces[i] & board.color[1]);
+
+        }
+        // Bonus for bishop pair
+        if (Long.bitCount(board.pieces[4] & board.color[0]) == 2) {
+            whiteMaterial += 50;
+        }
+        if (Long.bitCount(board.pieces[4] & board.color[1]) == 2) {
+            blackMaterial += 50;
+        }
+        // Penalty for having no pawns
+        if (Long.bitCount(board.pieces[1] & board.color[0]) == 0) {
+            whiteMaterial -= 50;
+        }
+        if (Long.bitCount(board.pieces[1] & board.color[1]) == 0) {
+            blackMaterial -= 50;
+        }
+
+        if (!board.avoidCheckPosition((byte) side)) {
+            if (side == 0) {
+                blackMaterial += 100;
+            } else {
+                whiteMaterial += 100;
+            }
+        }
+
+        // position scores without kings and pawns
+        remainingPieces = board.color[0] & ~board.pieces[6] & ~board.pieces[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            tip = board.getPieceType(pos) & 7;
+            remainingPieces ^= onePiece;
+            whiteMaterial += PiecePosScore[tip - 1][pos];
+
+        }
+        remainingPieces = board.color[1] & ~board.pieces[6] & ~board.pieces[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            tip = board.getPieceType(pos) & 7;
+            remainingPieces ^= onePiece;
+            blackMaterial += PiecePosScore[tip - 1][63 - pos];
+
+        }
+        // position scores kings
+        //white
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
+        if (gameStage > 1) {
+            whiteMaterial += PiecePosScore[6][63 - pos];
+        } else {
+            whiteMaterial += PiecePosScore[5][63 - pos];
+        }
+        //black
+        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
+        if (gameStage > 1) {
+            blackMaterial += PiecePosScore[6][63 - (pos % 8 + (7 - (pos / 8)) * 8)];
+        } else {
+            blackMaterial += PiecePosScore[5][63 - (pos % 8 + (7 - (pos / 8)) * 8)];
+        }
+
+        // PAWNS scores
+
+        remainingPieces = board.color[0] & board.pieces[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            whiteMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
+
+        }
+
+        remainingPieces = board.color[1] & board.pieces[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            blackMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
+
+        }
+
+        //bonus if pawn is on an empty file or a half-empty file
+        long columns = 0x0101010101010101L;
+
+        for (int i = 0; i < 8; i++) {
+            long col = board.table & (columns << i);
+            long pawnColWhite = board.pieces[1] & board.color[0] & (columns << i);
+            long pawnColBlack = board.pieces[1] & board.color[1] & (columns << i);
+            
+            if (Long.highestOneBit(col) == Long.highestOneBit(pawnColWhite)) {
+                whiteMaterial += (int) (PieceScore[0] * (pawnPieceScale / 2));
+            }
+            if (Long.lowestOneBit(col) == Long.lowestOneBit(pawnColBlack)) {
+                blackMaterial += (int) (PieceScore[0] * (pawnPieceScale / 2));
+            }
+        }
+
+        // pawn penalty - isolated pawns
+        int[] colPawns = {0, 0, 0, 0, 0, 0, 0, 0};
+            //white
+        remainingPieces = board.pieces[1] & board.color[0];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0] != 0 && colPawns[1] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[0];
+        }
+        for (int i = 1; i < 7; i++) {
+            if (colPawns[i - 1] == 0 && colPawns[i] != 0 && colPawns[i + 1] == 0) {
+                whiteMaterial -= IsolatedPawnPenalty[i];
+            }
+        }
+        if (colPawns[7] != 0 && colPawns[6] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[7];
+        }
+
+            //black
+        for (int i = 0; i < 8; i++) {
+            colPawns[i] = 0;
+        }
+
+        remainingPieces = board.pieces[1] & board.color[1];
+        while (remainingPieces != 0) {
+            onePiece = remainingPieces & -remainingPieces;
+            pos = Long.numberOfTrailingZeros(onePiece);
+            remainingPieces -= onePiece;
+            colPawns[pos % 8]++;
+        }
+        if (colPawns[0] != 0 && colPawns[1] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[0];
+        }
+        for (int i = 1; i < 7; i++) {
+            if (colPawns[i - 1] == 0 && colPawns[i] != 0 && colPawns[i + 1] == 0) {
+                whiteMaterial -= IsolatedPawnPenalty[i];
+            }
+        }
+        if (colPawns[7] != 0 && colPawns[6] == 0) {
+            whiteMaterial -= IsolatedPawnPenalty[7];
+        }
+
+        if (side == 0) {
+            return whiteMaterial - blackMaterial;
+        } else {
+            return blackMaterial - whiteMaterial;
+        }
+    }
+
+	
+	/*********************************** Afisari ale tablei ************************************************/
+
+	void printBoard() {
+		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
+		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
+		String chars=" abcdefgh"; 
+		System.out.print("\t");
+		for (int i=1;i<=8;i++)
+			System.out.print(chars.charAt(i)+"\t");
+		System.out.println();
+		for (int i=7;i>=0;i--) {
+			System.out.print((i+1)+"\t");
+			for (int j=0;j<8;j++)
+				System.out.print(type[getPieceType(i<<3|j)]+"\t");
+			System.out.println();
+		}	
+	}
+	//	Functie care afiseaza un long ca un bitboard, folosita la testare
+	public void printBoard(long n){
+		long mask = 1L;
+		System.out.println();
+		for(int i=7;i>=0;i--){
+			for(int j=0;j<8;j++){
+				mask = 1L << 8*i << j;
+				if((mask & n)!=0)
+					System.out.print("1 ");
+				else
+					System.out.print("0 ");
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+
+	
+	/***************************************** GET OUR SAN ************************************************/
+	
 	public String emmasToSAN(byte elementType,long endPosition,byte row,byte column,
 			boolean checkPosition,boolean checkMate,boolean capture,byte castlingType,byte promotion){
 
@@ -1124,14 +1474,8 @@ public class Board {
 
 		return sb.toString();
 	}
-
-	/*
-	 *	Functie intermediara care momentan calculeaza parametrii necesari crearii codificarii
-	 *	SAN.
-	 *	
-	 *	Este posibil sa unesc functia asta cu functia propriu-zisa de generare a codificarii SAN
-	 *	prezentata mai sus.
-	 */
+	
+	//	Functie intermediara care momentan calculeaza parametrii necesari crearii codificarii SAN
 	public String intermediaryToSANMove(long start,long end){
 		byte castlingType = 0;
 		boolean isCapture = false;
@@ -1216,125 +1560,10 @@ public class Board {
 		return emmasToSAN(elementType,end,row,column,checkPosition,checkMate,isCapture,castlingType,promotion);
 
 	}
-
-	/*
-	 *	Functie folosita pentru a selecta mutarea urmatoare(cel putin pentru etapa 1);
-	 *	Functia intoarce un string cu mutarea transpusa in SAN
-	 *
-	 *	Functia va selecta pionul dcu ordinul(pozitia pe tabla) cel mai mare(WHITE) respectiv
-	 *	cel mai mic(BLACK) si va alege mereu mutarea disponibila ce ii maximizeaza respectiv
-	 *	minimizeaza ordinul.
-	 */
-
-	public String nextMove(byte side){
-		Random r = new Random();
-		int position = 0;;
-		long onePiece = 0L,allMoves=0L,oneMove=0L;
-		int i = 10000;
-		if (checkmate)
-			return "resign";
-		while(i>0){
-			r = new Random();
-			position = r.nextInt(64);
-			onePiece = 1L << position;
-			if((onePiece & color[side]) != 0L){//este piesa proprie
-				
-				allMoves = getValidMoves(position);
-				if(allMoves != 0L){	//	exista mutari valide pentru piesa selectata
-					while(allMoves != 0L){
-						oneMove = Long.highestOneBit(allMoves);
-						allMoves ^= oneMove;
-						if(r.nextInt(12)<2)
-							break;
-					}
-				return "move " + intermediaryToSANMove(onePiece,oneMove);			
-					
-				}
-			}
-			i--;
-		}
-		return "resign";
-		
-		/*long piece = color[side] & pieces[1];
-		String moveCode = "";
-
-		
-		long endPosition;
-		int number;
-		if(side==0)	{//WHITE
-			piece = Long.highestOneBit(piece);
-
-			if(piece==0L)
-				return "resign";
-
-			number = Long.numberOfTrailingZeros(piece);
-			endPosition = getValidMoves(number);
-			endPosition = Long.highestOneBit(endPosition);
-
-			if(endPosition==0L)
-				return "resign";
-
-			moveCode = intermediaryToSANMove(piece,endPosition);
-			return "move " + moveCode;
-		}
-		else{		//Black
-			piece = Long.lowestOneBit(piece);
-
-			if(piece==0L)
-				return "resign";
-
-			number = Long.numberOfTrailingZeros(piece);
-			endPosition = getValidMoves(number);
-			endPosition = Long.lowestOneBit(endPosition);
-
-			if(endPosition==0L)
-				return "resign";
-
-			moveCode = intermediaryToSANMove(piece,endPosition);
-			return "move " + moveCode;
-		}
-		*/
-	}
-
-	//	
-	//.............................................................................................
-
-	void printBoard() {
-		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
-		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
-		String chars=" abcdefgh"; 
-		System.out.print("\t");
-		for (int i=1;i<=8;i++)
-			System.out.print(chars.charAt(i)+"\t");
-		System.out.println();
-		for (int i=7;i>=0;i--) {
-			System.out.print((i+1)+"\t");
-			for (int j=0;j<8;j++)
-				System.out.print(type[getPieceType(i<<3|j)]+"\t");
-			System.out.println();
-		}	
-	}
 	
-	String printAndreiBoard() {
-		// W_PAWN=1, W_ROOK=2, W_KNIGHT=3, W_BISHOP=4, W_QUEEN=5, W_KING=6;
-		char type[]={'-','p','r','n','b','q','k','-','-','P','R','N','B','Q','K'};
-		String chars=" abcdefgh"; 
-		String s ="";
-		s+="\t";
-		for (int i=1;i<=8;i++)
-			s+=chars.charAt(i)+"\t";
-		s+="\r\n";
-		for (int i=7;i>=0;i--) {
-			s+=(i+1)+"\t";
-			for (int j=0;j<8;j++)
-				s+=type[getPieceType(i<<3|j)]+"\t";
-			s+="\r\n";
-			
-		}
-		s+="\r\n";
-		return s;
-	}
-
+	
+	/***************************************  GET SAN FROM OPPONENT *****************************************/
+	
 	public boolean check;
 	public boolean checkmate;
 	public byte promotion; //retine tipul piesei la care a fost promovat pionul
