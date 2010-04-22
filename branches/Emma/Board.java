@@ -1286,7 +1286,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
-            remainingPieces ^= onePiece;
+            remainingPieces -= onePiece;
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
@@ -1295,7 +1295,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
-            remainingPieces ^= onePiece;
+            remainingPieces -= onePiece;
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }
@@ -1317,7 +1317,7 @@ public class Board implements Cloneable{
 
         // PAWNS scores
 
-        remainingPieces = board.color[0] & board.pieces[1];
+        remainingPieces =  board.color[0] & board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
