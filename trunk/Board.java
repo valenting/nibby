@@ -3,13 +3,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/*
- *	Forma simplificata la insistentele lui Vali
- *	Am mai modificat ceva si acum muta toti pionii
- *	Functioneaza corect pentru mutarea pionilor albi si negri (la nivelul etapei I)
- *
- *	Am implementat si o functie de determinare a situatiei de sah-mat
- */
 
 //Asta random este doar de test
 import java.util.Random;
@@ -843,19 +836,15 @@ public class Board implements Cloneable{
 		}
 		}
 
-		if(elementType > 8){//piesele proprii sunt BLACK, deci adversarul este WHITE
-			if(!avoidCheckPosition((byte)0)){	//	piesele albe sunt in sah
-				canShortCastleWhite = false;
-				canLongCastleWhite = false;
-			}
+		//	Verific daca se face captura pe pozitiile initiala ale turelor
+		//	Daca este captura, atunci sigur nu se mai poate face rocada pe partea respetiva
+		elementType = (byte)Long.numberOfTrailingZeros(end);
+		switch(elementType){
+			case 0: canLongCastleWhite = false;break;
+			case 7: canShortCastleWhite = false;break;
+			case 56: canLongCastleBlack = false;break;
+			case 63: canShortCastleBlack = false;break;	
 		}
-		else{//piesele adverse sunt BLACK
-			if(!avoidCheckPosition((byte)1)){	//	piesele negrele sunt in sah
-				canShortCastleBlack = false;
-				canLongCastleBlack = false;
-			}
-		}
-
 	}
 
 	/*
@@ -1057,6 +1046,7 @@ public class Board implements Cloneable{
 	
 	/******************************** Functii de evaluare folosite  *********************************/
 	
+	// functie de evaluare simpla, folosita pentru testarea initiala
 	public int evaluateBoard(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
         int[] values = {0, 100, 500, 300, 300, 900};
@@ -1087,6 +1077,7 @@ public class Board implements Cloneable{
         }
     }
 	
+	// functie de evaluare simpla ce tine cont si de situatia de sah/sah mat, folosita pentru testare
 	public int evaluateBoard2(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
         int[] values = {0, 100, 500, 300, 300, 900};
@@ -1222,6 +1213,7 @@ public class Board implements Cloneable{
         }
     };
 
+    // functia de evaluare folosita 
     public int evaluateBoard3(Board board, int side) {
         int whiteMaterial = 0, blackMaterial = 0, pos = 0, tip = 0, gameStage = 0;
         long onePiece, table, remainingPieces;
@@ -1286,7 +1278,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
-            remainingPieces ^= onePiece;
+            remainingPieces -= onePiece;
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
@@ -1295,7 +1287,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
-            remainingPieces ^= onePiece;
+            remainingPieces -= onePiece;
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }
@@ -1317,7 +1309,7 @@ public class Board implements Cloneable{
 
         // PAWNS scores
 
-        remainingPieces = board.color[0] & board.pieces[1];
+        remainingPieces =  board.color[0] & board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = Long.numberOfTrailingZeros(onePiece);
