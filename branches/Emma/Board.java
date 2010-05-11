@@ -1071,27 +1071,6 @@ public class Board implements Cloneable{
 	
 	/******************************** Functii de evaluare folosite  *********************************/
 	
-	public int quiesce(Board brd, byte side, int alpha, int beta){
-		int stand_pat = brd.evaluateBoard(side);
-		if (stand_pat >= beta)
-			return beta;
-		if (alpha < stand_pat)
-			alpha = stand_pat;
-		Vector<Move> capture = getAllCaptures(side);
-		if (capture == null)
-			return stand_pat;
-		for (Move m : capture){
-			Board bd = brd.getCopy();
-			bd.updateBoard(m.getP1(), m.getP2(), (byte)brd.W_QUEEN);
-			int score = -quiesce(bd,(byte)(1-side), -beta, -alpha);
-			if (score >= beta)
-				return beta;
-			if (score > alpha)
-				alpha = score;
-		}
-		return alpha;
-	}
-	
 	// functie de evaluare simpla, folosita pentru testarea initiala
 	public int evaluateBoard(int side) {
         int whiteMaterial = 0, blackMaterial = 0;
@@ -1325,6 +1304,7 @@ public class Board implements Cloneable{
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
+            if (tip>0)
             whiteMaterial += PiecePosScore[tip - 1][pos];
 
         }
@@ -1334,6 +1314,7 @@ public class Board implements Cloneable{
             pos = Long.numberOfTrailingZeros(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
+            if (tip>0)
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }

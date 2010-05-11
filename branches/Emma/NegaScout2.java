@@ -19,7 +19,7 @@ public class NegaScout2 {
 	private int negaScout( Board brd, int alpha, int beta, int d,byte Player ){ 
 		int t, b;
 		if (d == this.depth)
-			return brd.quiesce(brd, Player, alpha, beta);
+			return quiesce(brd, Player, alpha, beta,0);
 	    b = beta;
 	    Vector<Move> v = brd.getAllMoves(Player);
 	    for (int i = 0; i< v.size(); i++){
@@ -35,6 +35,30 @@ public class NegaScout2 {
 	    	b = alpha + 1;
 	    }
 	    return alpha;
+	}
+	
+	private int quiesce(Board brd, byte side, int alpha, int beta, int d){
+		int stand_pat = brd.evaluateBoard2(side);
+		if (stand_pat >= beta)
+			return beta;
+		if (alpha < stand_pat)
+			alpha = stand_pat;
+		Vector<Move> capture = brd.getAllCaptures(side);
+		if (capture == null || capture.size() == 0){
+			return stand_pat;
+		}
+		if ( d <= -depth)
+			return stand_pat;
+		for (Move m : capture){
+			Board bd = brd.getCopy();			
+			bd.updateBoard(m.getP1(), m.getP2(), (byte)brd.W_QUEEN);
+			int score = -quiesce(bd,(byte)(1-side), -beta, -alpha, d-1);
+			if (score >= beta)
+				return beta;
+			if (score > alpha)
+				alpha = score;
+		}
+		return alpha;
 	}
 	
 	public Move returnBestMove(){
