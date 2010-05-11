@@ -1018,8 +1018,9 @@ public class Board implements Cloneable{
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
-		AlphaBeta ab = new AlphaBeta(this,4,side);
-		Move m = ab.returnBestMove();
+		//AlphaBeta ab = new AlphaBeta(this,4,side);
+		NegaScout ns = new NegaScout(this, 4, side);
+		Move m = ns.returnBestMove();
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());

@@ -26,12 +26,13 @@ public class Game {
             		if (!Openings.isSet())
             			Openings.init(1);
                 	String mutare = xboard.lastMove.substring(9);
-                	xboard.readTime();
-                	xboard.readOtim();
             		brd.SAN(mutare,xboard.side);					
             		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
             		xboard.chSide();
             		Openings.makeMove(new Move(brd.pos1,brd.pos2));
+            		//prelucrare timpi
+            		xboard.time = 0;
+            		xboard.otim = 0;
                 }     
             else if (xboard.lastMove.startsWith("new")) {
             		brd = new Board();
