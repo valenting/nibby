@@ -26,6 +26,8 @@ public class Game {
             		if (!Openings.isSet())
             			Openings.init(1);
                 	String mutare = xboard.lastMove.substring(9);
+                	xboard.readTime();
+                	xboard.readOtim();
             		brd.SAN(mutare,xboard.side);					
             		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
             		xboard.chSide();

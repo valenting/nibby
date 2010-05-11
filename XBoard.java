@@ -47,7 +47,24 @@ public class XBoard {
     public void chSide() {
     	side = 1 - side;
     }
-
+    public boolean readTime() { 
+    	try {
+    		lastMove = inPipe.readLine();
+    		time = Integer.parseInt(lastMove.substring(5));
+    	}catch(IOException excep) { 
+    		return false;
+    	}
+    	return true;
+    }
+    public boolean readOtim() { 
+    	try {
+    		lastMove = inPipe.readLine();
+    		otim = Integer.parseInt(lastMove.substring(5));
+    	}catch(IOException excep) { 
+    		return false;
+    	}
+    	return true;
+    }
     public boolean read() {
     	
         System.out.flush();
