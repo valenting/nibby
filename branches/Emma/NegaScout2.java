@@ -1,5 +1,6 @@
 import java.util.*;
-public class NegaScout {
+public class NegaScout2 {
+
 	public Board brd;
 	public int INF = Integer.MAX_VALUE;
 	public int depth;
@@ -7,7 +8,7 @@ public class NegaScout {
 	public int alpha;
 	public int beta;
 	
-	public NegaScout(Board b, byte Player, int depth){
+	public NegaScout2(Board b, byte Player, int depth){
 		brd = b;
 		alpha = -INF;
 		beta = INF;
@@ -16,25 +17,24 @@ public class NegaScout {
 	}
 	
 	private int negaScout( Board brd, int alpha, int beta, int d,byte Player ){ 
-		int a,b;
+		int t, b;
 		if (d == this.depth)
-			return brd.evaluateBoard3(brd,Player);
-		a = alpha;
+			return brd.quiesce(brd, Player, alpha, beta);
 	    b = beta;
 	    Vector<Move> v = brd.getAllMoves(Player);
 	    for (int i = 0; i< v.size(); i++){
 	    	Board bd = brd.getCopy();
 	    	Move m = v.get(i);
 	    	bd.updateBoard(m.getP1(), m.getP2(), (byte)bd.W_QUEEN);
-	    	int t = - negaScout(bd,-b,-a,d+1,(byte)(1-Player));
-	    	if ( (t > a) && (t < beta) && (i > 0) && (d < this.depth -1))
-	    		a = -negaScout(bd,-beta,-t,d+1,(byte)(1-Player));
-	    	a = Math.max(a,t);
-	    	if (a >= beta)
-	    		return a;
-	    	b = a + 1;
+	    	t = - negaScout(bd,-b,-alpha,d+1,(byte)(1-Player));
+	    	if ( (t > alpha) && (t < beta) && (i > 0))
+	    		t = -negaScout(bd,-beta,-alpha,d+1,(byte)(1-Player));
+	    	alpha = Math.max(alpha,t);
+	    	if (alpha >= beta)
+	    		return alpha;
+	    	b = alpha + 1;
 	    }
-	    return a;
+	    return alpha;
 	}
 	
 	public Move returnBestMove(){
