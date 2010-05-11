@@ -1009,7 +1009,7 @@ public class Board implements Cloneable{
 		updateBoard(1L<<poz1,1L<<poz2,promotion);
 	}
 								
-	 /*******************************  Sfarsit metode de update al baordului  *******************************/
+	 /*******************************  Sfarsit metode de update al boardului  *******************************/
 
 	public String nextMove(byte side){
 		
@@ -1620,7 +1620,7 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.equals("O-O")){//rocada pe partea regelui
+		if (mutare.contains("O-O")){//rocada pe partea regelui
 			if (clr == 1){
 				castling = B_KING;
 				pos1 = 60; pos2 = 62;
@@ -1629,9 +1629,13 @@ public class Board implements Cloneable{
 				castling = W_KING; 
 				pos1 = 4; pos2 = 6;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
-		if (mutare.equals("O-O-O")){//rocada pe partea reginei
+		if (mutare.contains("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
 				pos1 = 60; pos2 = 58;
@@ -1640,6 +1644,10 @@ public class Board implements Cloneable{
 				castling = W_QUEEN; 
 				pos1 = 4; pos2 = 2;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
 		int i = mutare.length()-1;
