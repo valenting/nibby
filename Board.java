@@ -1742,4 +1742,79 @@ public class Board implements Cloneable{
 		}
 
 	}
+	
+	
+	public String nextMove(byte side,long myTime,long oppositeTime){
+		//	aici s-ar putea numara mutarile ramase pana la resetarea ceasului 
+		static int movesMade;//	asta e setat la 0 la primul apel, fiindca e static
+		
+		//NegaMax nm = new NegaMax(this, side, 3);
+		//NegaScout ns = new NegaScout(this,side,3);
+		if (Openings.hasNext()) {
+			Move m = Openings.getMove();
+			if (m!=null) {
+				Openings.makeMove(m);
+				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+				}
+		}
+		
+		Move m = myIterativeDeepening(40-(movesMade%40),myTime,oppositeTime);
+		movesMade++;
+		if (m == null)
+			return "";
+		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+	}
+	
+	public Move myIterativeDeepening(byte side,int movesLeft,long myTime,long oppositeTime){
+		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
+		long timeEnd;
+		long maxTime;
+		int depth = 3;
+		if(movesLeft!=0){
+			if(myTime/movesLeft>myTime-oppositeTime)
+				maxTime = myTime/movesLeft;
+			else
+				maxTime = myTime-oppositeTime;
+		}
+		
+		AlphaBeta ab;
+		
+		while(true){
+			ab = new AlphaBeta(this,depth,side);
+			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
+			if(movesLeft==0)
+				break;
+			if(timeEnd-timeStart>maxTime)
+				break;
+			depth++;
+			
+		}
+		return ab.returnBestMove();
+	}
+		/*
+		 // numarate mutari...
+
+// Start the negascout clock
+long ns_start = Calendar.getInstance().getTimeInMillis();
+maxtime = ;//calcul pe baza timpului adversarului si a timpului ramas/mutari reactualizare
+depth = 2;
+while(true) {
+	// Do the negascout
+	move_eval = negascout(depth, -INFINITY, INFINITY);
+				
+	// Stop the negascout clock
+	long ns_end = Calendar.getInstance().getTimeInMillis();
+				
+	// Depth sanity check
+	if(depth == RIDICULOUS_DEPTH)
+		break;
+	if( (ns_end - ns_start)  >= getTimeLimit()) {
+					modifyTimeLimit(getClock(), 1, 5);
+					System.out.println("Time Limit modified... now set at " + getTimeLimit() + " ms");
+				}
+	// Increase the depth for negascout
+
+	depth++;
+}
+		 */
 }
