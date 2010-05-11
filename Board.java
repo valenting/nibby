@@ -1005,7 +1005,7 @@ public class Board implements Cloneable{
 		updateBoard(1L<<poz1,1L<<poz2,promotion);
 	}
 								
-	 /*******************************  Sfarsit metode de update al baordului  *******************************/
+	 /*******************************  Sfarsit metode de update al boardului  *******************************/
 
 	public String nextMove(byte side){
 		
@@ -1019,6 +1019,7 @@ public class Board implements Cloneable{
 				}
 		}
 		AlphaBeta ab = new AlphaBeta(this,4,side);
+		NegaScout2 ns = new NegaScout2(this, side, 4);
 		Move m = ab.returnBestMove();
 		if (m == null)
 			return "";
@@ -1044,7 +1045,48 @@ public class Board implements Cloneable{
 		return v;
 	}
 	
+	// gaseste toate mutarile prin care se captureaza o piesa a adversarului
+	public Vector<Move> getAllCaptures(byte clr){
+		long pieces = color[clr];
+		Vector<Move> v = new Vector<Move>();
+		while (pieces!=0L) {
+			long p1 = Long.highestOneBit(pieces);
+			int pos1 = Long.numberOfTrailingZeros(p1);
+			long p2 = this.getValidMoves(pos1);
+			p2 = p2 & color[(byte)(1 - clr)];
+			while (p2!=0) {
+				long p3 = Long.highestOneBit(p2);
+				int pos3 = Long.numberOfTrailingZeros(p3);
+				v.add(new Move(pos1,pos3));
+				p2=p2^p3;
+			}
+			pieces=pieces^p1;
+		}
+		return v;
+	}
+	
 	/******************************** Functii de evaluare folosite  *********************************/
+	
+	public int quiesce(Board brd, byte side, int alpha, int beta){
+		int stand_pat = brd.evaluateBoard(side);
+		if (stand_pat >= beta)
+			return beta;
+		if (alpha < stand_pat)
+			alpha = stand_pat;
+		Vector<Move> capture = getAllCaptures(side);
+		if (capture == null)
+			return stand_pat;
+		for (Move m : capture){
+			Board bd = brd.getCopy();
+			bd.updateBoard(m.getP1(), m.getP2(), (byte)brd.W_QUEEN);
+			int score = -quiesce(bd,(byte)(1-side), -beta, -alpha);
+			if (score >= beta)
+				return beta;
+			if (score > alpha)
+				alpha = score;
+		}
+		return alpha;
+	}
 	
 	// functie de evaluare simpla, folosita pentru testarea initiala
 	public int evaluateBoard(int side) {
@@ -1574,7 +1616,7 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.equals("O-O")){//rocada pe partea regelui
+		if (mutare.contains("O-O")){//rocada pe partea regelui
 			if (clr == 1){
 				castling = B_KING;
 				pos1 = 60; pos2 = 62;
@@ -1583,9 +1625,13 @@ public class Board implements Cloneable{
 				castling = W_KING; 
 				pos1 = 4; pos2 = 6;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
-		if (mutare.equals("O-O-O")){//rocada pe partea reginei
+		if (mutare.contains("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
 				pos1 = 60; pos2 = 58;
@@ -1594,6 +1640,10 @@ public class Board implements Cloneable{
 				castling = W_QUEEN; 
 				pos1 = 4; pos2 = 2;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
 		int i = mutare.length()-1;
