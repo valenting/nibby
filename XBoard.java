@@ -17,8 +17,8 @@ public class XBoard {
     public int side = WHITE;
     public int engine = BLACK;
     public String lastMove = "";
-    public int time;
-    public int otim;
+    public int time = 0;
+    public int otim = 0;
     
 
     public XBoard() throws IOException {
@@ -47,24 +47,7 @@ public class XBoard {
     public void chSide() {
     	side = 1 - side;
     }
-    public boolean readTime() { 
-    	try {
-    		lastMove = inPipe.readLine();
-    		time = Integer.parseInt(lastMove.substring(5));
-    	}catch(IOException excep) { 
-    		return false;
-    	}
-    	return true;
-    }
-    public boolean readOtim() { 
-    	try {
-    		lastMove = inPipe.readLine();
-    		otim = Integer.parseInt(lastMove.substring(5));
-    	}catch(IOException excep) { 
-    		return false;
-    	}
-    	return true;
-    }
+
     public boolean read() {
     	
         System.out.flush();
