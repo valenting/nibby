@@ -5,6 +5,8 @@ import java.io.InputStreamReader;
 
 
 //Asta random este doar de test
+import java.util.Calendar;
+import java.util.Collections;
 import java.util.Random;
 import java.util.Vector;
 
@@ -1019,7 +1021,7 @@ public class Board implements Cloneable{
 				}
 		}
 		AlphaBeta ab = new AlphaBeta(this,4,side);
-		//NegaScout ns = new NegaScout(this, 4, side);
+		// NegaScout ns = new NegaScout(this, side, 4);
 		Move m = ab.returnBestMove();
 		if (m == null)
 			return "";
@@ -1028,12 +1030,40 @@ public class Board implements Cloneable{
 
 	// gaseste toate mutarile posbile ale tuturor pieselor pentru un jucator (depinde de culoare)
 	public Vector<Move> getAllMoves(byte clr) {
+		long pis = color[clr];
+		
+		Vector<Move> v = new Vector<Move>();
+		
+		for (int i=5;i>0;i--) {
+			pis = color[clr] & pieces[i];
+			while (pis!=0L) {
+				long p1 = Long.highestOneBit(pis);
+				int pos1 = BitwiseTricks.bitScanForward(p1);
+				long p2 = this.getValidMoves(pos1);
+				while (p2!=0) {
+					long p3 = Long.highestOneBit(p2);
+					int pos3 = BitwiseTricks.bitScanForward(p3);
+					Move m = new Move(pos1,pos3);
+					m.setTypes(types[pos1], types[pos3]);
+					v.add(new Move(pos1,pos3));
+					p2=p2^p3;
+				}
+				pis=pis^p1;
+			}
+		}
+		Collections.sort(v);
+		return v;
+	}
+	
+	// gaseste toate mutarile prin care se captureaza o piesa a adversarului
+	public Vector<Move> getAllCaptures(byte clr){
 		long pieces = color[clr];
 		Vector<Move> v = new Vector<Move>();
 		while (pieces!=0L) {
 			long p1 = Long.highestOneBit(pieces);
 			int pos1 = BitwiseTricks.bitScanForward(p1);
 			long p2 = this.getValidMoves(pos1);
+			p2 = p2 & color[(byte)(1 - clr)];
 			while (p2!=0) {
 				long p3 = Long.highestOneBit(p2);
 				int pos3 = BitwiseTricks.bitScanForward(p3);
@@ -1575,7 +1605,7 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.equals("O-O")){//rocada pe partea regelui
+		if (mutare.contains("O-O")){//rocada pe partea regelui
 			if (clr == 1){
 				castling = B_KING;
 				pos1 = 60; pos2 = 62;
@@ -1584,9 +1614,13 @@ public class Board implements Cloneable{
 				castling = W_KING; 
 				pos1 = 4; pos2 = 6;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
-		if (mutare.equals("O-O-O")){//rocada pe partea reginei
+		if (mutare.contains("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
 				pos1 = 60; pos2 = 58;
@@ -1595,6 +1629,10 @@ public class Board implements Cloneable{
 				castling = W_QUEEN; 
 				pos1 = 4; pos2 = 2;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
 		int i = mutare.length()-1;
@@ -1692,5 +1730,68 @@ public class Board implements Cloneable{
 			}
 		}
 
+	}
+	
+	// iterative deepening
+	static int movesMade = 0;
+	public String nextMove(byte side,long myTime,long oppositeTime){
+		//	aici s-ar putea numara mutarile ramase pana la resetarea ceasului 
+		//	asta e setat la 0 la primul apel, fiindca e static
+		
+		//NegaMax nm = new NegaMax(this, side, 3);
+		//NegaScout ns = new NegaScout(this,side,3);
+		Move m;
+		if (Openings.hasNext()) {
+			m = Openings.getMove();
+			if (m!=null) {
+				Openings.makeMove(m);
+				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+				}
+		}
+		movesMade++;
+		/*
+		if(movesMade<14){
+			AlphaBeta ab = new AlphaBeta(this,4,side);
+			m = ab.returnBestMove();
+		}
+		else */ 
+			m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		
+		if (m == null)
+			return "";
+		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+	}
+	
+	public Move myIterativeDeepening(byte side,int movesLeft,long myTime,long oppositeTime){
+		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
+		long timeEnd;
+		long maxTime = 0;
+		int depth = 3;
+		Move move;
+		if(movesLeft!=0){
+			if(myTime/(movesLeft+1)>myTime-oppositeTime)
+				maxTime = myTime/(movesLeft+1);
+			else
+				maxTime = myTime-oppositeTime;
+		}
+		maxTime /= 2;
+		System.out.println("maxtime este "+maxTime+" iar movesLeft="+movesLeft);
+		
+		AlphaBeta ab;
+		
+		while(true){
+			ab = new AlphaBeta(this,depth,side);
+			move = ab.returnBestMove();
+			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
+			System.out.println("depth "+depth+"maxtime este "+maxTime+" si "+timeStart+" " + timeEnd+" dif="+(timeEnd-timeStart));
+			if(depth==5)
+				break;
+			if(movesLeft==0)
+				break;
+			if(timeEnd-timeStart>maxTime)
+				break;
+			depth++;
+		}
+		return move;
 	}
 }
