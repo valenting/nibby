@@ -1695,6 +1695,18 @@ public class Board implements Cloneable{
 
 	}
 	
+	int extraDepthByPieceNumber(){
+		int numberOfPieces = Long.bitCount(table);
+		if(numberOfPieces>22)
+			return 0;
+		if(numberOfPieces>12)
+			return 1;
+		if(numberOfPieces>8)
+			return 2;
+		return 3;
+	}
+
+	
 	static int movesMade = 0;
 	public String nextMove(byte side,long myTime,long oppositeTime){
 		//	aici s-ar putea numara mutarile ramase pana la resetarea ceasului 
@@ -1712,12 +1724,12 @@ public class Board implements Cloneable{
 		}
 		movesMade++;
 		/*
-		if(movesMade<14){
-			AlphaBeta ab = new AlphaBeta(this,4,side);
+		if(movesMade<30){
+			AlphaBeta ab = new AlphaBeta(this,4+extraDepthByPieceNumber(),side);
 			m = ab.returnBestMove();
 		}
 		else */ 
-			m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
 		
 		if (m == null)
 			return "";
@@ -1728,7 +1740,8 @@ public class Board implements Cloneable{
 		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
 		long timeEnd;
 		long maxTime = 0;
-		int depth = 3;
+		int maxDepth = 4;
+		int depth = 4 + extraDepthByPieceNumber();
 		Move move;
 		if(movesLeft!=0){
 			if(myTime/(movesLeft+1)>myTime-oppositeTime)
@@ -1745,7 +1758,7 @@ public class Board implements Cloneable{
 			move = ab.returnBestMove();
 			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
 			System.out.println("depth "+depth+"maxtime este "+maxTime+" si "+timeStart+" " + timeEnd+" dif="+(timeEnd-timeStart));
-			if(depth==6)
+			if(depth>=maxDepth)
 				break;
 			if(movesLeft==0)
 				break;
