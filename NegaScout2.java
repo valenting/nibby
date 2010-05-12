@@ -19,7 +19,7 @@ public class NegaScout2 {
 	private int negaScout( Board brd, int alpha, int beta, int d,byte Player ){ 
 		int t, b;
 		if (d == this.depth)
-			return quiesce(brd, Player, alpha, beta,0);
+			return quiesce(brd, Player, alpha, beta,d);
 	    b = beta;
 	    Vector<Move> v = brd.getAllMoves(Player);
 	    for (int i = 0; i< v.size(); i++){
@@ -47,7 +47,7 @@ public class NegaScout2 {
 		if (capture == null || capture.size() == 0){
 			return stand_pat;
 		}
-		if ( d <= -depth)
+		if (d <= 0)
 			return stand_pat;
 		for (Move m : capture){
 			Board bd = brd.getCopy();			
