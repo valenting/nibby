@@ -836,19 +836,15 @@ public class Board implements Cloneable{
 		}
 		}
 
-		if(elementType > 8){//piesele proprii sunt BLACK, deci adversarul este WHITE
-			if(!avoidCheckPosition((byte)0)){	//	piesele albe sunt in sah
-				canShortCastleWhite = false;
-				canLongCastleWhite = false;
-			}
+		//	Verific daca se face captura pe pozitiile initiala ale turelor
+		//	Daca este captura, atunci sigur nu se mai poate face rocada pe partea respetiva
+		elementType = (byte)Long.numberOfTrailingZeros(end);
+		switch(elementType){
+			case 0: canLongCastleWhite = false;break;
+			case 7: canShortCastleWhite = false;break;
+			case 56: canLongCastleBlack = false;break;
+			case 63: canShortCastleBlack = false;break;	
 		}
-		else{//piesele adverse sunt BLACK
-			if(!avoidCheckPosition((byte)1)){	//	piesele negrele sunt in sah
-				canShortCastleBlack = false;
-				canLongCastleBlack = false;
-			}
-		}
-
 	}
 
 	/*
