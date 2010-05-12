@@ -2,7 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
+import java.util.Calendar;
 
 //Asta random este doar de test
 import java.util.Random;
@@ -796,44 +796,44 @@ public class Board implements Cloneable{
 		enPassantWhite = 9;
 
 		switch(elementType){
-		case W_PAWN : {
-			if(start<<16 == end)//mutare initiala de 2 patrate
-				enPassantWhite = columnPosition[Long.numberOfTrailingZeros(start)];
-			break;
-		}
-		case B_PAWN : {
-			if(start>>>16 == end)//mutare initiala de 2 patrate
-				enPassantBlack = columnPosition[Long.numberOfTrailingZeros(start)];
-			break;
-		}
-		case W_ROOK : {
-			if(start==1L){	//	mutarea turei de la A1
-				canLongCastleWhite = false;
+			case W_PAWN : {
+				if(start<<16 == end)//mutare initiala de 2 patrate
+					enPassantWhite = columnPosition[Long.numberOfTrailingZeros(start)];
 				break;
-			}else if(start==0x0000000000000080L){	//mutarea turei de la H1
+			}
+			case B_PAWN : {
+				if(start>>>16 == end)//mutare initiala de 2 patrate
+					enPassantBlack = columnPosition[Long.numberOfTrailingZeros(start)];
+				break;
+			}
+			case W_ROOK : {
+				if(start==1L){	//	mutarea turei de la A1
+					canLongCastleWhite = false;
+					break;
+				}else if(start==0x0000000000000080L){	//mutarea turei de la H1
+					canShortCastleWhite = false;
+					break;
+				}
+			}
+			case B_ROOK : {
+				if(start==0x0100000000000000L){	//	mutarea turei de la A8
+					canLongCastleBlack = false;
+					break;
+				}else if(start==0x8000000000000000L){
+					canShortCastleBlack = false;
+					break;
+				}
+			}
+			case W_KING : {
+				canLongCastleWhite = false;
 				canShortCastleWhite = false;
 				break;
 			}
-		}
-		case B_ROOK : {
-			if(start==0x0100000000000000L){	//	mutarea turei de la A8
+			case B_KING : {
 				canLongCastleBlack = false;
-				break;
-			}else if(start==0x8000000000000000L){
 				canShortCastleBlack = false;
 				break;
 			}
-		}
-		case W_KING : {
-			canLongCastleWhite = false;
-			canShortCastleWhite = false;
-			break;
-		}
-		case B_KING : {
-			canLongCastleBlack = false;
-			canShortCastleBlack = false;
-			break;
-		}
 		}
 
 		//	Verific daca se face captura pe pozitiile initiala ale turelor
@@ -1743,23 +1743,30 @@ public class Board implements Cloneable{
 
 	}
 	
-	
+	static int movesMade = 0;
 	public String nextMove(byte side,long myTime,long oppositeTime){
 		//	aici s-ar putea numara mutarile ramase pana la resetarea ceasului 
-		static int movesMade;//	asta e setat la 0 la primul apel, fiindca e static
+		//	asta e setat la 0 la primul apel, fiindca e static
 		
 		//NegaMax nm = new NegaMax(this, side, 3);
 		//NegaScout ns = new NegaScout(this,side,3);
+		Move m;
 		if (Openings.hasNext()) {
-			Move m = Openings.getMove();
+			m = Openings.getMove();
 			if (m!=null) {
 				Openings.makeMove(m);
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
-		
-		Move m = myIterativeDeepening(40-(movesMade%40),myTime,oppositeTime);
 		movesMade++;
+		/*
+		if(movesMade<14){
+			AlphaBeta ab = new AlphaBeta(this,4,side);
+			m = ab.returnBestMove();
+		}
+		else */ 
+			m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		
 		if (m == null)
 			return "";
 		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
@@ -1768,53 +1775,32 @@ public class Board implements Cloneable{
 	public Move myIterativeDeepening(byte side,int movesLeft,long myTime,long oppositeTime){
 		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
 		long timeEnd;
-		long maxTime;
+		long maxTime = 0;
 		int depth = 3;
+		Move move;
 		if(movesLeft!=0){
-			if(myTime/movesLeft>myTime-oppositeTime)
-				maxTime = myTime/movesLeft;
+			if(myTime/(movesLeft+1)>myTime-oppositeTime)
+				maxTime = myTime/(movesLeft+1);
 			else
 				maxTime = myTime-oppositeTime;
 		}
+		System.out.println("maxtime este "+maxTime+" iar movesLeft="+movesLeft);
 		
 		AlphaBeta ab;
 		
 		while(true){
 			ab = new AlphaBeta(this,depth,side);
+			move = ab.returnBestMove();
 			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
+			System.out.println("depth "+depth+"maxtime este "+maxTime+" si "+timeStart+" " + timeEnd+" dif="+(timeEnd-timeStart));
+			if(depth==6)
+				break;
 			if(movesLeft==0)
 				break;
 			if(timeEnd-timeStart>maxTime)
 				break;
 			depth++;
-			
 		}
-		return ab.returnBestMove();
+		return move;
 	}
-		/*
-		 // numarate mutari...
-
-// Start the negascout clock
-long ns_start = Calendar.getInstance().getTimeInMillis();
-maxtime = ;//calcul pe baza timpului adversarului si a timpului ramas/mutari reactualizare
-depth = 2;
-while(true) {
-	// Do the negascout
-	move_eval = negascout(depth, -INFINITY, INFINITY);
-				
-	// Stop the negascout clock
-	long ns_end = Calendar.getInstance().getTimeInMillis();
-				
-	// Depth sanity check
-	if(depth == RIDICULOUS_DEPTH)
-		break;
-	if( (ns_end - ns_start)  >= getTimeLimit()) {
-					modifyTimeLimit(getClock(), 1, 5);
-					System.out.println("Time Limit modified... now set at " + getTimeLimit() + " ms");
-				}
-	// Increase the depth for negascout
-
-	depth++;
-}
-		 */
 }
