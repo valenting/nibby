@@ -30,6 +30,9 @@ public class Game {
             		brd.updateBoard(brd.pos1,brd.pos2,brd.promotion);	
             		xboard.chSide();
             		Openings.makeMove(new Move(brd.pos1,brd.pos2));
+            		//prelucrare timpi
+            		xboard.time = 0;
+            		xboard.otim = 0;
                 }     
             else if (xboard.lastMove.startsWith("new")) {
             		brd = new Board();

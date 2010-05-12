@@ -17,8 +17,8 @@ public class XBoard {
     public int side = WHITE;
     public int engine = BLACK;
     public String lastMove = "";
-    public int time;
-    public int otim;
+    public int time = 0;
+    public int otim = 0;
     
 
     public XBoard() throws IOException {
