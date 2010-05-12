@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
 
+
 //Asta random este doar de test
 import java.util.Random;
 import java.util.Vector;
@@ -625,7 +626,7 @@ public class Board implements Cloneable{
 	public long potentialMovesBoard(long piece){
 		//	Face selectia intre diferitele piese, pe baza mastii date ca parametru
 
-		int pozitie = Long.numberOfTrailingZeros(piece);
+		int pozitie = BitwiseTricks.bitScanForward(piece);
 		byte elem = types[pozitie];
 
 
@@ -688,7 +689,7 @@ public class Board implements Cloneable{
 	 *	analiza este rocada.
 	 */
 	boolean isValidMove(long start,long end){
-		byte elementType = types[Long.numberOfTrailingZeros(start)];
+		byte elementType = types[BitwiseTricks.bitScanForward(start)];
 		boolean result = false;
 		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
 			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mare
@@ -714,7 +715,7 @@ public class Board implements Cloneable{
 					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 			}
 			else{
-				elementType = types[Long.numberOfTrailingZeros(end)];
+				elementType = types[BitwiseTricks.bitScanForward(end)];
 				updateMoveOnBoard(start,end);
 				if((color[0] & end)!=0)	//se studiaza validitatea mutarii WHITE
 					result = avoidCheckPosition((byte)0);
@@ -727,7 +728,7 @@ public class Board implements Cloneable{
 				
 		}
 		else{	//	se analizeaza mutarea unei piese diferite de rege
-			elementType = types[Long.numberOfTrailingZeros(end)];
+			elementType = types[BitwiseTricks.bitScanForward(end)];
 			updateMoveOnBoard(start,end);
 			if((color[0] & end)!=0)	//se studiaza validitatea mutarii WHITE
 				result = avoidCheckPosition((byte)0);
@@ -766,7 +767,7 @@ public class Board implements Cloneable{
 		long allPieces = color[defendingSide];
 		long onePiece = Long.highestOneBit(allPieces);
 		while(onePiece!=0L){
-			if(getValidMoves(Long.numberOfTrailingZeros(onePiece))!=0L)	//	exista mutari ce nu lasa regele propriu in sah
+			if(getValidMoves(BitwiseTricks.bitScanForward(onePiece))!=0L)	//	exista mutari ce nu lasa regele propriu in sah
 				return false;
 			allPieces ^= onePiece;
 			onePiece = Long.highestOneBit(allPieces);
@@ -789,56 +790,56 @@ public class Board implements Cloneable{
 	 *		
 	 */
 	public void boardIndicatorsUpdate(long start,long end){
-		byte elementType = getPieceType(Long.numberOfTrailingZeros(start));
+		byte elementType = getPieceType(BitwiseTricks.bitScanForward(start));
 		if(elementType == 0)
-			elementType = getPieceType(Long.numberOfTrailingZeros(end));
+			elementType = getPieceType(BitwiseTricks.bitScanForward(end));
 		enPassantBlack = 9;
 		enPassantWhite = 9;
 
 		switch(elementType){
-			case W_PAWN : {
-				if(start<<16 == end)//mutare initiala de 2 patrate
-					enPassantWhite = columnPosition[Long.numberOfTrailingZeros(start)];
-				break;
-			}
-			case B_PAWN : {
-				if(start>>>16 == end)//mutare initiala de 2 patrate
-					enPassantBlack = columnPosition[Long.numberOfTrailingZeros(start)];
-				break;
-			}
-			case W_ROOK : {
-				if(start==1L){	//	mutarea turei de la A1
-					canLongCastleWhite = false;
-					break;
-				}else if(start==0x0000000000000080L){	//mutarea turei de la H1
-					canShortCastleWhite = false;
-					break;
-				}
-			}
-			case B_ROOK : {
-				if(start==0x0100000000000000L){	//	mutarea turei de la A8
-					canLongCastleBlack = false;
-					break;
-				}else if(start==0x8000000000000000L){
-					canShortCastleBlack = false;
-					break;
-				}
-			}
-			case W_KING : {
+		case W_PAWN : {
+			if(start<<16 == end)//mutare initiala de 2 patrate
+				enPassantWhite = columnPosition[BitwiseTricks.bitScanForward(start)];
+			break;
+		}
+		case B_PAWN : {
+			if(start>>>16 == end)//mutare initiala de 2 patrate
+				enPassantBlack = columnPosition[BitwiseTricks.bitScanForward(start)];
+			break;
+		}
+		case W_ROOK : {
+			if(start==1L){	//	mutarea turei de la A1
 				canLongCastleWhite = false;
+				break;
+			}else if(start==0x0000000000000080L){	//mutarea turei de la H1
 				canShortCastleWhite = false;
 				break;
 			}
-			case B_KING : {
+		}
+		case B_ROOK : {
+			if(start==0x0100000000000000L){	//	mutarea turei de la A8
 				canLongCastleBlack = false;
+				break;
+			}else if(start==0x8000000000000000L){
 				canShortCastleBlack = false;
 				break;
 			}
 		}
+		case W_KING : {
+			canLongCastleWhite = false;
+			canShortCastleWhite = false;
+			break;
+		}
+		case B_KING : {
+			canLongCastleBlack = false;
+			canShortCastleBlack = false;
+			break;
+		}
+		}
 
 		//	Verific daca se face captura pe pozitiile initiala ale turelor
 		//	Daca este captura, atunci sigur nu se mai poate face rocada pe partea respetiva
-		elementType = (byte)Long.numberOfTrailingZeros(end);
+		elementType = (byte)BitwiseTricks.bitScanForward(end);
 		switch(elementType){
 			case 0: canLongCastleWhite = false;break;
 			case 7: canShortCastleWhite = false;break;
@@ -856,7 +857,7 @@ public class Board implements Cloneable{
 		pieces[elementType & 7] |= piece;	//modificare tabla piese
 		color[elementType >>> 3] |= piece;	//modificare tabla culori
 		table |= piece;
-		types[Long.numberOfTrailingZeros(piece)] = elementType;
+		types[BitwiseTricks.bitScanForward(piece)] = elementType;
 	}
 
 	/*
@@ -872,7 +873,7 @@ public class Board implements Cloneable{
 			type |= 8;
 
 		pieces[1] ^= piece;	//	eliminarea pionului
-		types[Long.numberOfTrailingZeros(piece)] = type;//	adaugarea pe tabla de tipuri
+		types[BitwiseTricks.bitScanForward(piece)] = type;//	adaugarea pe tabla de tipuri
 	}
 
 	/*
@@ -895,14 +896,14 @@ public class Board implements Cloneable{
 			//update placa de culoare opusa
 			color[oppositeSide] ^= end;
 			//update placa de piese
-			elementType = (byte)(getPieceType(Long.numberOfTrailingZeros(end)) & 7);
+			elementType = (byte)(getPieceType(BitwiseTricks.bitScanForward(end)) & 7);
 			pieces[elementType] ^= end; 
 		}
 													
 		//update tabla de coduri
-		elementType = getPieceType(Long.numberOfTrailingZeros(start));
-		types[Long.numberOfTrailingZeros(end)] = elementType;
-		types[Long.numberOfTrailingZeros(start)] = _EMPTY;
+		elementType = getPieceType(BitwiseTricks.bitScanForward(start));
+		types[BitwiseTricks.bitScanForward(end)] = elementType;
+		types[BitwiseTricks.bitScanForward(start)] = _EMPTY;
 		//update tabla piesa ce muta
 		elementType &= 7;
 		pieces[elementType] ^= start;
@@ -919,7 +920,7 @@ public class Board implements Cloneable{
 	 *	daca mutarea o necesita. Implicit ar trebui sa primesc zero la promotion
 	 */
 	public void updateBoard(long start,long end,byte promotion){
-		int number = Long.numberOfTrailingZeros(start);
+		int number = BitwiseTricks.bitScanForward(start);
 		byte elementType = getPieceType(number);
 		long extra = 0L;
 		switch(elementType){
@@ -931,13 +932,13 @@ public class Board implements Cloneable{
 				pieces[1] ^= extra;
 				color[1] ^= extra;
 				table ^= extra;
-				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
+				types[BitwiseTricks.bitScanForward(extra)] = _EMPTY;
 	
 				updateMoveOnBoard(start,end);
 				boardIndicatorsUpdate(start,end);
 				break;
 			}
-			if(rowPosition[Long.numberOfTrailingZeros(end)]==7){	//	este in situatie de a face promovare
+			if(rowPosition[BitwiseTricks.bitScanForward(end)]==7){	//	este in situatie de a face promovare
 				updateMoveOnBoard(start,end);
 
 				//pentru a aplica promotionUpdate este nevoie ca la destinatie sa fie pion propriu
@@ -958,13 +959,13 @@ public class Board implements Cloneable{
 				pieces[1] ^= extra;
 				color[0] ^= extra;
 				table ^= extra;
-				types[Long.numberOfTrailingZeros(extra)] = _EMPTY;
+				types[BitwiseTricks.bitScanForward(extra)] = _EMPTY;
 
 				updateMoveOnBoard(start,end);
 				boardIndicatorsUpdate(start,end);
 				break;
 			}
-			if(rowPosition[Long.numberOfTrailingZeros(end)]==0){	//	este in situatie de a face promovare
+			if(rowPosition[BitwiseTricks.bitScanForward(end)]==0){	//	este in situatie de a face promovare
 				updateMoveOnBoard(start,end);
 				promotionUpdate(end,(byte)(promotion|8));
 				boardIndicatorsUpdate(start,end);
@@ -1005,7 +1006,7 @@ public class Board implements Cloneable{
 		updateBoard(1L<<poz1,1L<<poz2,promotion);
 	}
 								
-	 /*******************************  Sfarsit metode de update al boardului  *******************************/
+	 /*******************************  Sfarsit metode de update al baordului  *******************************/
 
 	public String nextMove(byte side){
 		
@@ -1019,7 +1020,7 @@ public class Board implements Cloneable{
 				}
 		}
 		AlphaBeta ab = new AlphaBeta(this,4,side);
-		NegaScout2 ns = new NegaScout2(this, side, 4);
+		//NegaScout ns = new NegaScout(this, 4, side);
 		Move m = ab.returnBestMove();
 		if (m == null)
 			return "";
@@ -1032,31 +1033,11 @@ public class Board implements Cloneable{
 		Vector<Move> v = new Vector<Move>();
 		while (pieces!=0L) {
 			long p1 = Long.highestOneBit(pieces);
-			int pos1 = Long.numberOfTrailingZeros(p1);
+			int pos1 = BitwiseTricks.bitScanForward(p1);
 			long p2 = this.getValidMoves(pos1);
 			while (p2!=0) {
 				long p3 = Long.highestOneBit(p2);
-				int pos3 = Long.numberOfTrailingZeros(p3);
-				v.add(new Move(pos1,pos3));
-				p2=p2^p3;
-			}
-			pieces=pieces^p1;
-		}
-		return v;
-	}
-	
-	// gaseste toate mutarile prin care se captureaza o piesa a adversarului
-	public Vector<Move> getAllCaptures(byte clr){
-		long pieces = color[clr];
-		Vector<Move> v = new Vector<Move>();
-		while (pieces!=0L) {
-			long p1 = Long.highestOneBit(pieces);
-			int pos1 = Long.numberOfTrailingZeros(p1);
-			long p2 = this.getValidMoves(pos1);
-			p2 = p2 & color[(byte)(1 - clr)];
-			while (p2!=0) {
-				long p3 = Long.highestOneBit(p2);
-				int pos3 = Long.numberOfTrailingZeros(p3);
+				int pos3 = BitwiseTricks.bitScanForward(p3);
 				v.add(new Move(pos1,pos3));
 				p2=p2^p3;
 			}
@@ -1066,27 +1047,6 @@ public class Board implements Cloneable{
 	}
 	
 	/******************************** Functii de evaluare folosite  *********************************/
-	
-	public int quiesce(Board brd, byte side, int alpha, int beta){
-		int stand_pat = brd.evaluateBoard(side);
-		if (stand_pat >= beta)
-			return beta;
-		if (alpha < stand_pat)
-			alpha = stand_pat;
-		Vector<Move> capture = getAllCaptures(side);
-		if (capture == null)
-			return stand_pat;
-		for (Move m : capture){
-			Board bd = brd.getCopy();
-			bd.updateBoard(m.getP1(), m.getP2(), (byte)brd.W_QUEEN);
-			int score = -quiesce(bd,(byte)(1-side), -beta, -alpha);
-			if (score >= beta)
-				return beta;
-			if (score > alpha)
-				alpha = score;
-		}
-		return alpha;
-	}
 	
 	// functie de evaluare simpla, folosita pentru testarea initiala
 	public int evaluateBoard(int side) {
@@ -1318,7 +1278,7 @@ public class Board implements Cloneable{
         remainingPieces = board.color[0] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
-            pos = Long.numberOfTrailingZeros(onePiece);
+            pos = BitwiseTricks.bitScanForward(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
             whiteMaterial += PiecePosScore[tip - 1][pos];
@@ -1327,7 +1287,7 @@ public class Board implements Cloneable{
         remainingPieces = board.color[1] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
-            pos = Long.numberOfTrailingZeros(onePiece);
+            pos = BitwiseTricks.bitScanForward(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
@@ -1335,14 +1295,14 @@ public class Board implements Cloneable{
         }
         // position scores kings
         //white
-        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[0]);
+        pos = BitwiseTricks.bitScanForward(board.pieces[6] & board.color[0]);
         if (gameStage > 1) {
             whiteMaterial += PiecePosScore[6][63 - pos];
         } else {
             whiteMaterial += PiecePosScore[5][63 - pos];
         }
         //black
-        pos = Long.numberOfTrailingZeros(board.pieces[6] & board.color[1]);
+        pos = BitwiseTricks.bitScanForward(board.pieces[6] & board.color[1]);
         if (gameStage > 1) {
             blackMaterial += PiecePosScore[6][63 - (pos % 8 + (7 - (pos / 8)) * 8)];
         } else {
@@ -1354,7 +1314,7 @@ public class Board implements Cloneable{
         remainingPieces =  board.color[0] & board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
-            pos = Long.numberOfTrailingZeros(onePiece);
+            pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
             whiteMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
 
@@ -1363,7 +1323,7 @@ public class Board implements Cloneable{
         remainingPieces = board.color[1] & board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
-            pos = Long.numberOfTrailingZeros(onePiece);
+            pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
             blackMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
 
@@ -1391,7 +1351,7 @@ public class Board implements Cloneable{
         remainingPieces = board.pieces[1] & board.color[0];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
-            pos = Long.numberOfTrailingZeros(onePiece);
+            pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
             colPawns[pos % 8]++;
         }
@@ -1415,7 +1375,7 @@ public class Board implements Cloneable{
         remainingPieces = board.pieces[1] & board.color[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
-            pos = Long.numberOfTrailingZeros(onePiece);
+            pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
             colPawns[pos % 8]++;
         }
@@ -1494,8 +1454,8 @@ public class Board implements Cloneable{
 			if(capture)
 				sb.append("x");
 
-			sb.append(columnChar[columnPosition[Long.numberOfTrailingZeros(endPosition)]]);
-			sb.append(rowChar[rowPosition[Long.numberOfTrailingZeros(endPosition)]]);
+			sb.append(columnChar[columnPosition[BitwiseTricks.bitScanForward(endPosition)]]);
+			sb.append(rowChar[rowPosition[BitwiseTricks.bitScanForward(endPosition)]]);
 			if(promotion!=0){
 				sb.append("=");
 				sb.append(pieceForSAN[promotion]);
@@ -1519,7 +1479,7 @@ public class Board implements Cloneable{
 		byte row = 9,column = 9,extra = 9;
 
 		byte promotion = 0;
-		byte elementType = getPieceType(Long.numberOfTrailingZeros(start));	//	piesa mutata
+		byte elementType = getPieceType(BitwiseTricks.bitScanForward(start));	//	piesa mutata
 		byte side = (byte)(elementType >>> 3);	//	culoarea piesei mutate
 		elementType = (byte)(elementType & 7);	//	tipul piesei
 
@@ -1535,17 +1495,17 @@ public class Board implements Cloneable{
 			long onePiece = Long.highestOneBit(allPieces);
 
 			//	calculul destinatiei in termeni de coordonate carteziene
-			number = (byte)Long.numberOfTrailingZeros(start);
+			number = (byte)BitwiseTricks.bitScanForward(start);
 			byte endRow = rowPosition[number];
 			byte endColumn = columnPosition[number];
 
 			if(elementType == W_PAWN)	//	daca este pion
-				if(rowPosition[Long.numberOfTrailingZeros(end)] == 0 || rowPosition[Long.numberOfTrailingZeros(end)]==7)	//	pe ultimul rand
+				if(rowPosition[BitwiseTricks.bitScanForward(end)] == 0 || rowPosition[BitwiseTricks.bitScanForward(end)]==7)	//	pe ultimul rand
 					promotion = W_QUEEN;
 
 			while(onePiece != 0L){	//	mai exista piese de acest tip
 				if(onePiece != start){
-					number = (byte)Long.numberOfTrailingZeros(onePiece);
+					number = (byte)BitwiseTricks.bitScanForward(onePiece);
 					if((getValidMoves(number) & end)!=0L){	//	mutari suprapuse
 						if(columnPosition[number] == endColumn)	//	aceeasi coloana
 							row = endRow;
@@ -1563,19 +1523,19 @@ public class Board implements Cloneable{
 		if((end & table)!=0L){
 			isCapture = true;
 			if(elementType == W_PAWN)
-				column = columnPosition[Long.numberOfTrailingZeros(start)];
+				column = columnPosition[BitwiseTricks.bitScanForward(start)];
 		}
 		else if(elementType == W_PAWN){
 				if(side == 0){
 					if((start << 7 == end) || (start << 9 == end)){
 						isCapture = true;
-						column = columnPosition[Long.numberOfTrailingZeros(start)];
+						column = columnPosition[BitwiseTricks.bitScanForward(start)];
 					}
 				}
 				else{
 					if((start >>> 7 == end) || (start >>> 9 == end)){
 						isCapture = true;
-						column = columnPosition[Long.numberOfTrailingZeros(start)];
+						column = columnPosition[BitwiseTricks.bitScanForward(start)];
 					}
 				}
 			}
@@ -1616,7 +1576,7 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.contains("O-O")){//rocada pe partea regelui
+		if (mutare.equals("O-O")){//rocada pe partea regelui
 			if (clr == 1){
 				castling = B_KING;
 				pos1 = 60; pos2 = 62;
@@ -1625,13 +1585,9 @@ public class Board implements Cloneable{
 				castling = W_KING; 
 				pos1 = 4; pos2 = 6;
 			}
-			if (mutare.contains("+"))
-				check = true;
-			if (mutare.contains("#"))
-				checkmate = true;
 			return;
 		}
-		if (mutare.contains("O-O-O")){//rocada pe partea reginei
+		if (mutare.equals("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
 				pos1 = 60; pos2 = 58;
@@ -1640,10 +1596,6 @@ public class Board implements Cloneable{
 				castling = W_QUEEN; 
 				pos1 = 4; pos2 = 2;
 			}
-			if (mutare.contains("+"))
-				check = true;
-			if (mutare.contains("#"))
-				checkmate = true;
 			return;
 		}
 		int i = mutare.length()-1;
@@ -1695,7 +1647,7 @@ public class Board implements Cloneable{
 			while (bit != 0L){
 				firstb = Long.highestOneBit(bit);
 				bit ^= firstb;
-				poz = Long.numberOfTrailingZeros(firstb);
+				poz = BitwiseTricks.bitScanForward(firstb);
 				if ((getValidMoves(poz)&(1L<<pos2))!= 0) {
 					pos1 = poz;
 					break;
@@ -1715,7 +1667,7 @@ public class Board implements Cloneable{
 			while (bit != 0L){
 				firstb = Long.highestOneBit(bit);
 				bit ^= firstb;
-				poz = Long.numberOfTrailingZeros(firstb);
+				poz = BitwiseTricks.bitScanForward(firstb);
 				if ((getValidMoves(poz)&(1L<<pos2))!= 0) {
 					pos1 = poz;
 					break;
@@ -1733,7 +1685,7 @@ public class Board implements Cloneable{
 			while (bit != 0L) {
 				firstb = Long.highestOneBit(bit);	
 				bit ^= firstb;
-				poz = Long.numberOfTrailingZeros(firstb);		
+				poz = BitwiseTricks.bitScanForward(firstb);		
 				if ((getValidMoves(poz)&(1L<<pos2))!= 0) {
 					pos1 = poz;
 					break;
