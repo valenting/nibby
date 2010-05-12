@@ -1013,8 +1013,6 @@ public class Board implements Cloneable{
 
 	public String nextMove(byte side){
 		
-		//NegaMax nm = new NegaMax(this, side, 3);
-		
 		if (Openings.hasNext()) {
 			Move m = Openings.getMove();
 			if (m!=null) {
@@ -1023,6 +1021,7 @@ public class Board implements Cloneable{
 				}
 		}
 		// AlphaBeta ab = new AlphaBeta(this,4,side);
+		// NegaMax nm = new NegaMax(this, side, 3);
 		NegaScout2 ns = new NegaScout2(this,side,4);
 		Move m = ns.returnBestMove();
 		if (m == null)
