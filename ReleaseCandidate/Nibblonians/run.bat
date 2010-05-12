@@ -1,0 +1,1 @@
+winboard /cp /fcp="java Game" /fd="%CD%"

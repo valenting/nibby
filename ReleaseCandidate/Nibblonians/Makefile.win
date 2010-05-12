@@ -1,0 +1,9 @@
+
+build:
+	javac *.java
+	
+run: Game.class
+	winboard /cp /fcp='java Game' /fd="%CD%"
+	
+clean:
+	del *.class out*
