@@ -19,7 +19,7 @@ public class Game {
         	if(xboard.isTurn()) {
         		if (!Openings.isSet())
         			Openings.init(0);
-            	xboard.sendToXBoard(brd.nextMove((byte)xboard.side));
+            	xboard.sendToXBoard(brd.nextMove((byte)xboard.side,xboard.time,xboard.otim));
             }
         	boolean citit = xboard.read();
             if (xboard.lastMove.startsWith("usermove") && xboard.side!=xboard.engine){

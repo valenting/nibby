@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 
 
 //Asta random este doar de test
+import java.util.Calendar;
 import java.util.Random;
 import java.util.Vector;
 
@@ -691,27 +692,31 @@ public class Board implements Cloneable{
 		byte elementType = types[BitwiseTricks.bitScanForward(start)];
 		boolean result = false;
 		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
-			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mare
-				updateMoveOnBoard(start,start>>>1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateMoveOnBoard(start>>>1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+			if( (start>>>2 == end)){	//rocada mare
+				if(avoidCheckPosition((byte)(elementType>>>3))){
+					updateMoveOnBoard(start,start>>>1);
+					result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+					if(result){
+						updateMoveOnBoard(start>>>1,end);
+						result = avoidCheckPosition((byte)(elementType>>>3));
+						updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+					}
+					else
+						updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 				}
-				else
-					updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 			}
-			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mica
-				updateMoveOnBoard(start,start<<1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateMoveOnBoard(start<<1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+			else if( (start<<2 == end)){	//rocada mica
+				if(avoidCheckPosition((byte)(elementType>>>3))){
+					updateMoveOnBoard(start,start<<1);
+					result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+					if(result){
+						updateMoveOnBoard(start<<1,end);
+						result = avoidCheckPosition((byte)(elementType>>>3));
+						updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+					}
+					else
+						updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 				}
-				else
-					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 			}
 			else{
 				elementType = types[BitwiseTricks.bitScanForward(end)];
@@ -1720,5 +1725,79 @@ public class Board implements Cloneable{
 			}
 		}
 
+	}
+	
+	int extraDepthByPieceNumber(){
+		int numberOfPieces = Long.bitCount(table);
+		if(numberOfPieces>22)
+			return 0;
+		if(numberOfPieces>12)
+			return 1;
+		if(numberOfPieces>8)
+			return 2;
+		return 3;
+	}
+
+	
+	static int movesMade = 0;
+	public String nextMove(byte side,long myTime,long oppositeTime){
+		//	aici s-ar putea numara mutarile ramase pana la resetarea ceasului 
+		//	asta e setat la 0 la primul apel, fiindca e static
+		
+		//NegaMax nm = new NegaMax(this, side, 3);
+		//NegaScout ns = new NegaScout(this,side,3);
+		Move m;
+		if (Openings.hasNext()) {
+			m = Openings.getMove();
+			if (m!=null) {
+				Openings.makeMove(m);
+				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+				}
+		}
+		movesMade++;
+		/*
+		if(movesMade<30){
+			AlphaBeta ab = new AlphaBeta(this,4+extraDepthByPieceNumber(),side);
+			m = ab.returnBestMove();
+		}
+		else */ 
+		m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		
+		if (m == null)
+			return "";
+		return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
+	}
+	
+	public Move myIterativeDeepening(byte side,int movesLeft,long myTime,long oppositeTime){
+		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
+		long timeEnd;
+		long maxTime = 0;
+		int maxDepth = 4;
+		int depth = 4 + extraDepthByPieceNumber();
+		Move move;
+		if(movesLeft!=0){
+			if(myTime/(movesLeft+1)>myTime-oppositeTime)
+				maxTime = myTime/(movesLeft+1);
+			else
+				maxTime = myTime-oppositeTime;
+		}
+		System.out.println("maxtime este "+maxTime+" iar movesLeft="+movesLeft);
+		
+		AlphaBeta ab;
+		
+		while(true){
+			ab = new AlphaBeta(this,depth,side);
+			move = ab.returnBestMove();
+			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
+			System.out.println("depth "+depth+" maxtime este "+maxTime+" si "+timeStart+" " + timeEnd+" dif="+(timeEnd-timeStart));
+			if(depth>=maxDepth)
+				break;
+			if(movesLeft==0)
+				break;
+			if(timeEnd-timeStart>maxTime)
+				break;
+			depth++;
+		}
+		return move;
 	}
 }
