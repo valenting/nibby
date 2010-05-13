@@ -6,8 +6,10 @@ import java.io.InputStreamReader;
 
 //Asta random este doar de test
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Random;
 import java.util.Vector;
+import java.util.*;
 
 
 public class Board implements Cloneable{
@@ -1047,6 +1049,7 @@ public class Board implements Cloneable{
 			}
 			pieces=pieces^p1;
 		}
+		Collections.sort(v);
 		return v;
 	}
 	
