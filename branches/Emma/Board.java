@@ -1600,21 +1600,6 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.contains("O-O")){//rocada pe partea regelui
-			if (clr == 1){
-				castling = B_KING;
-				pos1 = 60; pos2 = 62;
-			}
-			else{
-				castling = W_KING; 
-				pos1 = 4; pos2 = 6;
-			}
-			if (mutare.contains("+"))
-				check = true;
-			if (mutare.contains("#"))
-				checkmate = true;
-			return;
-		}
 		if (mutare.contains("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
@@ -1630,6 +1615,23 @@ public class Board implements Cloneable{
 				checkmate = true;
 			return;
 		}
+		
+		if (mutare.contains("O-O")){//rocada pe partea regelui
+			if (clr == 1){
+				castling = B_KING;
+				pos1 = 60; pos2 = 62;
+			}
+			else{
+				castling = W_KING; 
+				pos1 = 4; pos2 = 6;
+			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
+			return;
+		}
+
 		int i = mutare.length()-1;
 		if (mutare.charAt(i)=='#'){
 			checkmate = true;
