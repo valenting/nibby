@@ -1250,7 +1250,23 @@ public class Board implements Cloneable{
         if (board.isCheckMate((byte) side)) {
             return -20000;
         }
-        
+
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) {
+            gameStage = 1;
+            pawnPieceScale = 0.25F;
+            pawnPosScale = 1.3F;
+        }
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) {
+            gameStage = 2;
+            pawnPieceScale = 0.40F;
+            pawnPosScale = 1.7F;
+        }
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) {
+            gameStage = 3;
+            pawnPieceScale = 0.70F;
+            pawnPosScale = 2.0F;
+        }
+
         //pawns
         whiteMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[0]);
         blackMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[1]);
@@ -1291,37 +1307,18 @@ public class Board implements Cloneable{
             pos = BitwiseTricks.bitScanForward(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
-            whiteMaterial += PiecePosScore[tip - 1][pos];
+            whiteMaterial += PiecePosScore[tip - 1][63 - pos];
+
         }
-        
         remainingPieces = board.color[1] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
             pos = BitwiseTricks.bitScanForward(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
-            blackMaterial += PiecePosScore[tip - 1][63 - pos];
-        }
-        
+            blackMaterial += PiecePosScore[tip - 1][pos];
 
-        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) {
-            gameStage = 1;
-            pawnPieceScale = 0.25F;
-            pawnPosScale = 1.3F;
         }
-        
-        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) {
-            gameStage = 2;
-            pawnPieceScale = 0.40F;
-            pawnPosScale = 1.7F;
-        }
-        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) {
-            gameStage = 3;
-            pawnPieceScale = 0.70F;
-            pawnPosScale = 2.0F;
-        }
-
-        
         // position scores kings
         //white
         pos = BitwiseTricks.bitScanForward(board.pieces[6] & board.color[0]);
@@ -1345,7 +1342,8 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
-            whiteMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
+            whiteMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
+
         }
 
         remainingPieces = board.color[1] & board.pieces[1];
@@ -1353,7 +1351,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
-            blackMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
+            blackMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
 
         }
 
@@ -1419,6 +1417,53 @@ public class Board implements Cloneable{
             whiteMaterial -= IsolatedPawnPenalty[7];
         }
 
+		//	Adaugat de Andrei: pawns defending pawns
+		// white pawns defending white pawns
+		byte contor = 8;
+		for(byte i = 0;i<5;i++){
+			// coloana 1(in reprezenrtarea curenta 0)
+			if(board.types[contor]==W_PAWN && board.types[contor+9]==W_PAWN)
+				whiteMaterial+=5;
+			contor++;
+			//coloanele 2->7(in reprezenrtarea curenta 1-6)
+			for(byte j = 1;j<7;j++){
+				if(board.types[contor]==W_PAWN){ 
+					if(board.types[contor+9]==W_PAWN)
+						whiteMaterial+=5;
+					if(board.types[contor+7]==W_PAWN)
+						whiteMaterial+=5;
+				}
+				contor++;
+			}
+			// coloana 8(in reprezenrtarea curenta 7)
+			if(board.types[contor]==W_PAWN && board.types[contor+7]==W_PAWN)
+				whiteMaterial+=5;
+			contor++;
+		}
+		// black pawns defending black pawns
+		contor = 55;
+		for(byte i = 6;i>1;i--){
+			// coloana 8(in reprezenrtarea curenta 7)
+			if(board.types[contor]==B_PAWN && board.types[contor-9]==B_PAWN)
+				blackMaterial+=5;
+			contor--;
+			//coloanele 2->7(in reprezenrtarea curenta 1-6)
+			for(byte j = 6;j>0;j--){
+				if(board.types[contor]==B_PAWN){ 
+					if(board.types[contor-9]==B_PAWN)
+						blackMaterial+=5;
+					if(board.types[contor-7]==B_PAWN)
+						blackMaterial+=5;
+				}
+				contor--;
+			}
+			// coloana 8(in reprezenrtarea curenta 7)
+			if(board.types[contor]==B_PAWN && board.types[contor-7]==B_PAWN)
+				blackMaterial+=5;
+			contor--;
+		}
+			
+		
         if (side == 0) {
             return whiteMaterial - blackMaterial;
         } else {
@@ -1731,15 +1776,24 @@ public class Board implements Cloneable{
 
 	}
 	
+	float depthCoefficient(){
+		int numberOfPieces = Long.bitCount(table);
+		if(numberOfPieces>20)
+			return 1f;
+		if(numberOfPieces>14)
+			return 1.4f;
+		if(numberOfPieces>8)
+			return 1.8f;
+		return 2.2f;
+	}
+	
 	int extraDepthByPieceNumber(){
 		int numberOfPieces = Long.bitCount(table);
-		if(numberOfPieces>22)
+		if(numberOfPieces>18)
 			return 0;
-		if(numberOfPieces>12)
+		if(numberOfPieces>10)
 			return 1;
-		if(numberOfPieces>8)
-			return 2;
-		return 3;
+		return 2;
 	}
 
 	
@@ -1754,18 +1808,37 @@ public class Board implements Cloneable{
 		if (Openings.hasNext()) {
 			m = Openings.getMove();
 			if (m!=null) {
+				movesMade++;
 				Openings.makeMove(m);
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
 		movesMade++;
+		int initDepth;
+		int maxTime = 0;
+		if(movesMade<=40){
+			if((40-movesMade+1)*750>myTime)
+				initDepth = 3;
+			else
+				initDepth = 5;
+		}else{
+			if((80-movesMade+1)*750>myTime)
+				initDepth = 3;
+			else
+				initDepth = 5;
+		}
+		
+		AlphaBeta ab = new AlphaBeta(this,(int)(initDepth+extraDepthByPieceNumber()),side);
+		m = ab.returnBestMove(); 
+		
 		/*
 		if(movesMade<30){
 			AlphaBeta ab = new AlphaBeta(this,4+extraDepthByPieceNumber(),side);
 			m = ab.returnBestMove();
 		}
-		else */ 
-		m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		else 
+			m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		*/
 		
 		if (m == null)
 			return "";
@@ -1776,9 +1849,11 @@ public class Board implements Cloneable{
 		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
 		long timeEnd;
 		long maxTime = 0;
-		int maxDepth = 5;
-		int depth = 5 + extraDepthByPieceNumber();
+		int maxDepth = 4;
+	
+		int depth = 4 + extraDepthByPieceNumber();
 		Move move;
+
 		if(movesLeft!=0){
 			if(myTime/(movesLeft+1)>myTime-oppositeTime)
 				maxTime = myTime/(movesLeft+1);
@@ -1793,7 +1868,7 @@ public class Board implements Cloneable{
 			ab = new AlphaBeta(this,depth,side);
 			move = ab.returnBestMove();
 			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
-			// System.out.println("depth:"+depth+" | Count:"+ab.count);
+			System.out.println("depth "+depth+"maxtime este "+maxTime+" si "+timeStart+" " + timeEnd+" dif="+(timeEnd-timeStart));
 			if(depth>=maxDepth)
 				break;
 			if(movesLeft==0)
@@ -1801,6 +1876,28 @@ public class Board implements Cloneable{
 			if(timeEnd-timeStart>maxTime)
 				break;
 			depth++;
+		}
+		return move;
+	}
+	
+	public Move myIterativeDeepening(byte side,int maxDepth,int maxTime){
+		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
+		long timeEnd;
+		int crtDepth = 4;
+	
+		Move move;
+
+		AlphaBeta ab;
+		
+		while(true){
+			ab = new AlphaBeta(this,crtDepth,side);
+			move = ab.returnBestMove();
+			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
+			if(crtDepth==maxDepth)
+				break;
+			if(timeEnd-timeStart>=maxTime)
+				break;
+			crtDepth++;
 		}
 		return move;
 	}
