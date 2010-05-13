@@ -61,14 +61,11 @@ class Move implements Comparable {
 		
 		return Usual.stringPos(p1)+Usual.stringPos(p2);
 	}
-	
 	@Override
 	public int compareTo(Object arg0) {
 		Move move2 = (Move) arg0;
 		if (typeS == 0 && move2.typeS == 0) {
-//			if  (move2.getP1() == p1 && move2.getP2() == p2)
-				return 0;
-//			return 1; 
+				return 0; 
 		} else {
 			if (typeD!=move2.typeD)
 				return -(typeD-move2.typeD);
@@ -76,7 +73,6 @@ class Move implements Comparable {
 				return -(typeS-move2.typeS);
 		}
 	}
-
 }
 
 class Node implements Comparable{

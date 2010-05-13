@@ -1048,7 +1048,7 @@ public class Board implements Cloneable{
 			}
 			pieces=pieces^p1;
 		}
-		Collections.sort(v);
+		// Collections.sort(v);
 		return v;
 	}
 	
@@ -1251,10 +1251,6 @@ public class Board implements Cloneable{
             return -20000;
         }
         
-        //pawns
-        whiteMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[0]);
-        blackMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[1]);
-
         //rest of the pieces
         for (int i = 2; i <= 5; i++) {
             whiteMaterial += PieceScore[i - 1] * Long.bitCount(board.pieces[i] & board.color[0]);
@@ -1278,9 +1274,9 @@ public class Board implements Cloneable{
 
         if (!board.avoidCheckPosition((byte) side)) {
             if (side == 0) {
-                blackMaterial += 50;
+                blackMaterial += 100;
             } else {
-                whiteMaterial += 50;
+                whiteMaterial += 100;
             }
         }
 
@@ -1320,7 +1316,9 @@ public class Board implements Cloneable{
             pawnPieceScale = 0.70F;
             pawnPosScale = 2.0F;
         }
-
+        
+        whiteMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[0]);
+        blackMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[1]);
         
         // position scores kings
         //white
@@ -1776,8 +1774,8 @@ public class Board implements Cloneable{
 		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
 		long timeEnd;
 		long maxTime = 0;
-		int maxDepth = 5;
-		int depth = 5 + extraDepthByPieceNumber();
+		int maxDepth = Usual.maxDepth;
+		int depth = Usual.depth + extraDepthByPieceNumber();
 		Move move;
 		if(movesLeft!=0){
 			if(myTime/(movesLeft+1)>myTime-oppositeTime)
@@ -1785,7 +1783,8 @@ public class Board implements Cloneable{
 			else
 				maxTime = myTime-oppositeTime;
 		}
-		System.out.println("maxtime este "+maxTime+" iar movesLeft="+movesLeft);
+		
+		//System.out.println("maxtime este "+maxTime+" iar movesLeft="+movesLeft);
 		
 		AlphaBeta ab;
 		
@@ -1793,7 +1792,7 @@ public class Board implements Cloneable{
 			ab = new AlphaBeta(this,depth,side);
 			move = ab.returnBestMove();
 			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
-			System.out.println("depth:"+depth+" | Count:"+ab.count);
+			// System.out.println("depth:"+depth+" | Count:"+ab.count);
 			if(depth>=maxDepth)
 				break;
 			if(movesLeft==0)
