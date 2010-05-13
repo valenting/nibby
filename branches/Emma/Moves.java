@@ -13,15 +13,25 @@ import org.omg.CORBA.NVList;
 
 class Move implements Comparable {
 	private int p1,p2;
+	public int typeS,typeD;
 	
 	public Move(String str) {
 		p1=Usual.pos1(str);
 		p2=Usual.pos2(str);
+		typeS = 0;
+		typeD = 0;
 	}
 	
 	public Move(int pos1, int pos2){
 		p1=pos1;
 		p2=pos2;
+		typeS = 0;
+		typeD = 0;
+	}
+	
+	public void setTypes(int S, int D) {
+		typeS = S;
+		typeD = D;
 	}
 	
 	public int getP1() {
@@ -54,9 +64,14 @@ class Move implements Comparable {
 	@Override
 	public int compareTo(Object arg0) {
 		Move move2 = (Move) arg0;
-		if  (move2.getP1() == p1 && move2.getP2() == p2)
-			return 0;
-		return 1;
+		if (typeS == 0 && move2.typeS == 0) {
+				return 0; 
+		} else {
+			if (typeD!=move2.typeD)
+				return -(typeD-move2.typeD);
+			else
+				return -(typeS-move2.typeS);
+		}
 	}
 }
 
