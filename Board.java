@@ -2,10 +2,10 @@ import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Calendar;
 
 
 //Asta random este doar de test
+import java.util.Calendar;
 import java.util.Random;
 import java.util.Vector;
 
@@ -692,27 +692,31 @@ public class Board implements Cloneable{
 		byte elementType = types[BitwiseTricks.bitScanForward(start)];
 		boolean result = false;
 		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
-			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mare
-				updateMoveOnBoard(start,start>>>1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateMoveOnBoard(start>>>1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+			if( (start>>>2 == end)){	//rocada mare
+				if(avoidCheckPosition((byte)(elementType>>>3))){
+					updateMoveOnBoard(start,start>>>1);
+					result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+					if(result){
+						updateMoveOnBoard(start>>>1,end);
+						result = avoidCheckPosition((byte)(elementType>>>3));
+						updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+					}
+					else
+						updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 				}
-				else
-					updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 			}
-			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mica
-				updateMoveOnBoard(start,start<<1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateMoveOnBoard(start<<1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+			else if( (start<<2 == end)){	//rocada mica
+				if(avoidCheckPosition((byte)(elementType>>>3))){
+					updateMoveOnBoard(start,start<<1);
+					result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+					if(result){
+						updateMoveOnBoard(start<<1,end);
+						result = avoidCheckPosition((byte)(elementType>>>3));
+						updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+					}
+					else
+						updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 				}
-				else
-					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 			}
 			else{
 				elementType = types[BitwiseTricks.bitScanForward(end)];
@@ -1010,8 +1014,6 @@ public class Board implements Cloneable{
 
 	public String nextMove(byte side){
 		
-		//NegaMax nm = new NegaMax(this, side, 3);
-		//NegaScout ns = new NegaScout(this,side,3);
 		if (Openings.hasNext()) {
 			Move m = Openings.getMove();
 			if (m!=null) {
@@ -1019,8 +1021,8 @@ public class Board implements Cloneable{
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
-		AlphaBeta ab = new AlphaBeta(this,4,side);
-		//NegaScout ns = new NegaScout(this, 4, side);
+		AlphaBeta ab = new AlphaBeta(this,5,side);
+		// NegaScout ns = new NegaScout(this, side, 4);
 		Move m = ab.returnBestMove();
 		if (m == null)
 			return "";
@@ -1035,6 +1037,26 @@ public class Board implements Cloneable{
 			long p1 = Long.highestOneBit(pieces);
 			int pos1 = BitwiseTricks.bitScanForward(p1);
 			long p2 = this.getValidMoves(pos1);
+			while (p2!=0) {
+				long p3 = Long.highestOneBit(p2);
+				int pos3 = BitwiseTricks.bitScanForward(p3);
+				v.add(new Move(pos1,pos3));
+				p2=p2^p3;
+			}
+			pieces=pieces^p1;
+		}
+		return v;
+	}
+	
+	// gaseste toate mutarile prin care se captureaza o piesa a adversarului
+	public Vector<Move> getAllCaptures(byte clr){
+		long pieces = color[clr];
+		Vector<Move> v = new Vector<Move>();
+		while (pieces!=0L) {
+			long p1 = Long.highestOneBit(pieces);
+			int pos1 = BitwiseTricks.bitScanForward(p1);
+			long p2 = this.getValidMoves(pos1);
+			p2 = p2 & color[(byte)(1 - clr)];
 			while (p2!=0) {
 				long p3 = Long.highestOneBit(p2);
 				int pos3 = BitwiseTricks.bitScanForward(p3);
@@ -1281,7 +1303,7 @@ public class Board implements Cloneable{
             pos = BitwiseTricks.bitScanForward(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
-            whiteMaterial += PiecePosScore[tip - 1][pos];
+            whiteMaterial += PiecePosScore[tip - 1][63 - pos];
 
         }
         remainingPieces = board.color[1] & ~board.pieces[6] & ~board.pieces[1];
@@ -1290,7 +1312,7 @@ public class Board implements Cloneable{
             pos = BitwiseTricks.bitScanForward(onePiece);
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
-            blackMaterial += PiecePosScore[tip - 1][63 - pos];
+            blackMaterial += PiecePosScore[tip - 1][pos];
 
         }
         // position scores kings
@@ -1316,7 +1338,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
-            whiteMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
+            whiteMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
 
         }
 
@@ -1325,7 +1347,7 @@ public class Board implements Cloneable{
             onePiece = remainingPieces & -remainingPieces;
             pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
-            blackMaterial += (int) (PiecePosScore[0][63 - pos] * pawnPosScale);
+            blackMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
 
         }
 
@@ -1391,6 +1413,53 @@ public class Board implements Cloneable{
             whiteMaterial -= IsolatedPawnPenalty[7];
         }
 
+		//	Adaugat de Andrei: pawns defending pawns
+		// white pawns defending white pawns
+		byte contor = 8;
+		for(byte i = 0;i<5;i++){
+			// coloana 1(in reprezenrtarea curenta 0)
+			if(board.types[contor]==W_PAWN && board.types[contor+9]==W_PAWN)
+				whiteMaterial+=5;
+			contor++;
+			//coloanele 2->7(in reprezenrtarea curenta 1-6)
+			for(byte j = 1;j<7;j++){
+				if(board.types[contor]==W_PAWN){ 
+					if(board.types[contor+9]==W_PAWN)
+						whiteMaterial+=5;
+					if(board.types[contor+7]==W_PAWN)
+						whiteMaterial+=5;
+				}
+				contor++;
+			}
+			// coloana 8(in reprezenrtarea curenta 7)
+			if(board.types[contor]==W_PAWN && board.types[contor+7]==W_PAWN)
+				whiteMaterial+=5;
+			contor++;
+		}
+		// black pawns defending black pawns
+		contor = 55;
+		for(byte i = 6;i>1;i--){
+			// coloana 8(in reprezenrtarea curenta 7)
+			if(board.types[contor]==B_PAWN && board.types[contor-9]==B_PAWN)
+				blackMaterial+=5;
+			contor--;
+			//coloanele 2->7(in reprezenrtarea curenta 1-6)
+			for(byte j = 6;j>0;j--){
+				if(board.types[contor]==B_PAWN){ 
+					if(board.types[contor-9]==B_PAWN)
+						blackMaterial+=5;
+					if(board.types[contor-7]==B_PAWN)
+						blackMaterial+=5;
+				}
+				contor--;
+			}
+			// coloana 8(in reprezenrtarea curenta 7)
+			if(board.types[contor]==B_PAWN && board.types[contor-7]==B_PAWN)
+				blackMaterial+=5;
+			contor--;
+		}
+			
+		
         if (side == 0) {
             return whiteMaterial - blackMaterial;
         } else {
@@ -1576,18 +1645,7 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.equals("O-O")){//rocada pe partea regelui
-			if (clr == 1){
-				castling = B_KING;
-				pos1 = 60; pos2 = 62;
-			}
-			else{
-				castling = W_KING; 
-				pos1 = 4; pos2 = 6;
-			}
-			return;
-		}
-		if (mutare.equals("O-O-O")){//rocada pe partea reginei
+		if (mutare.contains("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
 				pos1 = 60; pos2 = 58;
@@ -1596,8 +1654,28 @@ public class Board implements Cloneable{
 				castling = W_QUEEN; 
 				pos1 = 4; pos2 = 2;
 			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
 			return;
 		}
+		if (mutare.contains("O-O")){//rocada pe partea regelui
+			if (clr == 1){
+				castling = B_KING;
+				pos1 = 60; pos2 = 62;
+			}
+			else{
+				castling = W_KING; 
+				pos1 = 4; pos2 = 6;
+			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
+			return;
+		}
+		
 		int i = mutare.length()-1;
 		if (mutare.charAt(i)=='#'){
 			checkmate = true;
@@ -1695,15 +1773,24 @@ public class Board implements Cloneable{
 
 	}
 	
+	float depthCoefficient(){
+		int numberOfPieces = Long.bitCount(table);
+		if(numberOfPieces>20)
+			return 1f;
+		if(numberOfPieces>14)
+			return 1.4f;
+		if(numberOfPieces>8)
+			return 1.8f;
+		return 2.2f;
+	}
+	
 	int extraDepthByPieceNumber(){
 		int numberOfPieces = Long.bitCount(table);
-		if(numberOfPieces>22)
+		if(numberOfPieces>18)
 			return 0;
-		if(numberOfPieces>12)
+		if(numberOfPieces>10)
 			return 1;
-		if(numberOfPieces>8)
-			return 2;
-		return 3;
+		return 2;
 	}
 
 	
@@ -1718,18 +1805,37 @@ public class Board implements Cloneable{
 		if (Openings.hasNext()) {
 			m = Openings.getMove();
 			if (m!=null) {
+				movesMade++;
 				Openings.makeMove(m);
 				return "move " + intermediaryToSANMove(m.getLongP1(),m.getLongP2());
 				}
 		}
 		movesMade++;
+		int initDepth;
+		int maxTime = 0;
+		if(movesMade<=40){
+			if((40-movesMade+1)*750>myTime)
+				initDepth = 3;
+			else
+				initDepth = 5;
+		}else{
+			if((80-movesMade+1)*750>myTime)
+				initDepth = 3;
+			else
+				initDepth = 5;
+		}
+		
+		AlphaBeta ab = new AlphaBeta(this,(int)(initDepth+extraDepthByPieceNumber()),side);
+		m = ab.returnBestMove(); 
+		
 		/*
 		if(movesMade<30){
 			AlphaBeta ab = new AlphaBeta(this,4+extraDepthByPieceNumber(),side);
 			m = ab.returnBestMove();
 		}
-		else */ 
-		m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		else 
+			m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		*/
 		
 		if (m == null)
 			return "";
@@ -1741,8 +1847,10 @@ public class Board implements Cloneable{
 		long timeEnd;
 		long maxTime = 0;
 		int maxDepth = 4;
+	
 		int depth = 4 + extraDepthByPieceNumber();
 		Move move;
+
 		if(movesLeft!=0){
 			if(myTime/(movesLeft+1)>myTime-oppositeTime)
 				maxTime = myTime/(movesLeft+1);
@@ -1765,6 +1873,28 @@ public class Board implements Cloneable{
 			if(timeEnd-timeStart>maxTime)
 				break;
 			depth++;
+		}
+		return move;
+	}
+	
+	public Move myIterativeDeepening(byte side,int maxDepth,int maxTime){
+		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
+		long timeEnd;
+		int crtDepth = 4;
+	
+		Move move;
+
+		AlphaBeta ab;
+		
+		while(true){
+			ab = new AlphaBeta(this,crtDepth,side);
+			move = ab.returnBestMove();
+			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
+			if(crtDepth==maxDepth)
+				break;
+			if(timeEnd-timeStart>=maxTime)
+				break;
+			crtDepth++;
 		}
 		return move;
 	}
