@@ -2,8 +2,11 @@ import java.util.*;
 import java.io.*;
 
 /* Author: Nibblonians
- * Etapa 3: 
+ * Etapa 4: 
  * 			implementare NegaMax si AlphaBeta
+ * 			implementare NegaScout + quiescence search
+ * 			implementare iterative deepening
+ * 			optimizare deBruijn
  * 			deschideri
  */
 
