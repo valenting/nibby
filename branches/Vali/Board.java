@@ -1250,23 +1250,7 @@ public class Board implements Cloneable{
         if (board.isCheckMate((byte) side)) {
             return -20000;
         }
-
-        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) {
-            gameStage = 1;
-            pawnPieceScale = 0.25F;
-            pawnPosScale = 1.3F;
-        }
-        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) {
-            gameStage = 2;
-            pawnPieceScale = 0.40F;
-            pawnPosScale = 1.7F;
-        }
-        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) {
-            gameStage = 3;
-            pawnPieceScale = 0.70F;
-            pawnPosScale = 2.0F;
-        }
-
+        
         //pawns
         whiteMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[0]);
         blackMaterial += ((int) (PieceScore[0] * pawnPieceScale)) * Long.bitCount(board.pieces[1] & board.color[1]);
@@ -1294,9 +1278,9 @@ public class Board implements Cloneable{
 
         if (!board.avoidCheckPosition((byte) side)) {
             if (side == 0) {
-                blackMaterial += 100;
+                blackMaterial += 50;
             } else {
-                whiteMaterial += 100;
+                whiteMaterial += 50;
             }
         }
 
@@ -1308,8 +1292,8 @@ public class Board implements Cloneable{
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
             whiteMaterial += PiecePosScore[tip - 1][pos];
-
         }
+        
         remainingPieces = board.color[1] & ~board.pieces[6] & ~board.pieces[1];
         while (remainingPieces != 0) {
             onePiece = remainingPieces & -remainingPieces;
@@ -1317,8 +1301,27 @@ public class Board implements Cloneable{
             tip = board.getPieceType(pos) & 7;
             remainingPieces -= onePiece;
             blackMaterial += PiecePosScore[tip - 1][63 - pos];
-
         }
+        
+
+        if (whiteMaterial < KING_SCORE + 2000 || blackMaterial < KING_SCORE + 2000) {
+            gameStage = 1;
+            pawnPieceScale = 0.25F;
+            pawnPosScale = 1.3F;
+        }
+        
+        if (whiteMaterial < KING_SCORE + 1500 || blackMaterial < KING_SCORE + 1500) {
+            gameStage = 2;
+            pawnPieceScale = 0.40F;
+            pawnPosScale = 1.7F;
+        }
+        if (whiteMaterial < KING_SCORE + 1000 || blackMaterial < KING_SCORE + 1000) {
+            gameStage = 3;
+            pawnPieceScale = 0.70F;
+            pawnPosScale = 2.0F;
+        }
+
+        
         // position scores kings
         //white
         pos = BitwiseTricks.bitScanForward(board.pieces[6] & board.color[0]);
@@ -1343,7 +1346,6 @@ public class Board implements Cloneable{
             pos = BitwiseTricks.bitScanForward(onePiece);
             remainingPieces -= onePiece;
             whiteMaterial += (int) (PiecePosScore[0][pos] * pawnPosScale);
-
         }
 
         remainingPieces = board.color[1] & board.pieces[1];
@@ -1774,8 +1776,8 @@ public class Board implements Cloneable{
 		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
 		long timeEnd;
 		long maxTime = 0;
-		int maxDepth = 4;
-		int depth = 4 + extraDepthByPieceNumber();
+		int maxDepth = 5;
+		int depth = 5 + extraDepthByPieceNumber();
 		Move move;
 		if(movesLeft!=0){
 			if(myTime/(movesLeft+1)>myTime-oppositeTime)

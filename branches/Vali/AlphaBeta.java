@@ -13,6 +13,7 @@ public class AlphaBeta {
 		alpha = -INF;
 		beta = INF;
 		this.Player = Player;
+		count = 0;
 	}
 	
 	public int alphaBeta(Board brd, int alpha,int beta, int depthleft, byte Play){

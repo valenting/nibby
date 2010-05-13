@@ -61,6 +61,7 @@ class Move implements Comparable {
 		
 		return Usual.stringPos(p1)+Usual.stringPos(p2);
 	}
+	
 	@Override
 	public int compareTo(Object arg0) {
 		Move move2 = (Move) arg0;
@@ -75,6 +76,7 @@ class Move implements Comparable {
 				return -(typeS-move2.typeS);
 		}
 	}
+
 }
 
 class Node implements Comparable{
