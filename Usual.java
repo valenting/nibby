@@ -2,6 +2,14 @@ import java.util.HashMap;
 
 
 public class Usual {
+	
+	public static int depth, maxDepth, eval;
+	
+	public static void setVars(int d, int mD, int e){
+		depth = d;
+		maxDepth = mD;
+		eval = e;
+	}
 	public static long boardMask(String pos) {
 		pos=pos.toLowerCase();
 		return 1L << ( ( pos.charAt(1) - '1' ) << 3 | ( pos.charAt(0) - 'a' ) );
