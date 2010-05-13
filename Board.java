@@ -693,27 +693,31 @@ public class Board implements Cloneable{
 		byte elementType = types[BitwiseTricks.bitScanForward(start)];
 		boolean result = false;
 		if((elementType & 7)==W_KING){	//	se analizeaza situatia in care piesa mutata este rege
-			if( (start>>>2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mare
-				updateMoveOnBoard(start,start>>>1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateMoveOnBoard(start>>>1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+			if( (start>>>2 == end)){	//rocada mare
+				if(avoidCheckPosition((byte)(elementType>>>3))){
+					updateMoveOnBoard(start,start>>>1);
+					result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+					if(result){
+						updateMoveOnBoard(start>>>1,end);
+						result = avoidCheckPosition((byte)(elementType>>>3));
+						updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+					}
+					else
+						updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 				}
-				else
-					updateMoveOnBoard(start>>>1,start);//	aduce tabla la starea initiala
 			}
-			else if( (start<<2 == end) && avoidCheckPosition((byte)(elementType>>>3))){	//rocada mica
-				updateMoveOnBoard(start,start<<1);
-				result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
-				if(result){
-					updateMoveOnBoard(start<<1,end);
-					result = avoidCheckPosition((byte)(elementType>>>3));
-					updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+			else if( (start<<2 == end)){	//rocada mica
+				if(avoidCheckPosition((byte)(elementType>>>3))){
+					updateMoveOnBoard(start,start<<1);
+					result = avoidCheckPosition((byte)(elementType>>>3));//nu e in sah pe patratul imediat alaturat
+					if(result){
+						updateMoveOnBoard(start<<1,end);
+						result = avoidCheckPosition((byte)(elementType>>>3));
+						updateMoveOnBoard(end,start);	//	aduce tabla la starea initiala
+					}
+					else
+						updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 				}
-				else
-					updateMoveOnBoard(start<<1,start);//	aduce tabla la starea initiala
 			}
 			else{
 				elementType = types[BitwiseTricks.bitScanForward(end)];
@@ -1021,7 +1025,7 @@ public class Board implements Cloneable{
 				}
 		}
 		AlphaBeta ab = new AlphaBeta(this,4,side);
-		// NegaScout ns = new NegaScout(this, side, 4);
+		//NegaScout ns = new NegaScout(this, 4, side);
 		Move m = ab.returnBestMove();
 		if (m == null)
 			return "";
@@ -1030,26 +1034,19 @@ public class Board implements Cloneable{
 
 	// gaseste toate mutarile posbile ale tuturor pieselor pentru un jucator (depinde de culoare)
 	public Vector<Move> getAllMoves(byte clr) {
-		long pis = color[clr];
-		
+		long pieces = color[clr];
 		Vector<Move> v = new Vector<Move>();
-		
-		for (int i=5;i>0;i--) {
-			pis = color[clr] & pieces[i];
-			while (pis!=0L) {
-				long p1 = Long.highestOneBit(pis);
-				int pos1 = BitwiseTricks.bitScanForward(p1);
-				long p2 = this.getValidMoves(pos1);
-				while (p2!=0) {
-					long p3 = Long.highestOneBit(p2);
-					int pos3 = BitwiseTricks.bitScanForward(p3);
-					Move m = new Move(pos1,pos3);
-					m.setTypes(types[pos1], types[pos3]);
-					v.add(new Move(pos1,pos3));
-					p2=p2^p3;
-				}
-				pis=pis^p1;
+		while (pieces!=0L) {
+			long p1 = Long.highestOneBit(pieces);
+			int pos1 = BitwiseTricks.bitScanForward(p1);
+			long p2 = this.getValidMoves(pos1);
+			while (p2!=0) {
+				long p3 = Long.highestOneBit(p2);
+				int pos3 = BitwiseTricks.bitScanForward(p3);
+				v.add(new Move(pos1,pos3));
+				p2=p2^p3;
 			}
+			pieces=pieces^p1;
 		}
 		Collections.sort(v);
 		return v;
@@ -1605,21 +1602,6 @@ public class Board implements Cloneable{
 		piece_type = _EMPTY;
 		castling = _EMPTY;
 		pos1 = -1; pos2 = -1;
-		if (mutare.contains("O-O")){//rocada pe partea regelui
-			if (clr == 1){
-				castling = B_KING;
-				pos1 = 60; pos2 = 62;
-			}
-			else{
-				castling = W_KING; 
-				pos1 = 4; pos2 = 6;
-			}
-			if (mutare.contains("+"))
-				check = true;
-			if (mutare.contains("#"))
-				checkmate = true;
-			return;
-		}
 		if (mutare.contains("O-O-O")){//rocada pe partea reginei
 			if (clr == 1){
 				castling = B_QUEEN;
@@ -1628,6 +1610,21 @@ public class Board implements Cloneable{
 			else{
 				castling = W_QUEEN; 
 				pos1 = 4; pos2 = 2;
+			}
+			if (mutare.contains("+"))
+				check = true;
+			if (mutare.contains("#"))
+				checkmate = true;
+			return;
+		}
+		if (mutare.contains("O-O")){//rocada pe partea regelui
+			if (clr == 1){
+				castling = B_KING;
+				pos1 = 60; pos2 = 62;
+			}
+			else{
+				castling = W_KING; 
+				pos1 = 4; pos2 = 6;
 			}
 			if (mutare.contains("+"))
 				check = true;
@@ -1732,7 +1729,18 @@ public class Board implements Cloneable{
 
 	}
 	
-	// iterative deepening
+	int extraDepthByPieceNumber(){
+		int numberOfPieces = Long.bitCount(table);
+		if(numberOfPieces>22)
+			return 0;
+		if(numberOfPieces>12)
+			return 1;
+		if(numberOfPieces>8)
+			return 2;
+		return 3;
+	}
+
+	
 	static int movesMade = 0;
 	public String nextMove(byte side,long myTime,long oppositeTime){
 		//	aici s-ar putea numara mutarile ramase pana la resetarea ceasului 
@@ -1750,12 +1758,12 @@ public class Board implements Cloneable{
 		}
 		movesMade++;
 		/*
-		if(movesMade<14){
-			AlphaBeta ab = new AlphaBeta(this,4,side);
+		if(movesMade<30){
+			AlphaBeta ab = new AlphaBeta(this,4+extraDepthByPieceNumber(),side);
 			m = ab.returnBestMove();
 		}
 		else */ 
-			m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
+		m = myIterativeDeepening(side,40-(movesMade%40),myTime,oppositeTime);
 		
 		if (m == null)
 			return "";
@@ -1766,7 +1774,8 @@ public class Board implements Cloneable{
 		long timeStart = Calendar.getInstance().getTimeInMillis()/10;
 		long timeEnd;
 		long maxTime = 0;
-		int depth = 3;
+		int maxDepth = 4;
+		int depth = 4 + extraDepthByPieceNumber();
 		Move move;
 		if(movesLeft!=0){
 			if(myTime/(movesLeft+1)>myTime-oppositeTime)
@@ -1774,7 +1783,6 @@ public class Board implements Cloneable{
 			else
 				maxTime = myTime-oppositeTime;
 		}
-		maxTime /= 2;
 		System.out.println("maxtime este "+maxTime+" iar movesLeft="+movesLeft);
 		
 		AlphaBeta ab;
@@ -1783,8 +1791,8 @@ public class Board implements Cloneable{
 			ab = new AlphaBeta(this,depth,side);
 			move = ab.returnBestMove();
 			timeEnd = Calendar.getInstance().getTimeInMillis()/10;
-			System.out.println("depth "+depth+"maxtime este "+maxTime+" si "+timeStart+" " + timeEnd+" dif="+(timeEnd-timeStart));
-			if(depth==5)
+			System.out.println("depth:"+depth+" | Count:"+ab.count);
+			if(depth>=maxDepth)
 				break;
 			if(movesLeft==0)
 				break;

@@ -65,14 +65,14 @@ class Move implements Comparable {
 	public int compareTo(Object arg0) {
 		Move move2 = (Move) arg0;
 		if (typeS == 0 && move2.typeS == 0) {
-			if  (move2.getP1() == p1 && move2.getP2() == p2)
+//			if  (move2.getP1() == p1 && move2.getP2() == p2)
 				return 0;
-			return 1; 
+//			return 1; 
 		} else {
 			if (typeD!=move2.typeD)
-				return typeD-move2.typeD;
+				return -(typeD-move2.typeD);
 			else
-				return typeS-move2.typeS;
+				return -(typeS-move2.typeS);
 		}
 	}
 }

@@ -6,7 +6,7 @@ public class AlphaBeta {
 	public Board brd;
 	public int alpha;
 	public int beta;
-	
+	public int count = 0;
 	public AlphaBeta(Board b, int depth, byte Player){
 		brd = b;
 		this.depth = depth;
@@ -16,6 +16,7 @@ public class AlphaBeta {
 	}
 	
 	public int alphaBeta(Board brd, int alpha,int beta, int depthleft, byte Play){
+		count++;
 		if (depthleft == 0)
 			return brd.evaluateBoard3(brd,Play);
 		Vector<Move> v = brd.getAllMoves(Play);
